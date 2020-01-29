@@ -1,0 +1,9 @@
+[Nemo Action]
+Name=GitExt Browse
+Comment=GitExt Browse
+Exec="/opt/GitExtensions/nemo-scripts/launch-gitext-browse.sh" %F
+Icon-Name=git-ext-browse
+Selection=Any
+Extensions=any;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F

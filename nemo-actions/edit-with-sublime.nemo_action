@@ -1,0 +1,7 @@
+[Nemo Action]
+Name=Edit with Sublime
+Comment=Edit with Sublime Text
+Exec=/opt/sublime_text/sublime_text "%F"
+Icon-Name=sublime-text
+Selection=S
+Extensions=bash_aliases;bash_functions;bashrc;bat;cmd;conf;config;cpp;cs;css;desktop;gitconfig;gitignore;ini;inputrc;java;js;json;h;list;log;lst;md;menu;nemo_action;nfo;profile;properties;py;reg;settings;sh;txt;vimrc;xml;yaml;yml;

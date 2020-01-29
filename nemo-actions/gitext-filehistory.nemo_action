@@ -1,0 +1,20 @@
+[Nemo Action]
+Name=GitExt File History
+Comment=GitExt File History
+Exec="/opt/GitExtensions/nemo-scripts//launch-gitext-filehistory.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/opt/GitExtensions/nemo-scripts//launch-gitext-commit.sh;
+Icon-Name=git-ext-commit
+Selection=s
+Extensions=nodirs;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F
+[Nemo Action]
+Name=GitExt File History
+Comment=GitExt File History
+Exec="/opt/GitExtensions/nemo-scripts//launch-gitext-filehistory.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/opt/GitExtensions/nemo-scripts//launch-gitext-commit.sh;
+Icon-Name=git-ext-file-history
+Selection=s
+Extensions=nodirs;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F
