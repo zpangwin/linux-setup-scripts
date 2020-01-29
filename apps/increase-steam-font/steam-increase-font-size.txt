@@ -1,0 +1,15 @@
+
+#   https://steamcommunity.com/discussions/forum/1/624075374618774174/
+#   https://www.maketecheasier.com/change-steams-font/
+
+cd ~/.local/share/Steam/resource/styles/
+cp -a steam.styles steam.styles.orig
+
+sed -i 's|font-size=17|font-size=23|g' steam.styles;
+sed -i 's|font-size=16|font-size=22|g' steam.styles;
+sed -i 's|font-size=15|font-size=21|g' steam.styles;
+sed -i 's|font-size=14|font-size=20|g' steam.styles;
+sed -i 's|font-size=13|font-size=19|g' steam.styles;
+sed -i 's|font-size=12|font-size=18|g' steam.styles;
+sed -i 's|font-size=11|font-size=17|g' steam.styles;
+sed -i 's|font-size=10|font-size=16|g' steam.styles;

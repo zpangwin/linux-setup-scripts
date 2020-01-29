@@ -1,0 +1,12 @@
+#!/usr/bin/pkexec /bin/bash
+
+PINCE_INSTALL_DIR="/opt/PINCE";
+
+if [[ ! -f "${PINCE_INSTALL_DIR}/PINCE.sh" ]]; then
+	ERROR_MSG="ERROR: PINCE not found at '${PINCE_INSTALL_DIR}/PINCE.sh'; Please install PINCE and try again.";
+	notify-send --icon=error "${ERROR_MSG}";
+	exit;
+fi
+
+cd "${PINCE_INSTALL_DIR}";
+sudo ./PINCE.sh;

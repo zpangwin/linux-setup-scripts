@@ -1,0 +1,39 @@
+
+
+
+# Experimental / Unconfirmed WIP
+# based on https://askubuntu.com/questions/663187/how-can-i-run-a-program-on-startup-minimized
+# -> If you get it working, update this thread:
+    https://www.reddit.com/r/discordapp/comments/ar9mbg/linux_how_can_i_start_discord_on_login_minimized/
+
+=============
+Prep:
+=============
+1. Install dependencies
+sudo apt-get install wmctrl xdotool python3;
+
+2. 
+
+=============
+Setup:
+=============
+1. You will need to either create or copy a script to /usr/bin/discord-to-systray
+
+    Copy the file ./discord-to-systray.sh to /usr/bin/discord-to-systray
+                sudo cp -a ./discord-to-systray.sh /usr/bin/discord-to-systray
+
+2 Make /usr/bin/discord-to-systray executable:
+    sudo chmod 755 /usr/bin/discord-to-systray;
+    
+3. Close Discord, then run the script to confirm it works:
+    discord-to-systray &
+
+5. (Start) Menu > Preferences > Startup Applications > Select Discord > click edit button > then 
+    change from /usr/share/discord/Discord
+    to /usr/bin/python3 /usr/bin/discord-to-systray
+    and adjust the delay as needed
+
+5. Log out and back in to confirm everything works
+
+
+

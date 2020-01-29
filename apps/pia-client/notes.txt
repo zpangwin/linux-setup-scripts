@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# get sudo prompt out of the way up front so that message displays will be cleaner
+sudo ls -acl 2>&1 >/dev/null;
+
+
+CHROME_WINDOWS_UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36";
+
+PIA_DOWNLOAD_PAGE_LINK="https://www.privateinternetaccess.com/installer/x/download_installer_linux";
+
+
+echo ''
+echo -e "Fetching archive link from Downloads page:\n\t${PIA_DOWNLOAD_PAGE_LINK}";
+RAW_HTML_SOURCE=$(/usr/bin/curl --location --user-agent "${CHROME_WINDOWS_UA}" "${PIA_DOWNLOAD_PAGE_LINK}" 2>/dev/null);
+if [[ "0" != "$?" ]]; then
+	echo "ERROR: curl returned error code of $? while accessing download URL : ${PIA_DOWNLOAD_PAGE_LINK}";
+	echo "Aborting script";
+	exit;
+fi
+if [[ "" == "${RAW_HTML_SOURCE}" ]]; then
+	echo "ERROR: RAW_HTML_SOURCE was empty; please check download URL : ${PIA_DOWNLOAD_PAGE_LINK}";
+	echo "Aborting script";
+	exit;
+fi
+
+echo '';
+echo 'Parsing download link...'
+PIA_SITE="https://www.privateinternetaccess.com";
+PIA_INSTALLER_LINK=$(echo "${RAW_HTML_SOURCE}" | /usr/bin/perl -0pe "s/>\s*</>\n</g"|grep -P 'meta.*refresh.*pia.*\.run'|/usr/bin/perl -pe 's/^.*url=([^"]+)".*$/$1/g');
+
+if [[ ${#PIA_INSTALLER_LINK} -lt 30 || ${#PIA_INSTALLER_LINK} -gt 300 || "http" != "${PIA_INSTALLER_LINK:0:4}" ]]; then
+	PIA_INSTALLER_LINK=$(echo "${RAW_HTML_SOURCE}" | /usr/bin/perl -0pe "s/>\s*</>\n</g"|grep -P "href\S*linux\S*"|grep -i 'restart'|/usr/bin/perl -pe 's/^.*href="([^"]+)".*$/$1/g');
+
+	if [[ "/" == "${PIA_INSTALLER_LINK:0:1}" ]]; then
+		PIA_INSTALLER_LINK="${PIA_SITE}${PIA_INSTALLER_LINK}";
+	fi
+
+	if [[ ${#PIA_INSTALLER_LINK} -lt 30 || ${#PIA_INSTALLER_LINK} -gt 300 || "http" != "${PIA_INSTALLER_LINK:0:4}" ]]; then
+		# dump source to temp file for debugging...
+		echo "${RAW_HTML_SOURCE}" > /tmp/pia-sh-raw-source.txt
+
+		# print error message
+		echo "";
+		echo "===========================================================================================";
+		echo "ERROR: Invalid download link value. The script may need to be updated.";
+		echo "       Displaying debug info then aborting script";
+		echo "===========================================================================================";
+		printDebugInfo;
+		exit;
+	fi
+fi
+
+echo 'Parsing version...'
+PIA_INSTALLER_VERSION=$(echo "${PIA_INSTALLER_LINK}" | sed -E 's/^.*PIA\-(classic\-)?([0-9][0-9\.]*)\.en.*$/\2/g');
+if [[ "" == "${PIA_INSTALLER_VERSION}" || "${PIA_INSTALLER_LINK}" == "${PIA_INSTALLER_VERSION}" ]]; then
+	# dump source to temp file for debugging...
+	echo "${RAW_HTML_SOURCE}" > /tmp/PIA-sh-raw-source.txt
+	echo "${CLEANED_PAGE_HTML_SOURCE}" > /tmp/PIA-sh-cleaned-source.txt
+
+	# print error message
+	echo "";
+	echo "===========================================================================================";
+	echo "ERROR: PIA version could not be identified. The script may need to be updated.";
+	echo "       Displaying debug info then aborting script";
+	echo "===========================================================================================";
+	printDebugInfo;
+	exit;
+fi
+
+if [[ ! $PIA_INSTALLER_VERSION =~ ^20[1-9][0-9]\.[0-9][0-9]$ && ! $PIA_INSTALLER_VERSION =~ ^56.*$ ]]; then
+	# dump source to temp file for debugging...
+	echo "${RAW_HTML_SOURCE}" > /tmp/PIA-sh-raw-source.txt
+	echo "${CLEANED_PAGE_HTML_SOURCE}" > /tmp/PIA-sh-cleaned-source.txt
+
+	# print error message
+	echo "";
+	echo "===========================================================================================";
+	echo "ERROR: Invalid PIA version detected. The script may need to be updated.";
+	echo "       Displaying debug info then aborting script";
+	echo "===========================================================================================";
+	echo ""
+	echo "PIA is recommended over PIA Current."
+	echo "Some issues with PIA Current have been noticed under Mint 19.x / Ubuntu 18.04:"
+	echo '  - It requires glibc v2.28, creating compatibility issues on Ubuntu 18.04/Mint 19.x'
+	echo '  - Legacy firefox addons require heavy modification to work';
+	echo ""
+	printDebugInfo;
+	exit;
+fi
+
+
+
+# <a style="color: #39b54a; text-decoration: none" href="/installer/download_installer_linux_beta">click here to restart the download</a>
+
+PIA_DOWNLOAD_PAGE_SOURCE=$(curl --user-agent "${CHROME_WINDOWS_UA}" "${PIA_DOWNLOAD_PAGE_LINK}" );
+
+PIA_INSTALLER_LINK="";
+
+PIA_INSTALLER_NAME="";

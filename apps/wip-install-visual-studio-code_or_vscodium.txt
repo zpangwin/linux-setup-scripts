@@ -1,0 +1,45 @@
+
+https://itsfoss.com/vscodium/
+The source code of VS Code is open sourced under MIT license. You can access it on the GitHub. However, the installation files that Microsoft has created contain proprietary telemetry/tracking.
+
+You can disable the telemetry in VS Code but can you trust Microsoft completely? If the answer is no, then what are your options?
+
+You can build it from the source code and thus keep everything open source. But installing from source code is not always the prettiest option specially in today’s world when we are so used to of having binaries.
+
+Another option is to use VSCodium!
+==============================================================================================
+VSCodium: 100% open source form of Visual Studio Code
+==============================================================================================
+#First, add the GPG key of the repository:
+wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | sudo apt-key add -
+
+#And then add the repository itself:
+echo 'deb https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/repos/debs/ vscodium main' | sudo tee --append /etc/apt/sources.list.d/vscodium.list
+
+#Now update your system and install VSCodium:
+sudo apt update && sudo apt install -y vscodium
+
+
+==============================================================================================
+IF YOU DON'T CARE ABOUT PRIVACY AND STILL WANT TO INSTALL VISUAL STUDIO CODE ITSELF:
+==============================================================================================
+https://code.visualstudio.com/docs/setup/linux
+
+Debian and Ubuntu based distributions
+-> installing the .deb package will automatically install the apt repository and signing key to enable auto-updating using the system's package manager
+
+------------------------------
+OR you can do this manually:
+------------------------------
+curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+sudo install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
+sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+
+#Then update the package cache and install the package using:
+sudo apt-get install apt-transport-https
+sudo apt-get update
+sudo apt-get install code # or code-insiders
+
+#Follow the instructions here for disabling the telemetry (page shows VS Code settings as an alternative to vscodium):
+https://itsfoss.com/vscodium/
+
