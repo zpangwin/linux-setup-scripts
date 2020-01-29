@@ -1,0 +1,18 @@
+[core]
+	autocrlf = false
+[merge]
+	tool = kdiff3
+[diff]
+	guitool = kdiff3
+[difftool "kdiff3"]
+	path = /usr/bin/kdiff3
+[alias]
+	stat = status
+	last = log --format=\"%H  %cn  %cd  %s\" --date=format:\"%Y-%m-%d %H:%M:%S\" -1 HEAD
+	st = status
+	cko = checkout
+	br = branch
+	com = commit
+	l = log --format=\"%H  %cn  %cd  %s\" --date=format:\"%Y-%m-%d %H:%M:%S\"
+[log]
+	date = local
