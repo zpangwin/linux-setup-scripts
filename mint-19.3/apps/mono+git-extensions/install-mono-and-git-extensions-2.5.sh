@@ -181,6 +181,12 @@ rm -R "${ICONS_DIR}" 2>/dev/null;
 #handle extracting the mono installation zip...
 echo -e "\nSetting up Git Extensions wrapper scripts...";
 GIT_EXT_INSTALL_DIR="/opt/GitExtensions";
+
+# if old install exists, then create backup but get it out of the way
+if [[ -d "${GIT_EXT_INSTALL_DIR}" ]]; then
+	sudo mv "${GIT_EXT_INSTALL_DIR}" "${GIT_EXT_INSTALL_DIR}".$(date +'%Y%m%d%H%M').bak
+fi
+
 sudo mv "${EXTRACTED_MONO_DIR}/GitExtensions/" "${GIT_EXT_INSTALL_DIR}/";
 sudo mv "${GITEXT_MONO_ZIP}" "${GIT_EXT_INSTALL_DIR}/../${GITEXT_MONO_ZIP}";
 sudo mv "${GITEXT_SRC_ZIP}" "${GIT_EXT_INSTALL_DIR}/../${GITEXT_SRC_ZIP}";
@@ -193,14 +199,14 @@ sudo mv "${GIT_EXT_SH}" "${GIT_EXT_SH}.orig";
 #create a new one that uses the full path to GitExtensions.exe
 sudo touch "${GIT_EXT_SH}";
 echo '#!/bin/bash' | sudo tee -a "${GIT_EXT_SH}" >/dev/null;
-echo -e "mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" \"\$@\" &\n\n" | sudo tee -a "${GIT_EXT_SH}" >/dev/null;
+echo -e "/usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" \"\$@\" &\n\n" | sudo tee -a "${GIT_EXT_SH}" >/dev/null;
 sudo chmod 755 "${GIT_EXT_SH}";
 
 #create a symlink
 sudo ln -fs "${GIT_EXT_SH}" "/usr/bin/gitext";
 
 #Make sure scripts called by nemo actions are present
-GITEXT_SCRIPTS_DIR="${GIT_EXT_INSTALL_DIR}/nemo-scripts"
+GITEXT_SCRIPTS_DIR="/usr/share/nemo/scripts"
 
 mkdir -p "${GITEXT_SCRIPTS_DIR}" 2>/dev/null;
 
@@ -271,7 +277,7 @@ echo '#!/bin/bash' | sudo tee -a "${BROWSE_SH}" >/dev/null;
 echo "gitTopLevelDir=\$(\"${WHICH_GIT_TOP_DIR_SH}\" \"\$1\");" | sudo tee -a "${BROWSE_SH}" >/dev/null;
 echo 'if [[ "" != "${gitTopLevelDir}" ]]; then' | sudo tee -a "${BROWSE_SH}" >/dev/null;
 echo '	cd "${gitTopLevelDir}";' | sudo tee -a "${BROWSE_SH}" >/dev/null;
-echo '    /usr/bin/mono "/opt/GitExtensions/GitExtensions.exe" browse &' | sudo tee -a "${BROWSE_SH}" >/dev/null;
+echo "    /usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" browse &" | sudo tee -a "${BROWSE_SH}" >/dev/null;
 echo 'fi' | sudo tee -a "${BROWSE_SH}" >/dev/null;
 
 sudo touch "${COMMIT_SH}";
@@ -279,7 +285,7 @@ echo '#!/bin/bash' | sudo tee -a "${COMMIT_SH}" >/dev/null;
 echo "gitTopLevelDir=\$(\"${WHICH_GIT_TOP_DIR_SH}\" \"\$1\");" | sudo tee -a "${COMMIT_SH}" >/dev/null;
 echo 'if [[ "" != "${gitTopLevelDir}" ]]; then' | sudo tee -a "${COMMIT_SH}" >/dev/null;
 echo '	cd "${gitTopLevelDir}";' | sudo tee -a "${COMMIT_SH}" >/dev/null;
-echo '    /usr/bin/mono "/opt/GitExtensions/GitExtensions.exe" commit &' | sudo tee -a "${COMMIT_SH}" >/dev/null;
+echo "    /usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" commit &" | sudo tee -a "${COMMIT_SH}" >/dev/null;
 echo 'fi' | sudo tee -a "${COMMIT_SH}" >/dev/null;
 
 sudo touch "${CLONE_SH}";
@@ -291,7 +297,7 @@ echo '#!/bin/bash' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
 echo "gitTopLevelDir=\$(\"${WHICH_GIT_TOP_DIR_SH}\" \"\$1\");" | sudo tee -a "${FILEHIST_SH}" >/dev/null;
 echo 'if [[ "" != "${gitTopLevelDir}" ]]; then' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
 echo '	cd "${gitTopLevelDir}";' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-echo '    /usr/bin/mono "/opt/GitExtensions/GitExtensions.exe" filehistory "$1" &' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
+echo "    /usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" filehistory \"\$1\" &" | sudo tee -a "${FILEHIST_SH}" >/dev/null;
 echo 'fi' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
 
 #set script perms
@@ -319,7 +325,7 @@ echo '[Nemo Action]' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
 echo 'Name=GitExt Browse' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
 echo 'Comment=GitExt Browse' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
 echo "Exec=\"${BROWSE_SH}\" %F" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;/opt/GitExtensions/gitext.sh;${BROWSE_SH};" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
+echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${BROWSE_SH};" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
 echo 'Icon-Name=git-ext-browse' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
 echo 'Selection=Any' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
 echo 'Extensions=any;' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
@@ -331,7 +337,7 @@ echo '[Nemo Action]' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Name=GitExt Commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Comment=GitExt Commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo "Exec=\"${COMMIT_SH}\" %F" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;/opt/GitExtensions/gitext.sh;${COMMIT_SH};" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
+echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${COMMIT_SH};" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Icon-Name=git-ext-commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Selection=Any' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Extensions=any;' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
@@ -343,7 +349,7 @@ echo '[Nemo Action]' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Name=GitExt Clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Comment=GitExt Clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo "Exec=\"${CLONE_SH}\" %F" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;/opt/GitExtensions/gitext.sh;${CLONE_SH};" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
+echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${CLONE_SH};" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Icon-Name=git-ext-clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Selection=none' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Extensions=none;' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
@@ -355,7 +361,7 @@ echo '[Nemo Action]' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
 echo 'Name=GitExt File History' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
 echo 'Comment=GitExt File History' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
 echo "Exec=\"${FILEHIST_SH}\" %F" | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;/opt/GitExtensions/gitext.sh;${COMMIT_SH};" | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
+echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${COMMIT_SH};" | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
 echo 'Icon-Name=git-ext-file-history' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
 echo 'Selection=s' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
 echo 'Extensions=nodirs;' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
@@ -371,4 +377,6 @@ sudo chmod 644 "${FILEHIST_ACTION}";
 
 #Get rid of plugins which cause issues in Linux
 rm "${GIT_EXT_INSTALL_DIR}/Plugins/Bitbucket.dll" 2>/dev/null
+
+
 
