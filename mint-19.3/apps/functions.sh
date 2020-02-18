@@ -41,6 +41,10 @@ function addPPAIfNotInSources () {
 }
 
 function addCustomSource() {
+	# get sudo prompt out of way up-front so that it
+	# doesn't appear in the middle of other output
+	sudo ls -acl 2>/dev/null >/dev/null;
+
 	local useLogFile="false";
 	local logFile="/dev/null";
 	if [[ "" != "${INSTALL_LOG}" ]]; then
@@ -78,26 +82,46 @@ function addCustomSource() {
 		fi
 
 		if [[ 'true' != "${hasMissingOrInvalidInfo}" ]]; then
+			echo "Validating repo details";
 			#check if more than 2 args
 			arg3="$3";
 			arg4="$4";
+			arg5="$5";
+			arg6="$6";
 			if [[ 'deb' == "${repoDetails}" ]]; then
+				echo "Found repoDetails as multiple arguments; attempting to combine ...";
+
 				if [[ "" == "${arg3}" || "" == "${arg4}" ]]; then
 					hasMissingOrInvalidInfo="true";
-					errorMessage="missing/invalid repo details (only 'deb' but not server/path)";
+					errorMessage="missing/invalid repo details (only 'deb' but not server/path). Try quoting args after file name?";
 
 				elif [[ ! $arg3 =~ ^https?:\/\/[A-Za-z0-9][-A-Za-z0-9.]*.*$ ]]; then
 					hasMissingOrInvalidInfo="true";
-					errorMessage="missing/invalid repo details (repo server) for '${arg3}'";
+					errorMessage="missing/invalid repo details (repo server) for '${arg3}'. Try quoting args after file name?";
+
+				elif [[ "" != "${arg6}" ]]; then
+					repoDetails="deb $arg3 $arg4 $arg6";
+
+				elif [[ "" != "${arg5}" ]]; then
+					repoDetails="deb $arg3 $arg4 $arg5";
 
 				else
 					repoDetails="deb $arg3 $arg4";
 				fi
+			fi
 
-			elif [[ $repoDetails =~ ^https?:\/\/[A-Za-z0-9][-A-Za-z0-9.]*[^\ ]*\ [^\ ]*$ ]]; then
+			# Check known formats
+			architecturelessRepoDetails=$(echo "$repoDetails"|sed 's/^\([deb ]*\)*\[arch=[A-Za-z0-9][-A-Za-z0-9.]*\] /\1/');
+			echo "architecturelessRepoDetails: '${architecturelessRepoDetails}'";
+			if [[ $architecturelessRepoDetails =~ ^deb\ https?:\/\/[A-Za-z0-9][-A-Za-z0-9.]*[^\ ]*\ [^\ ]*\ ?[^\ ]*$ ]]; then
+				echo "OK: repo details appear to be valid.";
+				repoDetails="$repoDetails";
+
+			elif [[ $architecturelessRepoDetails =~ ^https?:\/\/[A-Za-z0-9][-A-Za-z0-9.*[^\ ]*\ [^\ ]*\ ?[^\ ]*$ ]]; then
+				echo "OK: repo details appear to be valid but does not start with 'deb'; prepending ...";
 				repoDetails="deb $repoDetails";
 
-			elif [[ ! $repoDetails =~ ^deb\ https?:\/\/[A-Za-z0-9][-A-Za-z0-9.]*[^\ ]*\ [^\ ]*$ ]]; then
+			else
 				hasMissingOrInvalidInfo="true";
 				errorMessage="invalid/unsupported repo details format for '${repoDetails}'";
 			fi
@@ -137,20 +161,29 @@ function addCustomSource() {
 	if [[ -f "/etc/apt/sources.list.d/${repoName}.list" ]]; then
 		echo "addCustomSource(): Source ${repoName} already defined; skipping..." | tee -a "${logFile}";
 		return;
+    else
+        echo "  -> PASSED";
 	fi
 
 	#check if details already exist...
-	echo "Checking if repo details not already defined..." | tee -a "${logFile}";
-	local existingRepoDetsCount=$(grep -R "${repoDetails}"|wc -l);
+	echo "Checking if repo details not already defined in another file ..." | tee -a "${logFile}";
+	local existingRepoDetsCount=$(sudo grep -Ri "${repoDetails}" /etc/apt/sources.list.d/*.list 2>/dev/null|wc -l);
 	if [[ "0" != "${existingRepoDetsCount}" ]]; then
 		echo "addCustomSource(): Repo details already defined for '${repoDetails}'; skipping..." | tee -a "${logFile}";
+		echo "Existing matches:" | tee -a "${logFile}";
+		echo "" | tee -a "${logFile}";
+        sudo grep -RHni "${repoDetails}" /etc/apt/sources.list.d/*.list 2>/dev/null | tee -a "${logFile}";
 		return;
+    else
+        echo "  -> PASSED";
 	fi
 
 	# add new source
+	echo "Adding source as '${repoName}.list' ..." | tee -a "${logFile}";
 	echo "${repoDetails}" | sudo tee "/etc/apt/sources.list.d/${repoName}.list" >/dev/null;
 
 	# safety
-	sudo chown root:root "/etc/apt/sources.list.d/${repoName}.list";
-	sudo chmod 644 "/etc/apt/sources.list.d/${repoName}.list";
+	sudo chown root:root /etc/apt/sources.list.d/*.list;
+	sudo chmod 644 /etc/apt/sources.list.d/*.list;
+
 }
