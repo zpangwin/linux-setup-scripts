@@ -11,10 +11,10 @@ function printDebugInfo () {
 	echo "   CHROME_WINDOWS_UA=\"${CHROME_WINDOWS_UA}\";";
 	echo "   RAW_HTML_SOURCE=\$(/usr/bin/curl --location --user-agent \"\${CHROME_WINDOWS_UA}\" \"\${WATERFOX_DOWNLOAD_PAGE}\" 2>/dev/null);";
 	echo "   echo \"raw page source size is: \${#RAW_HTML_SOURCE}\";";
-	echo "   CLEANED_PAGE_HTML_SOURCE=\$(echo \"\${RAW_HTML_SOURCE}\"|sed -E 's/(<h2>)/\n\1/g'|sed '/<h2>Waterfox Current<\/h2>/Q');";
+	echo "   CLEANED_PAGE_HTML_SOURCE=\$(echo \"\${RAW_HTML_SOURCE}\"|/usr/bin/perl -0pe \"s/>\\s*</>\\n</g\"|grep -Pi '<a.*classic.*linux');";
 	echo "   echo \"cleaned page source size is: \${#CLEANED_PAGE_HTML_SOURCE}\";";
 	echo "   PAGE_SOURCE_SIZE=\$(/usr/bin/curl --location --user-agent \"\${CHROME_WINDOWS_UA}\" \"\${WATERFOX_DOWNLOAD_PAGE}\" 2>/dev/null);";
-	echo "   WATERFOX_TAR_DOWNLOAD_LINK=\$(echo \"\${CLEANED_PAGE_HTML_SOURCE}\" | /usr/bin/perl -0pe \"s/>\\s*</>\\n</g\" | grep -P \"href\\S*en-US.linux\\S*.tar.bz2\" | grep -Pvi '(aurora|alpha|waterfox\-[6-9]\\d|waterfox\-[\\d\\.]+a[\\d\\.]*\\.en\\-US.linux\\-x86_64.tar.bz2)' | /usr/bin/perl -pe 's/^.*href=\"([^\"]+)\".*$/\$1/g' | /usr/bin/sort -u | /usr/bin/tail -n 1);";
+	echo "   WATERFOX_TAR_DOWNLOAD_LINK=$(echo \"\${CLEANED_PAGE_HTML_SOURCE}\"| grep -P \"href\\S*en-US.linux\\S*.tar.bz2\" | grep -Pvi '(aurora|alpha|waterfox\\-[6-9]\\d|waterfox\\-[\\d\\.]+a[\\d\\.]*\\.en\\-US.linux\\-x86_64.tar.bz2)' | /usr/bin/perl -pe 's/^.*href=\"([^\"]+)\".*\$/\$1/g' | /usr/bin/sort -u | /usr/bin/tail -n 1);";
 	echo "   echo \"download link size is: \${#WATERFOX_TAR_DOWNLOAD_LINK}\";";
 	echo "   echo \"\${RAW_HTML_SOURCE}\" > /tmp/waterfox-cli-raw-source.txt";
 	echo "   echo \"\${CLEANED_PAGE_HTML_SOURCE}\" > /tmp/waterfox-cli-cleaned-source.txt";
@@ -128,7 +128,7 @@ fi
 
 #Create the parent dir, if it doesn't already exist
 if [[ ! -e "${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}" ]]; then
-	mkdir -p "${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}";
+	mkdir -p "${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}" 2>/dev/null;
 fi
 if [[ ! -e "${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}" ]]; then
 	echo "ERROR: Cannot find or create parent dir '${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}'";
@@ -155,12 +155,12 @@ echo 'Cleaning page source to only show Waterfox Classic versions...';
 
 # Remove all lines after and including the line with 'Waterfox Current'
 RAW_PAGE_HTML_SIZE="${#RAW_HTML_SOURCE}";
-CLEANED_PAGE_HTML_SOURCE=$(echo "${RAW_HTML_SOURCE}"|sed -E 's/(<h2>)/\n\1/g'|sed '/<h2>Waterfox Current<\/h2>/Q');
+CLEANED_PAGE_HTML_SOURCE=$(echo "${RAW_HTML_SOURCE}"|/usr/bin/perl -0pe "s/>\s*</>\n</g"|grep -Pi '<a.*classic.*linux');
 CLEANED_PAGE_HTML_SIZE="${#CLEANED_PAGE_HTML_SOURCE}";
 
 echo '';
 echo 'Parsing download link...'
-WATERFOX_TAR_DOWNLOAD_LINK=$(echo "${CLEANED_PAGE_HTML_SOURCE}" | /usr/bin/perl -0pe "s/>\s*</>\n</g" | grep -P "href\S*en-US.linux\S*.tar.bz2" | grep -Pvi '(aurora|alpha|waterfox\-[6-9]\d|waterfox\-[\d\.]+a[\d\.]*\.en\-US.linux\-x86_64.tar.bz2)' | /usr/bin/perl -pe 's/^.*href="([^"]+)".*$/$1/g' | /usr/bin/sort -u | /usr/bin/tail -n 1);
+WATERFOX_TAR_DOWNLOAD_LINK=$(echo "${CLEANED_PAGE_HTML_SOURCE}"| grep -P "href\S*en-US.linux\S*.tar.bz2" | grep -Pvi '(aurora|alpha|waterfox\-[6-9]\d|waterfox\-[\d\.]+a[\d\.]*\.en\-US.linux\-x86_64.tar.bz2)' | /usr/bin/perl -pe 's/^.*href="([^"]+)".*$/$1/g' | /usr/bin/sort -u | /usr/bin/tail -n 1);
 if [[ ${#WATERFOX_TAR_DOWNLOAD_LINK} -lt 30 || ${#WATERFOX_TAR_DOWNLOAD_LINK} -gt 300 || "http" != "${WATERFOX_TAR_DOWNLOAD_LINK:0:4}" ]]; then
 	# dump source to temp file for debugging...
 	echo "${RAW_HTML_SOURCE}" > /tmp/waterfox-sh-raw-source.txt
