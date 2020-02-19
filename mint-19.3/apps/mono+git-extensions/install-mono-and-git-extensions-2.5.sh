@@ -342,7 +342,7 @@ echo 'Icon-Name=git-ext-commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Selection=Any' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Extensions=any;' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 echo 'Quote=double' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo "Conditions=exec ${IS_GIT_DIR_SH} %F" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
+echo "Conditions=exec ${IS_GIT_DIR_SH} %F" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
 
 sudo touch "${CLONE_ACTION}";
 echo '[Nemo Action]' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
@@ -354,7 +354,7 @@ echo 'Icon-Name=git-ext-clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Selection=none' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Extensions=none;' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 echo 'Quote=double' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo "Conditions=exec ${IS_NON_GIT_DIR_SH} %F" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
+echo "Conditions=exec ${IS_NON_GIT_DIR_SH} %F" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
 
 sudo touch "${FILEHIST_ACTION}";
 echo '[Nemo Action]' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
