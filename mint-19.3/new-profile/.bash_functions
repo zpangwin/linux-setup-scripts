@@ -258,6 +258,24 @@ function printBatteryPercentages() {
 
     upower --dump | perl -0 -pe 's/(?:^|nn)Daemon:.*?nn/n/gsm' | perl -ne 'if ( /^$/ ) { print "n" } elsif ( /^.*model:[ t]+(.*)$/ ) { print "$1: " } elsif ( /^.*percentage:[ t]+(.*)$/ ) { print "$1" }' | sed '/^$/d';
 }
+function unmuteAllAlsaAudioControls() {
+    local INITIAL_IFS="$IFS";
+    IFS='';
+    amixer scontrols | sed "s|[^']*('[^']*').*|1|g" |
+    while read control_name
+    do
+        if [[ "'Auto-Mute Mode'" ==  "$control_name" || "'Input Source'" ==  "$control_name" ]]; then
+            #Skip these ones -- not really valid sources
+            continue;
+        fi
+        #echo "control name: $control_name";
+        amixer -q set "$control_name" 100% unmute;
+        if [[ "0" != "$?" ]]; then
+            echo "Error unmuting control name: $control_name";
+        fi
+    done
+    IFS="$INITIAL_IFS";
+}
 
 #==========================================================================
 # End Section: Hardware
