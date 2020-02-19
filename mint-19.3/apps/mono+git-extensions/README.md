@@ -25,3 +25,17 @@ After installation, you should be able to open Nemo and:
 * Right-click on file under a git repo and see "GitExt FileHistory"
 
 If you are on an older version of Linux Mint (e.g. earlier than v19.3) or using an older version of Nemo (earlier than v4.4.2) then the Nemo actions may behave differently for you. The actions rely on a new "Conditions" feature (described [here](https://github.com/linuxmint/nemo/pull/2056)) that allows actions to display conditionally. On older versions where this is not present, you can just remove the "Conditions" property from the actions file to force it to always display (e.g. don't consider whether you are in a git repo or not).
+
+
+To use this script:
+
+```
+git clone https://github.com/zpangwin/linux-setup-scripts.git;
+find linux-setup-scripts -type f -iname '*.sh' -exec chmod a+rx "{}" \;;
+cd linux-setup-scripts/mint-19.3/apps/mono+git-extensions
+./install-mono-and-git-extensions-2.5.sh
+```
+
+Last tested : Feb 2020 with Git Extensions 2.51.05
+Last status : working (Mint 19.3 Cinnamon x64)
+
