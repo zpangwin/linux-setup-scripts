@@ -14,4 +14,3 @@ if [[ "0" != "$ismetadir" ]]; then
 	exit 502;
 fi
 git -C "$path" rev-parse;
-
