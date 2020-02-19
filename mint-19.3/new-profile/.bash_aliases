@@ -378,6 +378,35 @@ alias vpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.
 #====================================================
 # Multimedia related commands
 #====================================================
+alias 2mp3='extractMp3AudioFromVideoFile'
+alias tomp3='extractMp3AudioFromVideoFile'
+alias flv2mp3='extractMp3AudioFromVideoFile'
+alias flvtomp3='extractMp3AudioFromVideoFile'
+alias mp42mp3='extractMp3AudioFromVideoFile'
+alias mp4tomp3='extractMp3AudioFromVideoFile'
+alias vid2mp3='extractMp3AudioFromVideoFile'
+alias vidtomp3='extractMp3AudioFromVideoFile'
+alias extractaudio='extractMp3AudioFromVideoFile'
+alias extractmp3='extractMp3AudioFromVideoFile'
+
+alias allflvtomp3='extractMp3AudioFromAllFlvInCurrentDir'
+alias allmp4tomp3='extractMp3AudioFromAllMp4InCurrentDir'
+alias allvidstomp3='extractMp3AudioFromAllVideosInCurrentDir'
+
+alias 2ogg='extractOggAudioFromVideoFile'
+alias toogg='extractOggAudioFromVideoFile'
+alias mp42ogg='extractOggAudioFromVideoFile'
+alias mp4toogg='extractOggAudioFromVideoFile'
+alias allmp4toogg='extractOggAudioFromAllMp4InCurrentDir'
+
+alias levelmp3='normalizeAllMp3InCurrentDir'
+alias normalmp3='normalizeAllMp3InCurrentDir'
+alias normalizemp3='normalizeAllMp3InCurrentDir'
+
+alias levelogg='normalizeAllOggInCurrentDir'
+alias normalogg='normalizeAllOggInCurrentDir'
+alias normalizeogg='normalizeAllOggInCurrentDir'
+
 alias ytdl="youtube-dl -f 'bestvideo[ext=mkv][height <=? 480]+bestaudio/bestvideo[ext=mp4][height <=? 480]+bestaudio/bestvideo+bestaudio/best' -o '%(title)s.%(ext)s' --restrict-filenames --quiet --no-warnings --ignore-errors --prefer-free-formats "
 alias ytv="youtube-dl -f 'bestvideo[ext=mkv][height <=? 480]+bestaudio/bestvideo[ext=mp4][height <=? 480]+bestaudio/bestvideo+bestaudio/best' -o '%(title)s.%(ext)s' --restrict-filenames --quiet --no-warnings --ignore-errors --prefer-free-formats "
 alias yt="youtube-dl -f 'bestvideo[ext=mkv][height <=? 480]+bestaudio/bestvideo[ext=mp4][height <=? 480]+bestaudio/bestvideo+bestaudio/best' -o '%(title)s.%(ext)s' --restrict-filenames --quiet --no-warnings --ignore-errors --prefer-free-formats "

@@ -211,6 +211,86 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 # Start Section: Media files
 #==========================================================================
+function extractMp3AudioFromVideoFile () {
+    local videofile="$1";
+    local bitrate="$2";
+    local defbitrate="160k";
+    if [[ "" == "$2" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
+        bitrate="$defbitrate";
+    fi
+    local filenameonly="${videofile%.*}"
+    ffmpeg -i "${videofile}" -vn -acodec libmp3lame -ac 2 -ab $bitrate -ar 48000 "${filenameonly}.mp3"
+}
+function extractOggAudioFromVideoFile () {
+    local videofile="$1";
+    local filenameonly="${videofile%.*}"
+    ffmpeg -i "${videofile}" -vn -acodec libvorbis "${filenameonly}.ogg"
+}
+function extractMp3AudioFromAllVideosInCurrentDir () {
+    local bitrate="$1";
+    local defbitrate="160k";
+    if [[ "" == "$1" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
+        bitrate="$defbitrate";
+    fi
+
+    for file in *.{3gp,arf,asf,avi,f4v,flv,h264,m1v,m2v,m4v,mkv,mov,mp4,mp4v,mpg,mpeg,ogm,ogv,ogx,qt,rm,rv,wmv} ; do
+        if [[ "*" == "${file:0:1}" ]]; then
+            continue;
+        fi
+        #no clobber; skip any that already exist
+        file_without_ext="${file%.*}";
+        if [[ ! -f "${file_without_ext}.mp3" ]]; then
+            ffmpeg -i "$file" -vn -acodec libmp3lame -ac 2 -ab $bitrate -ar 48000 "${file_without_ext}.mp3"
+        fi
+    done
+}
+function extractMp3AudioFromAllMp4InCurrentDir () {
+    local bitrate="$1";
+    local defbitrate="160k";
+    if [[ "" == "$1" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
+        bitrate="$defbitrate";
+    fi
+
+    for vid in *.mp4; do
+        echo "vid is: $vid"
+        #skip any that already exist
+        if [[ ! -f "${vid%.mp4}.mp3" ]]; then
+            ffmpeg -i "$vid" -vn -acodec libmp3lame -ac 2 -ab $bitrate -ar 48000 "${vid%.mp4}.mp3"
+        fi
+    done
+}
+function extractMp3AudioFromAllFlvInCurrentDir () {
+    local bitrate="$1";
+    local defbitrate="160k";
+    if [[ "" == "$1" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
+        bitrate="$defbitrate";
+    fi
+
+    for vid in *.flv; do
+        #skip any that already exist
+        if [[ ! -f "${vid%.flv}.mp3" ]]; then
+            ffmpeg -i "$vid" -vn -acodec libmp3lame -ac 2 -ab $bitrate -ar 48000 "${vid%.flv}.mp3"
+        fi
+    done
+}
+function extractOggAudioFromAllMp4InCurrentDir () {
+    for vid in *.mp4; do
+        #skip any that already exist
+        if [[ ! -f "${vid%.mp4}.ogg" ]]; then
+            ffmpeg -i "$vid" -vn -acodec libvorbis "${vid%.mp4}.ogg";
+        fi
+    done
+}
+function normalizeAllOggInCurrentDir () {
+    for audio_file in *.ogg; do
+        normalize-ogg "${audio_file}";
+    done
+}
+function normalizeAllMp3InCurrentDir () {
+    for audio_file in *.mp3; do
+        normalize-mp3 "${audio_file}";
+    done
+}
 
 #==========================================================================
 # End Section: Media files
