@@ -26,7 +26,7 @@ addCustomSource winehq 'deb http://dl.winehq.org/wine-builds/ubuntu/ bionic main
 addCustomSource libfaudio "deb ${LIBFAUDIO_REPO}/ ./";
 
 # update local apt cache
-sudo apt update;
+sudo apt update 2>/dev/null >/dev/null;
 
 # fix libfaudio issue (still needed in Mint 19.x)
 # if unsure, try running 'sudp apt install --install-recommends winehq-staging'
