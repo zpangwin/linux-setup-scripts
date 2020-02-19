@@ -278,11 +278,13 @@ function openGitExtensionsBrowse() {
     #launch background process
     (cd "$1"; /usr/bin/gitext >/dev/null 2>/dev/null;)&
 }
+function openFileInTextEditor() {
+    openFileInSublime "$1";
+}
 function openFileInSublime() {
     #launch background process
     (/usr/bin/sublime "$1" >/dev/null 2>/dev/null;)&
 }
-
 function openFileInXed() {
     #launch background process
     (/usr/bin/xed "$1" >/dev/null 2>/dev/null;)&
