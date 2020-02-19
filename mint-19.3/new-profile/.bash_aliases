@@ -248,6 +248,41 @@ alias xupsidedown='xrandr --orientation inverted'
 #====================================================
 # Wine related commands
 #====================================================
+alias mkwine32='createNewWine32Prefix'
+alias mkwine32pfx='createNewWine32Prefix'
+alias mkwinepfx32='createNewWine32Prefix'
+alias mkwine64='createNewWine32Prefix'
+alias mkwine64pfx='createNewWine32Prefix'
+alias mkwinepfx64='createNewWine32Prefix'
+
+alias winebase='goToWinePrefix'
+alias winetop='goToWinePrefix'
+alias winepfx='goToWinePrefix'
+alias pfx='goToWinePrefix'
+alias cdpfx='goToWinePrefix'
+alias uppfx='goToWinePrefix'
+alias pfxbase='goToWinePrefix'
+alias pfxtop='goToWinePrefix'
+
+alias wineconf='wineConfigHere'
+alias wineconfig='wineConfigHere'
+alias winecmd='wineCmdHere'
+alias winereg='wineRegeditHere'
+
+alias cmd='wineCmdHere'
+alias wcmd='wineCmdHere'
+alias reg='wineRegeditHere'
+alias wreg='wineRegeditHere'
+alias wconf='wineConfigHere'
+
+alias wt='winetricksHere'
+
+alias printpfx='printWinePrefix'
+alias whichpfx='printWinePrefix'
+alias lspfx='printWinePrefix'
+alias pwdpfx='printWinePrefix'
+alias pfxpwd='printWinePrefix'
+alias ppfx='printWinePrefix'
 
 alias listprotongames="protontricks -s '*'|grep -P '[()]'"
 alias protongames="protontricks -s '*'|grep -P '[()]'"
