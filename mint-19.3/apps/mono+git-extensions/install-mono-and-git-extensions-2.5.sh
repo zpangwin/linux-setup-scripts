@@ -206,9 +206,9 @@ sudo chmod 755 "${GIT_EXT_SH}";
 sudo ln -fs "${GIT_EXT_SH}" "/usr/bin/gitext";
 
 #Make sure scripts called by nemo actions are present
-GITEXT_SCRIPTS_DIR="/usr/share/nemo/scripts"
+GITEXT_SCRIPTS_DIR="/usr/share/nemo/actions/scripts"
 
-mkdir -p "${GITEXT_SCRIPTS_DIR}" 2>/dev/null;
+sudo mkdir -p "${GITEXT_SCRIPTS_DIR}" 2>/dev/null;
 
 IS_GIT_DIR_SH="/usr/bin/is-git-dir";
 IS_NON_GIT_DIR_SH="/usr/bin/is-non-git-dir";
