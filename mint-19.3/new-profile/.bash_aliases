@@ -159,6 +159,33 @@ alias dist-upgrade='sudo apt dist-upgrade'
 alias distro-update='sudo apt dist-upgrade'
 alias upgrade='sudo apt dist-upgrade'
 
+alias viewoptpkgs='apt-cache depends --no-pre-depends --no-depends --no-conflicts --no-breaks --no-replaces --no-enhances'
+alias viewrecommends='apt-cache depends --no-pre-depends --no-depends --no-conflicts --no-breaks --no-replaces --no-enhances --no-suggests'
+alias viewsuggests='apt-cache depends --no-pre-depends --no-depends --no-conflicts --no-breaks --no-replaces --no-enhances --no-recommends'
+
+alias appsize="previewPackageDownloadSize"
+alias pkgsize="previewPackageDownloadSize"
+
+alias upgradepreview="previewUpgradablePackagesDownloadSize";
+alias previewupgrade="previewUpgradablePackagesDownloadSize";
+alias upgradesize="previewUpgradablePackagesDownloadSize";
+
+alias upgradelist="sudo apt list --upgradable 2>&1|grep -Pv '^(Listing|WARNING|$)'|sed -E 's/^([^\/]+)\/.*$/\1/g'|tr '\n' ' '|sed -E 's/^\s+|\s+$//g'&&echo ''"
+alias listupgrade="sudo apt list --upgradable 2>&1|grep -Pv '^(Listing|WARNING|$)'|sed -E 's/^([^\/]+)\/.*$/\1/g'|tr '\n' ' '|sed -E 's/^\s+|\s+$//g'&&echo ''"
+alias listupgradable="sudo apt list --upgradable 2>&1|grep -Pv '^(Listing|WARNING|$)'|sed -E 's/^([^\/]+)\/.*$/\1/g'|tr '\n' ' '|sed -E 's/^\s+|\s+$//g'&&echo ''"
+alias upgradable="sudo apt list --upgradable 2>&1|grep -Pv '^(Listing|WARNING|$)'|sed -E 's/^([^\/]+)\/.*$/\1/g'|tr '\n' ' '|sed -E 's/^\s+|\s+$//g'&&echo ''"
+
+alias listppa='list_installed_ppa_repos'
+alias listppas='list_installed_ppa_repos'
+
+#alias isinstalled='dpkg -l'
+alias isinstall='apt list package'
+alias isappinstalled='apt list package'
+
+#alias ispackageinstalled='dpkg -l'
+alias ispackageinstalled='apt list package'
+#alias doihave='dpkg -l'
+alias doihave='apt list package'
 
 alias glibc="echo -e 'alias glibc=\"ldd --version|grep GLIBC\"\n' && ldd --version|grep --color=never GLIBC"
 
@@ -244,6 +271,18 @@ alias xbottom='xrandr --orientation inverted'
 alias xinvert='xrandr --orientation inverted'
 alias xupsidedown='xrandr --orientation inverted'
 
+#====================================================
+# Audio/Sound related commands
+#====================================================
+alias aslamixer='echo -e "\nCorrecting to ALSAmixer...\n";alsamixer'
+alias pavcontrol='echo -e "\nCorrecting to pavUcontrol...\n";pavucontrol'
+
+alias am='alsamixer'
+alias pav='pavucontrol'
+
+alias fixsound='unmuteAllAlsaAudioControls';
+alias fixvol='unmuteAllAlsaAudioControls';
+alias fixvolume='unmuteAllAlsaAudioControls';
 
 #====================================================
 # Wine related commands
@@ -358,8 +397,11 @@ alias mymac='ifconfig -a|grep "HWaddr"| perl -p -n -e "s/^.*HWaddr ([a-f\d:]+).*
 
 alias netscan="sudo ls >/dev/null;echo -e '\nip addr\t\tmac addr\t\thostname\n=================================================';ETH0=\$(ifconfig | grep -P '^e\\w+0:' | sed 's/^\\(e[A-Za-z0-9]*0\\):.*\$/\\1/g');sudo arp-scan --localnet --interface=\"\$ETH0\" | grep -P '\\d\\.\\d\\.\\d' | sort";
 
+alias netview='displayNetworkHostnames'
+
+
 alias stopsmb='sudo systemctl stop smbd; sudo systemctl stop nmbd;'
-alias startsma'sudo systemctl start smbd; sudo systemctl start nmbd;'
+alias startsmb='sudo systemctl start smbd; sudo systemctl start nmbd;'
 alias restartsmb='sudo systemctl restart smbd; sudo systemctl restart nmbd;'
 
 alias stopsamba='sudo systemctl stop smbd; sudo systemctl stop nmbd;'
@@ -374,6 +416,18 @@ alias nettype="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: 
 alias connection="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
 alias onvpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
 alias vpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
+
+#====================================================
+# Text editor related commands
+#====================================================
+alias edit="openFileInTextEditor";
+alias nemo="openNemo";
+
+alias vialias="vi ${HOME}/.bash_aliases"
+alias editalias="openFileInTextEditor ${HOME}/.bash_aliases"
+
+alias vifunc="vi ${HOME}/.bash_functions"
+alias editfunc="openFileInTextEditor ${HOME}/.bash_functions"
 
 #====================================================
 # Multimedia related commands
@@ -477,6 +531,9 @@ alias lsd='ls -Ahcl1p --group-directories-first';
 # recreate windows dir command:
 alias dir="ls -1ap --group-directories-first|grep -Pv '^\.{1,2}/?$'"
 
+#list directory with headers
+alias lsh="ls -Ahcl1p | sed '2iPerms         Ownr    Grp     Size Mod_Time     Name'";
+
 
 #python
 alias py2='python2'
@@ -484,6 +541,14 @@ alias py3='python3'
 
 alias restartcinnamon="echo -e \"Option 1. Press 'Ctrl+Alt+Esc\\nOption 2. Alt+F2, followed by R\\nOption 3. Try alias 'rcinn'\""
 alias rcinn="cinnamon --replace --clutter-display=:0 2> /dev/null &"
+
+alias subdirstolower="find . -mindepth 1 -depth -type d -not -iwholename '*.git/*' -regex '^.*/[^/]*[A-Z][^/]*\$' -exec rename 's/(.*)\\/([^\\/]*)/\$1\\/\\L\$2/' {} \\;"
+alias tolower="find . -mindepth 1 -depth -type d -not -iwholename '*.git/*' -regex '^.*/[^/]*[A-Z][^/]*\$' -exec rename 's/(.*)\\/([^\\/]*)/\$1\\/\\L\$2/' {} \\;"
+alias checksubdircase="find . -mindepth 1 -depth -type d -not -iwholename '*.git/*' -regex '^.*/[^/]*[A-Z][^/]*\$'"
+alias subdircase="find . -mindepth 1 -depth -type d -not -iwholename '*.git/*' -regex '^.*/[^/]*[A-Z][^/]*\$'"
+alias checkemptyfiles="find . -mindepth 1 -type f -not -iwholename '*.git/*' -size 0"
+alias hasemptyfiles="find . -mindepth 1 -type f -not -iwholename '*.git/*' -size 0"
+alias emptyfiles="find . -mindepth 1 -type f -not -iwholename '*.git/*' -size 0"
 
 #====================================================
 # GIT
