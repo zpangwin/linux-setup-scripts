@@ -3,6 +3,8 @@
 #====================================================
 
 alias title="setGnomeTerminalTitle";
+alias mkcd="makeThenChangeDir";
+
 
 #====================================================
 # Sudo and admin related commands
@@ -20,6 +22,44 @@ alias fucking='sudo'
 alias fuck='sudo $(history -p \!\!)'
 alias su!='sudo -i'
 alias root='sudo -i'
+
+
+alias docuser='referenceUserCommands'
+alias docusers='referenceUserCommands'
+alias docgroup='referenceGroupCommands'
+alias docgroups='referenceGroupCommands'
+
+alias helpgroup='referenceGroupCommands'
+alias helpgroups='referenceGroupCommands'
+alias helpuser='referenceUserCommands'
+alias helpusers='referenceUserCommands'
+
+alias refuser='referenceUserCommands'
+alias refusers='referenceUserCommands'
+alias refgroup='referenceGroupCommands'
+alias refgroups='referenceGroupCommands'
+
+alias userdoc='referenceUserCommands'
+alias usersdoc='referenceUserCommands'
+alias groupdoc='referenceGroupCommands'
+alias groupsdoc='referenceGroupCommands'
+
+alias userhelp='referenceUserCommands'
+alias usershelp='referenceUserCommands'
+alias grouphelp='referenceGroupCommands'
+alias groupshelp='referenceGroupCommands'
+
+alias userref='referenceUserCommands'
+alias usersref='referenceUserCommands'
+alias groupref='referenceGroupCommands'
+alias groupsref='referenceGroupCommands'
+
+alias permref='referencePermissions'
+alias permsref='referencePermissions'
+alias refperm='referencePermissions'
+alias refperms='referencePermissions'
+alias octal='referenceOctalPermissions'
+alias octalref='referenceOctalPermissions'
 
 alias hist='history'
 alias histoff="setGnomeTerminalTitle 'Incognito Window' && set +o history"
@@ -40,6 +80,27 @@ alias grepd='ls -GAhclips1 | grep -P -i -e '
 alias dgrep='ls -GAhclips1 | grep -P -i -e '
 
 alias f='find . -not -iwholename "*.git/*" '
+
+
+#====================================================
+# Config related commands
+#====================================================
+alias cgrep='gsettings list-recursively | grep -i ';
+alias fconf='gsettings list-recursively | grep -i ';
+alias grepc='gsettings list-recursively | grep -i ';
+alias grepconf='gsettings list-recursively | grep -i ';
+alias fsetting='gsettings list-recursively | grep -i ';
+alias fsettings='gsettings list-recursively | grep -i ';
+alias lsconf='gsettings list-recursively';
+alias lssettings='gsettings list-recursively';
+alias printdconf='dconf dump /';
+alias printgsettings='gsettings list-recursively';
+alias printsettings='gsettings list-recursively';
+
+alias before='gsettings list-recursively | tee /tmp/gsettings-snapshot-before.txt'
+alias after='gsettings list-recursively | tee /tmp/gsettings-snapshot-after.txt'
+alias snapshot='APPEND_TIMESTAMP=$(/bin/date +"%Y.%m.%d_%H.%M.%S");gsettings list-recursively | tee "/tmp/gsettings-snapshot-${APPEND_TIMESTAMP}".txt'
+alias diffsettings='diff /tmp/gsettings-snapshot-before.txt /tmp/gsettings-snapshot-after.txt'
 
 #====================================================
 # System Info related commands
@@ -69,6 +130,9 @@ alias debianinfo='cat /etc/debian_version'
 alias debianversion='cat /etc/debian_version'
 alias whichdebian='cat /etc/debian_version'
 
+alias batt='printBatteryPercentages'
+alias battery='printBatteryPercentages'
+
 #====================================================
 # Package related commands
 #====================================================
@@ -95,6 +159,9 @@ alias dist-upgrade='sudo apt dist-upgrade'
 alias distro-update='sudo apt dist-upgrade'
 alias upgrade='sudo apt dist-upgrade'
 
+
+alias glibc="echo -e 'alias glibc=\"ldd --version|grep GLIBC\"\n' && ldd --version|grep --color=never GLIBC"
+
 #====================================================
 # Process and Service related commands
 #====================================================
@@ -116,9 +183,65 @@ alias pg='pgrep --list-full --full --ignore-case'
 #override pgrep to automatically list all without having to specify args
 alias pgrep='pgrep --list-full'
 
+
+#====================================================
+# Wine related commands
+#====================================================
+
+alias listprotongames="protontricks -s '*'|grep -P '[()]'"
+alias protongames="protontricks -s '*'|grep -P '[()]'"
+
+#====================================================
+# Display related commands
+#====================================================
+alias resetgamma='xgamma -gamma 1.0';
+alias gam0='xgamma -gamma 1.0';
+alias fixgam='xgamma -gamma 1.0';
+alias gam++="xgamma -gamma \$(xgamma 2>& 1 | perl -pe 's/^\\D*(\\d+\\.\\d+)\\D.*\$/\"\" . (\$1 + 0.1)/ge')";
+alias gam--="xgamma -gamma \$(xgamma 2>& 1 | perl -pe 's/^\\D*(\\d+\\.\\d+)\\D.*\$/\"\" . (\$1 - 0.1)/ge')";
+alias lighten="xgamma -gamma \$(xgamma 2>& 1 | perl -pe 's/^\\D*(\\d+\\.\\d+)\\D.*\$/\"\" . (\$1 + 0.1)/ge')";
+alias lighter="xgamma -gamma \$(xgamma 2>& 1 | perl -pe 's/^\\D*(\\d+\\.\\d+)\\D.*\$/\"\" . (\$1 + 0.1)/ge')";
+alias darken="xgamma -gamma \$(xgamma 2>& 1 | perl -pe 's/^\\D*(\\d+\\.\\d+)\\D.*\$/\"\" . (\$1 - 0.1)/ge')";
+alias darker="xgamma -gamma \$(xgamma 2>& 1 | perl -pe 's/^\\D*(\\d+\\.\\d+)\\D.*\$/\"\" . (\$1 - 0.1)/ge')";
+alias toodark='xgamma -gamma 1.2';
+alias toodark2='xgamma -gamma 1.4';
+alias toolight='xgamma -gamma 0.8';
+alias toolight2='xgamma -gamma 0.6';
+alias gam09='xgamma -gamma 0.9';
+alias gam08='xgamma -gamma 0.8';
+alias gam07='xgamma -gamma 0.7';
+alias gam06='xgamma -gamma 0.6';
+alias gam05='xgamma -gamma 0.5';
+alias gam04='xgamma -gamma 0.4';
+alias gam03='xgamma -gamma 0.3';
+alias gam02='xgamma -gamma 0.2';
+alias gam01='xgamma -gamma 0.1';
+alias gam10='xgamma -gamma 1.0';
+alias gam11='xgamma -gamma 1.1';
+alias gam12='xgamma -gamma 1.2';
+alias gam13='xgamma -gamma 1.3';
+alias gam14='xgamma -gamma 1.4';
+alias gam15='xgamma -gamma 1.5';
+alias gam16='xgamma -gamma 1.6';
+alias gam17='xgamma -gamma 1.7';
+alias gam18='xgamma -gamma 1.8';
+alias gam19='xgamma -gamma 1.9';
+alias gam20='xgamma -gamma 2.0';
+alias gam21='xgamma -gamma 2.1';
+alias gam22='xgamma -gamma 2.2';
+alias gam23='xgamma -gamma 2.3';
+alias gam24='xgamma -gamma 2.4';
+alias gam25='xgamma -gamma 2.5';
+alias gam26='xgamma -gamma 2.6';
+alias gam27='xgamma -gamma 2.7';
+alias gam28='xgamma -gamma 2.8';
+alias gam29='xgamma -gamma 2.9';
+
 #====================================================
 # Archive related commands
 #====================================================
+alias 7zdir="archiveDirWith7z";
+alias zipdir="archiveDirWith7z";
 alias tardir='echo "dirname=\"foo\";";echo "tar -czf \"\${dirname}.tar.gz\" \"\${dirname}\";";'
 
 #====================================================
@@ -215,10 +338,27 @@ alias scrot60='scrot --delay 60 --silent --count ~/Pictures/Screenshots/$(date +
 alias cls='reset'
 alias nocaps="SYM_GROUP_NAME='none';setxkbmap -layout us -option;setxkbmap -layout us -option caps:\${SYM_GROUP_NAME};gsettings set org.gnome.desktop.input-sources xkb-options \"['caps:\${SYM_GROUP_NAME}']\";"
 
+alias scriptcheck='echo "Note: Actual command is shellcheck"; shellcheck'
+alias checkscript='echo "Note: Actual command is shellcheck"; shellcheck'
+
 alias c='clear'
 alias l='ls -Ahclp1 --group-directories-first'
 
 alias mkdir='mkdir -p'
+
+#list directory
+alias lsd='ls -Ahcl1p --group-directories-first';
+
+# recreate windows dir command:
+alias dir="ls -1ap --group-directories-first|grep -Pv '^\.{1,2}/?$'"
+
+
+#python
+alias py2='python2'
+alias py3='python3'
+
+alias restartcinnamon="echo -e \"Option 1. Press 'Ctrl+Alt+Esc\\nOption 2. Alt+F2, followed by R\\nOption 3. Try alias 'rcinn'\""
+alias rcinn="cinnamon --replace --clutter-display=:0 2> /dev/null &"
 
 #====================================================
 # GIT
@@ -289,6 +429,13 @@ alias gecommit='gitext commit';
 alias gepull='gitext pull --all';
 alias gestash='gitext stash';
 
+#custom git commands
+alias gstgdel="__num__git__deletions__=\$(git ls-files --deleted -- .|wc -l);if [[ \$__num__git__deletions__ -gt 0 ]]; then \$(git ls-files --deleted -- .|sed -E 's/^(.*)$/\"\\1\"/'|xargs git add); else echo 'no deletions found'; fi"
+alias stgdel="__num__git__deletions__=\$(git ls-files --deleted -- .|wc -l);if [[ \$__num__git__deletions__ -gt 0 ]]; then \$(git ls-files --deleted -- .|sed -E 's/^(.*)$/\"\\1\"/'|xargs git add); else echo 'no deletions found'; fi"
+alias stagedel="__num__git__deletions__=\$(git ls-files --deleted -- .|wc -l);if [[ \$__num__git__deletions__ -gt 0 ]]; then \$(git ls-files --deleted -- .|sed -E 's/^(.*)$/\"\\1\"/'|xargs git add); else echo 'no deletions found'; fi"
+alias stagedeletions="__num__git__deletions__=\$(git ls-files --deleted -- .|wc -l);if [[ \$__num__git__deletions__ -gt 0 ]]; then \$(git ls-files --deleted -- .|sed -E 's/^(.*)$/\"\\1\"/'|xargs git add); else echo 'no deletions found'; fi"
+alias pullall='gitUpdateAllReposUnderDir'
+
 #====================================================
 # navigation
 #====================================================
@@ -310,6 +457,8 @@ alias up6='cd ../../../../../..'
 alias up7='cd ../../../../../../..'
 alias up8='cd ../../../../../../../..'
 alias up9='cd ../../../../../../../../..'
+
+alias cdnew="makeThenChangeDir";
 
 #====================================================
 # Handle my common typos / bad spelling
@@ -334,4 +483,3 @@ alias gre[='grep'
 alias grpe='grep'
 alias greo='grep'
 alias greio='grep'
-
