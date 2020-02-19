@@ -44,7 +44,7 @@ ARG2="$2";
 WATERFOX_DOWNLOAD_PAGE="https://www.waterfox.net/releases/";
 CHROME_WINDOWS_UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36";
 WATERFOX_MENU_LINK="/usr/share/applications/waterfox-classic.desktop";
-PRIVATE_MENU_LINK="/usr/share/applications/waterfox-classic-private.desktop";
+PRIVATE_MENU_LINK="/usr/share/applications/waterfox-private.desktop";
 PRIVATE_ICON_NAME="private-browsing";
 PRIVATE_ICON_PATH="/usr/share/icons/${PRIVATE_ICON_NAME}.png";
 WATERFOX_ICON_NAME="waterfox-classic";
@@ -257,20 +257,20 @@ cd "${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}";
 sudo /usr/bin/killall -9 waterfox 2>/dev/null;
 
 #Backup existing installation
-WATERFOX_INSTALL_DIR="${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}/waterfox";
-WATERFOX_CLASSIC_INSTALL_DIR="${WATERFOX_INSTALL_DIR}-classic";
+WATERFOX_CLASSIC_INSTALL_DIR="${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}/waterfox-classic";
 
-WATERFOX_ARCHIVE_NAME="waterfox-installation-backup.7z";
+BACKUP_TS=$(date +'%Y%m%d%H%M');
+WATERFOX_ARCHIVE_NAME="waterfox-classic-backup-${BACKUP_TS}.7z";
 WATERFOX_INSTALL_BAK="${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}/${WATERFOX_ARCHIVE_NAME}";
 
-if [[ "true" != "${SKIP_BACKUP}" && -e "${WATERFOX_INSTALL_DIR}" ]]; then
+if [[ "true" != "${SKIP_BACKUP}" && -e "${WATERFOX_CLASSIC_INSTALL_DIR}" ]]; then
 	if [[ -e "${WATERFOX_INSTALL_BAK}" ]]; then
 		sudo rm "${WATERFOX_INSTALL_BAK}" 2>/dev/null;
 	fi
 
 	echo '';
 	echo "Creating backup of current install to: ${WATERFOX_INSTALL_BAK}  ... ";
-	sudo /usr/bin/7z a -t7z -m0=lzma2 -mx=9 -md=32m -ms=on "${WATERFOX_INSTALL_BAK}" "${WATERFOX_INSTALL_DIR}" >/dev/null 2>/dev/null;
+	sudo /usr/bin/7z a -t7z -m0=lzma2 -mx=9 -md=32m -ms=on "${WATERFOX_INSTALL_BAK}" "${WATERFOX_CLASSIC_INSTALL_DIR}" >/dev/null 2>/dev/null;
 	if [[ ! -e "${WATERFOX_INSTALL_BAK}" && "true" != "${FORCE_INSTALL}" ]]; then
 		echo "ERROR: Failed to backup existing installation folder";
 		echo "The script may need to be updated.";
@@ -299,22 +299,17 @@ if [[ "0" == "${FILE_SIZE_KB}" ]]; then
 fi
 
 #If successful and if not first install, then delete the old install
-if [[ -e "${WATERFOX_INSTALL_DIR}" ]]; then
+if [[ -e "${WATERFOX_CLASSIC_INSTALL_DIR}" ]]; then
 	echo "Removing old install folder (see backup for archived copy)..."
-	sudo rm -r "${WATERFOX_INSTALL_DIR}";
+	sudo rm -r "${WATERFOX_CLASSIC_INSTALL_DIR}";
 fi
 
 #Finally, extract the new file to the parent folder
 echo ''
-echo "Extracting 'waterfox' folder to ${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO} ...";
+echo "Extracting 'waterfox-classic' folder to ${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO} ...";
 sudo tar -xvjf "${OUTPUT_FILEPATH}" -C "${PARENT_DIR_WHERE_WE_WILL_EXTRACT_TO}" >/dev/null 2>/dev/null;
 
-if [[ ! -e "${WATERFOX_INSTALL_DIR}" && -e "${WATERFOX_CLASSIC_INSTALL_DIR}" ]]; then
-	sudo ln -s "${WATERFOX_CLASSIC_INSTALL_DIR}" "${WATERFOX_INSTALL_DIR}";
-	WATERFOX_INSTALL_DIR="${WATERFOX_CLASSIC_INSTALL_DIR}";
-fi
-
-if [[ ! -e "${WATERFOX_INSTALL_DIR}" ]]; then
+if [[ ! -e "${WATERFOX_CLASSIC_INSTALL_DIR}" ]]; then
 	echo "ERROR: Failed to extract archive. Please resolve manually.";
 else
 	#Move the downloaded archive to the local archives folder
@@ -332,7 +327,7 @@ fi
 
 # On successful install...
 echo "Checking for successful install...";
-echo "   WATERFOX_INSTALL_DIR: '${WATERFOX_INSTALL_DIR}'";
+echo "   WATERFOX_CLASSIC_INSTALL_DIR: '${WATERFOX_CLASSIC_INSTALL_DIR}'";
 echo "   WATERFOX_ICON_PATH:   '${WATERFOX_ICON_PATH}'";
 echo "   PRIVATE_ICON_PATH:    '${PRIVATE_ICON_PATH}'";
 echo "   WATERFOX_MENU_LINK:   '${WATERFOX_MENU_LINK}'";
@@ -340,12 +335,13 @@ echo "   PRIVATE_MENU_LINK:    '${PRIVATE_MENU_LINK}'";
 
 if [[ -e "${WATERFOX_INSTALL_DIR}/waterfox" ]]; then
 	# Make sure system link exists / that its pointing to the correct locaton
-	sudo ln -sf "${WATERFOX_INSTALL_DIR}/waterfox" /usr/bin/waterfox;
+	sudo ln -sf "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox" /usr/bin/waterfox;
+	sudo ln -sf "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox-classic" /usr/bin/waterfox;
 
     # Make sure regular icon exists
     if [[ ! -e "${WATERFOX_ICON_PATH}" ]]; then
-        if [[ -e "${WATERFOX_INSTALL_DIR}/browser/chrome/icons/default/default256.png" ]]; then
-            sudo cp "${WATERFOX_INSTALL_DIR}/browser/chrome/icons/default/default256.png" "${WATERFOX_ICON_PATH}";
+        if [[ -e "${WATERFOX_CLASSIC_INSTALL_DIR}/browser/chrome/icons/default/default256.png" ]]; then
+            sudo cp "${WATERFOX_CLASSIC_INSTALL_DIR}/browser/chrome/icons/default/default256.png" "${WATERFOX_ICON_PATH}";
     		sudo chown root:root "${WATERFOX_ICON_PATH}";
     		sudo chmod a+r "${WATERFOX_ICON_PATH}";
         fi
