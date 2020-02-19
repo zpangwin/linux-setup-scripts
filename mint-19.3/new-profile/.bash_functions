@@ -243,6 +243,21 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 # Start Section: Hardware
 #==========================================================================
+function printBatteryPercentages() {
+    # this assumes that you only have 1 wireless device
+
+    # 1. Get info from upower; this won't have everything (missing xbox 360 wireless)
+    #       but it should have wireless kb/m and possibly some wireless controllers
+    #
+    #   1.1. get the dump from upower
+    #   1.2. remove any info blocks for 'daemon'; they don't have any worthwhile info anyway
+    #           perl -0 -pe 's/(?:^|nn)Daemon:.*?nn/n/gsm'
+    #   1.3. remove any device attribute lines not related to either model or (battery) percentage
+    #        while simultaneously reformatting
+    #           perl -ne 'if ( /^$/ ) { print "n" } elsif ( /^.*model:[ t]+(.*)$/ ) { print "$1: " } elsif ( /^.*percentage:[ t]+(.*)$/ ) { print "$1" }'
+
+    upower --dump | perl -0 -pe 's/(?:^|nn)Daemon:.*?nn/n/gsm' | perl -ne 'if ( /^$/ ) { print "n" } elsif ( /^.*model:[ t]+(.*)$/ ) { print "$1: " } elsif ( /^.*percentage:[ t]+(.*)$/ ) { print "$1" }' | sed '/^$/d';
+}
 
 #==========================================================================
 # End Section: Hardware
