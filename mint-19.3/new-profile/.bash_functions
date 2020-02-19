@@ -259,7 +259,27 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 # Start Section: Launchers
 #==========================================================================
+function openGitExtensionsBrowse() {
+    #launch background process
+    (cd "$1"; /usr/bin/gitext >/dev/null 2>/dev/null;)&
+}
+function openFileInSublime() {
+    #launch background process
+    (/usr/bin/sublime "$1" >/dev/null 2>/dev/null;)&
+}
 
+function openFileInXed() {
+    #launch background process
+    (/usr/bin/xed "$1" >/dev/null 2>/dev/null;)&
+}
+function mergeFilesInMeld() {
+    #launch background process
+    (/usr/bin/meld "$1" "$2" >/dev/null 2>/dev/null;)&
+}
+function openNemo() {
+    #launch background process
+    (/usr/bin/nemo "$1" >/dev/null 2>/dev/null)&
+}
 #==========================================================================
 # End Section: Launchers
 #==========================================================================
