@@ -8,6 +8,8 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
+#echo ".profile"
+
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -39,5 +41,19 @@ if [[ -d "${HOME}/go" ]]; then
 		PATH="${PATH}:${GOBIN}";
 	fi
 fi
-export PATH="${PATH}";
 
+if [[ -d "${HOME}/.local/share/umake" ]]; then
+	# Ubuntu make installation of Ubuntu Make binary symlink
+	PATH="${HOME}/.local/share/umake/bin:$PATH";
+fi
+
+NO_DUPES_PATH=$(printf "${PATH}"|sed 's/:/\n/g'|gawk '!x[$0]++'|tr '\n' ':');
+if [[ "" != "${NO_DUPES_PATH}" ]]; then
+    if [[ ":" == "${NO_DUPES_PATH:${#NO_DUPES_PATH}-1}" ]]; then
+        NO_DUPES_PATH="${NO_DUPES_PATH:0:${#NO_DUPES_PATH}-1}";
+    fi
+    if [[ "${PATH}" != "${NO_DUPES_PATH}" ]]; then
+        PATH="${NO_DUPES_PATH}";
+    fi
+fi
+export PATH="${PATH}";

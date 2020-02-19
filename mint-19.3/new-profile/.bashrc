@@ -2,15 +2,7 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-
-if [[ "" == "${USERHOME}" ]]; then
-	export USERHOME="/home/${USER}";
-fi
-
-if [[ "" == "${USERSCRIPTS}" && -e "${USERHOME}/Scripts" ]]; then
-	export USERSCRIPTS="${USERHOME}/Scripts";
-fi
-
+#echo ".bashrc";
 
 # If not running interactively, don't do anything
 case $- in
@@ -32,46 +24,6 @@ shopt -s histappend
 # Unlimited history size
 HISTSIZE=-1
 HISTFILESIZE=-1
-
-# cleanup junk from history file on new session
-if [[ -e "$HOME/.bash_history" ]]; then
-	# remove leading spaces
-	sed -i -E 's/^\s+//g' "$HOME/.bash_history";
-
-	# remove all various read statements
-	sed -i '/^cls$/d' "$HOME/.bash_history";
-	sed -i '/^history/d' "$HOME/.bash_history";
-	sed -i '/^l$/d' "$HOME/.bash_history";
-	sed -i '/^s$/d' "$HOME/.bash_history";
-	sed -i '/^ls -acl$/d' "$HOME/.bash_history";
-	sed -i '/^up[1-9]?$/d' "$HOME/.bash_history";
-	sed -i '/^xfind$/d' "$HOME/.bash_history";
-	sed -i '/^pcinfo$/d' "$HOME/.bash_history";
-	sed -i '/^ipaddr$/d' "$HOME/.bash_history";
-
-	# remove all various read statements with a single argument
-	sed -i '/^l \/[A-Za-z0-9\-\/]*$/d' "$HOME/.bash_history";
-	sed -i '/^ls \/[A-Za-z0-9\-\/]*$/d' "$HOME/.bash_history";
-	sed -i '/^ls -acl \/[A-Za-z0-9\-\/]*$/d' "$HOME/.bash_history";
-	sed -i '/^man [A-Za-z0-9\-]*$/d' "$HOME/.bash_history";
-	sed -i '/^which [A-Za-z0-9\-]*$/d' "$HOME/.bash_history";
-	sed -i '/^echo "[^"]*"$/d' "$HOME/.bash_history";
-	sed -i '/^md5sum "?[^"|]*"?$/d' "$HOME/.bash_history";
-	sed -i '/^sha256sum "?[^"|]*"?$/d' "$HOME/.bash_history";
-	sed -i '/^sha512sum "?[^"|]*"?$/d' "$HOME/.bash_history";
-
-	# remove all "gstat" alias / various git calls
-	sed -i '/^gstat$/d' "$HOME/.bash_history";
-	sed -i '/^git init$/d' "$HOME/.bash_history";
-	sed -i '/^git push$/d' "$HOME/.bash_history";
-	sed -i '/^git pull$/d' "$HOME/.bash_history";
-	sed -i '/^git status$/d' "$HOME/.bash_history";
-	sed -i '/^g?pull$/d' "$HOME/.bash_history";
-	sed -i '/^g?push$/d' "$HOME/.bash_history";
-
-	# remove empty lines
-	sed -i '/^$/d' "$HOME/.bash_history";
-fi
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -154,8 +106,8 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # You may want to put all your additions into a separate file like
 # ~/.bash_aliases, instead of adding them here directly.
 
-if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
+if [[ -f ~/.bash_functions ]]; then
+    . ~/.bash_functions;
 fi
 
 # Alias definitions.
@@ -163,8 +115,19 @@ fi
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
+if [[ -f ~/.bash_aliases ]]; then
+    . ~/.bash_aliases;
+fi
+
+
+# check if history is getting too big ...
+# requires functions to be loaded
+if (( $(cat "$HOME/.bash_history"|wc -l) > 5000 )); then
+    functIsDefined=$(type -t backupAndCleanBashHistory|wc -l);
+    if [[ "1" == "${functIsDefined}" ]]; then
+        echo "WARNING: .bash_history over 5000k lines; rotating file to backup ...";
+        backupAndCleanBashHistory;
+    fi
 fi
 
 # enable programmable completion features (you don't need to enable
@@ -204,6 +167,11 @@ fi
 # See: https://unix.stackexchange.com/questions/72086/ctrl-s-hang-terminal-emulator
 stty -ixon
 
+#set more secure default file perms
+#   https://geek-university.com/linux/set-the-default-permissions-for-newly-created-files/
+# normally perms default to 666; with umask of 006 == perms now default to 660
+umask 006
+
 if [[ -d "${HOME}/.local/bin" ]]; then
 	# added by pipx (https://github.com/pipxproject/pipx)
 	pathHasLocalBin=$(echo "${PATH}" | grep -P "${HOME}/.local/bin(:|\$)" | wc -l);
@@ -212,21 +180,14 @@ if [[ -d "${HOME}/.local/bin" ]]; then
 	fi
 fi
 
-# Path additions for GOLANG
-if [[ -d "${HOME}/go" ]]; then
-	export GOPATH=${HOME}/go;
-	export GOBIN=${GOPATH}/bin;
-	pathHasGoBin=$(echo "${PATH}" | grep -P ":${GOBIN}(:|\$)" | wc -l);
-	if [[ "0" == "${pathHasGoBin}" ]]; then
-		PATH="${PATH}:${GOBIN}";
-	fi
+
+NO_DUPES_PATH=$(printf "${PATH}"|sed 's/:/\n/g'|gawk '!x[$0]++'|tr '\n' ':');
+if [[ "" != "${NO_DUPES_PATH}" ]]; then
+    if [[ ":" == "${NO_DUPES_PATH:${#NO_DUPES_PATH}-1}" ]]; then
+        NO_DUPES_PATH="${NO_DUPES_PATH:0:${#NO_DUPES_PATH}-1}";
+    fi
+    if [[ "${PATH}" != "${NO_DUPES_PATH}" ]]; then
+        PATH="${NO_DUPES_PATH}";
+    fi
 fi
-
-#set more secure default file perms
-#   https://geek-university.com/linux/set-the-default-permissions-for-newly-created-files/
-# normally perms default to 666; with umask of 006 == perms now default to 660
-umask 006
-
-
 export PATH="${PATH}";
-
