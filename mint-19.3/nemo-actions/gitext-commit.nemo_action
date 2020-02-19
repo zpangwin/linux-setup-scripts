@@ -1,7 +1,8 @@
 [Nemo Action]
 Name=GitExt Commit
 Comment=GitExt Commit
-Exec="/opt/GitExtensions/nemo-scripts/launch-gitext-commit.sh" %F
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-commit.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-commit.sh;
 Icon-Name=git-ext-commit
 Selection=Any
 Extensions=any;

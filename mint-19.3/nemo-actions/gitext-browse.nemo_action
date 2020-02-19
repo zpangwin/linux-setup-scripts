@@ -1,7 +1,8 @@
 [Nemo Action]
 Name=GitExt Browse
 Comment=GitExt Browse
-Exec="/opt/GitExtensions/nemo-scripts/launch-gitext-browse.sh" %F
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-browse.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-browse.sh;
 Icon-Name=git-ext-browse
 Selection=Any
 Extensions=any;
