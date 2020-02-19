@@ -232,6 +232,222 @@ function gitUpdateAllReposUnderDir () {
 # End Section: Administration
 #==========================================================================
 
+#==========================================================================
+# Start Section: Network
+#==========================================================================
+function isValidIpAddr() {
+    # return code only version
+    local ipaddr="$1";
+    [[ ! $ipaddr =~ ^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$ ]] && return 1;
+    for quad in $(echo "${ipaddr//./ }"); do
+        (( $quad >= 0 && $quad <= 255 )) && continue;
+        return 1;
+    done
+}
+function validateIpAddr() {
+    # return code + output version
+    local ipaddr="$1";
+    local errmsg="ERROR: $1 is not a valid IP address";
+    [[ ! $ipaddr =~ ^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$ ]] && echo "$errmsg" && return 1;
+    for quad in $(echo "${ipaddr//./ }"); do
+        (( $quad >= 0 && $quad <= 255 )) && continue;
+        echo "$errmsg";
+        return 1;
+    done
+    echo "SUCCESS: $1 is a valid IP address";
+}
+function mountWindowsNetworkShare() {
+    local networkPath="$1";
+    local mountPoint="$2";
+    local remoteLogin="$3";
+    local remotePassword="$4";
+
+    # validate input
+    local showUsage="false";
+    if [[ "-h" == "$1" || "--help" == "$1" ]]; then
+        showUsage="true";
+
+    elif [[ "" == "${networkPath}" ]]; then
+        echo "ERROR: REMOTE_PATH is empty";
+        showUsage="true";
+
+    elif [[ "" == "${mountPoint}" ]]; then
+        echo "ERROR: LOCAL_PATH is empty";
+        showUsage="true";
+
+    elif [[ ! $mountPoint =~ ^[~.]?/.*$ || $mountPoint =~ ^//.*$ ]]; then
+        echo "ERROR: LOCAL_PATH must be a valid local path";
+        showUsage="true";
+
+    elif [[ "" == "${remoteLogin}" ]]; then
+        echo "ERROR: REMOTE_USER is empty";
+        showUsage="true";
+
+    elif [[ "" == "${remotePassword}" ]]; then
+        echo "ERROR: REMOTE_PWD is empty";
+        showUsage="true";
+    fi
+
+    # secondary validations
+    if [[ "false" == "${showUsage}" ]]; then
+        # get sudo prompt out of the way
+        sudo ls -acl 2>/dev/null >/dev/null;
+
+        # canonicalize network path
+        if [[ "//" != "${networkPath:0:2}" ]]; then
+            networkPath="//${networkPath}";
+        fi
+
+        # Make sure network path is of the format:
+        #   HOST/SHARE
+        #
+        # Where REMOTE_HOST is either a valid HOST or a valid IP_ADDR
+        local remoteHost=$(printf "${networkPath}"|sed -E 's|^//([^/]+)/.*$|1|g');
+        local shareName=$(printf "${networkPath}"|sed -E 's|^//[^/]+/(.*)$|1|g');
+
+        if [[ "${#networkPath}" == "${#remoteHost}" || "0" == "${#remoteHost}" || "${#networkPath}" == "${#shareName}" || "0"  == "${#shareName}" ]]; then
+            echo "ERROR: REMOTE_PATH is invalid. It should be in the form: //IPADDR/SHARE_NAME";
+            showUsage="true";
+
+        elif [[ $shareName =~ ^.*[^-A-Za-z0-9_.+= ~%@#()&].*$ ]]; then
+            echo "ERROR: REMOTE_PATH is invalid. shareName '${shareName}' contains invalid characters.";
+            showUsage="true";
+
+        elif [[ $remoteHost =~ ^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$ ]]; then
+            # definitely *supposed* to be an ip address
+            # check if it is a *valid* ip address (correct numerical ranges)
+
+            # check that each ip quad is with the range 0 to 255
+            isValidIpAddr "$remoteHost";
+            if [[ "0" != "$?" ]]; then
+                echo "ERROR: REMOTE_PATH is invalid. host '${remoteHost}' is not a valid ip address.";
+                showUsage="true";
+            fi
+
+        elif [[ $remoteHost =~ ^[A-Za-z][-A-Za-z0-9_.]*$ ]]; then
+            # host names are only allowed if the system supports
+            # resolving hostnames...
+            local supportsHostNameResolution="true";
+            if [[ ! -f /etc/nsswitch.conf ]]; then
+                echo "WARNING: Missing /etc/nsswitch.conf; will not be able to resolve Windows host names...";
+                supportsHostNameResolution="false";
+            else
+                local winbindPkgCount=$(apt search winbind | grep -P "^is+(winbind|libnss-winbind)s+"|wc -l);
+                if (( $winbindPkgCount < 2 )); then
+                    echo "WARNING: Missing winbind / libnss-winbind packages; will not be able to resolve Windows host names...";
+                    supportsHostNameResolution="false";
+                fi
+            fi
+
+            if [[ "false" == "${supportsHostNameResolution}" ]]; then
+                echo "ERROR: REMOTE_PATH is invalid; system doesn't support resolution of named host '${remoteHost}'.";
+                echo "";
+                echo "Use IP address instead or update system to support host name resolution.";
+                echo "See:";
+                echo "   https://www.techrepublic.com/article/how-to-enable-linux-machines-to-resolve-windows-hostnames/";
+                echo "   https://askubuntu.com/a/516533/1003652";
+                showUsage="true";
+
+                echo "";
+                echo "Attempting to resolve for next time ...";
+                sudo apt-get install -y winbind libnss-winbind 2>/dev/null >/dev/null;
+            else
+                local unresolvedHostChk=$(ping -c 1 "$remoteHost" 2>&1 | grep 'Name or service not known'|wc -l);
+                if [[ "0" == "${unresolvedHostChk}" ]]; then
+                    echo "ERROR: REMOTE_PATH is invalid; system was unable to resolve named host '${remoteHost}'.";
+                    echo "";
+                    echo "Use IP address instead or update system to support host name resolution.";
+                fi
+            fi
+        fi
+    fi
+
+    if [[ "true" == "${showUsage}" ]]; then
+        echo "";
+        echo "Expected usage:";
+        echo "mountWindowsNetworkShare REMOTE_PATH LOCAL_PATH REMOTE_USER REMOTE_PWD";
+        echo "";
+        echo "Mounts the indicated path, if it is not already mounted.";
+        echo "";
+        echo "REMOTE_PATH must be in the form: //IPADDR/SHARE_NAME";
+        echo "";
+        echo "LOCAL_PATH  must be a valid local path.";
+        echo "";
+        echo "REMOTE_USER should be the user name on the remote machine. If it contains spaces, pass in quotes.";
+        echo "";
+        echo "REMOTE_PWD should be the user password on the remote machine. This should always be passed in quotes. Additionally, special characters should be preceded by a backslash (\) when using double-quotes. Especially:";
+        echo " * dollar sign ($)";
+        echo " * backslash (\)"
+        echo " * backtick (`)";
+        echo " * double-quote (")";
+        echo " * exclaimation mark (!)";
+        echo " * all special characters may be escaped but the above are required.";
+        echo "";
+        return;
+    fi
+
+    local isAlreadyMounted=$(mount|grep -P "${mountPoint}"|wc -l);
+    if [[ "0" != "${isAlreadyMounted}" ]]; then
+        echo "'${mountPoint}' is already mounted."
+        return;
+    fi
+
+    if [[ ! -e "${mountPoint}" ]]; then
+        sudo mkdir "${mountPoint}";
+        sudo chown ${SUDO_USER:-$USER}:${SUDO_USER:-$USER} "${mountPoint}";
+    fi
+    echo "Attempting to mount '${networkPath}' at '${mountPoint}' ...";
+    sudo mount -t cifs "${networkPath}" "${mountPoint}" -o "user=${remoteLogin},username=${remoteLogin},password=${remotePassword},dir_mode=0777,file_mode=0777";
+    if [[ "0" == "$?" ]]; then
+        echo "-> SUCCESS";
+    else
+        echo "-> FAILURE";
+    fi
+}
+function unmountWindowsNetworkShare() {
+    local mountPoint="$1";
+
+    # validate input
+    if [[ "" == "${mountPoint}" ]]; then
+        echo "ERROR: local mountPoint is empty";
+        echo "Expected usage:";
+        echo "unmountWindowsNetworkShare /local/path/to/mount/point";
+        echo "";
+        echo "   unmounts the indicated path, if it is mounted.";
+        echo "";
+        return;
+    fi
+
+    # check if mounted
+    local isAlreadyMounted=$(mount|grep -P "${mountPoint}"|wc -l);
+    if [[ "0" == "${isAlreadyMounted}" ]]; then
+        echo "'${mountPoint}' is not currently mounted."
+        return;
+    fi
+    echo "Attempting to unmount '${mountPoint}' ...";
+    sudo umount --force "${mountPoint}";
+    if [[ "0" == "$?" ]]; then
+        echo "-> SUCCESS";
+    else
+        echo "-> FAILURE";
+    fi
+}
+function displayGatewayIp() {
+    ip r|grep default|sed -E 's/^.*b([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})b.*$/1/g';
+}
+function displayNetworkHostnames() {
+    local gatewayIp=$(ip r|grep default|sed -E 's/^.*b([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})b.*$/1/g');
+
+    echo -e "IP AddresstHostname";
+    local ipAddr='';
+    for ipAddr in $(arp -vn|grep -P '^d'|grep -Pv "\b(${gatewayIp})\b" |awk -F'\s+' '{print $1}'); do
+        local hostName=$(nmblookup -A "${ipAddr}"|grep -Pvi '(Looking|No reply|<GROUP>|MAC Address)'|grep -i '<ACTIVE>'|head -1|sed -E 's/^s+(S+)s*.*$/1/');
+        echo -e "${ipAddr}t${hostName}";
+    done
+}
+#==========================================================================
+# End Section: Network
+#==========================================================================
 
 #==========================================================================
 # Start Section: Package Management
