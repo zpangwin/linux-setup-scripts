@@ -235,7 +235,17 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 # Start Section: Processes
 #==========================================================================
-
+function getProcessInfoByInteractiveMouseClick() {
+    ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]([0-9][0-9]*)[^0-9]*$/1/g"))
+}
+function getProcessIdByWindowName() {
+    local TARGET_NAME="$1";
+    xdotool search --class "$TARGET_NAME" getwindowpid
+}
+function getProcessInfoByWindowName() {
+    local TARGET_NAME="$1";
+    ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(xdotool search --class "$TARGET_NAME" getwindowpid);
+}
 #==========================================================================
 # End Section: Processes
 #==========================================================================
@@ -276,7 +286,6 @@ function unmuteAllAlsaAudioControls() {
     done
     IFS="$INITIAL_IFS";
 }
-
 #==========================================================================
 # End Section: Hardware
 #==========================================================================

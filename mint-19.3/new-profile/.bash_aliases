@@ -204,6 +204,46 @@ alias restore='enableAndRestartSystemdServices'
 alias restoresvc='enableAndRestartSystemdServices'
 alias restoreservice='enableAndRestartSystemdServices'
 
+#====================================================
+# X-Window related commands
+#====================================================
+#interactive (changes cursor and waits for user to click)
+alias ifind='ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]\([0-9][0-9]*\)[^0-9]*$/\1/g"))'
+alias ikill='xkill'
+alias findx='ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]\([0-9][0-9]*\)[^0-9]*$/\1/g"))'
+alias killx='xkill'
+alias pofwindow='ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]\([0-9][0-9]*\)[^0-9]*$/\1/g"))'
+alias pofx='ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]\([0-9][0-9]*\)[^0-9]*$/\1/g"))'
+alias xfind='ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]\([0-9][0-9]*\)[^0-9]*$/\1/g"))'
+
+#other options/tools for getting x windows info:
+#	xwininfo
+#	xprop
+#	xdotool selectwindow getwindowpid
+#	xdotool getactivewindow
+#	xdotool getwindowpid <the-window-id>
+
+#by name
+alias getwindowpid='getProcessIdByWindowName'
+alias getwindowproc='getProcessInfoByWindowName'
+alias pofw='getProcessInfoByWindowName'
+alias pofwinname='getProcessInfoByWindowName'
+#also see /bin/pidof
+alias pidofwinname='getProcessIdByWindowName'
+
+alias getkeycode='xev -event keyboard 2>&1 | grep -i -P "keycode [a-f0-9]+ \([^\)]+\)" -B 2 -A 3'
+alias keycode='xev -event keyboard 2>&1 | grep -i -P "keycode [a-f0-9]+ \([^\)]+\)" -B 2 -A 3'
+
+# xrandr
+alias xleft='xrandr --orientation left'
+alias xright='xrandr --orientation right'
+alias xnormal='xrandr --orientation normal'
+alias xreset='xrandr --orientation normal'
+alias xtop='xrandr --orientation normal'
+alias xbottom='xrandr --orientation inverted'
+alias xinvert='xrandr --orientation inverted'
+alias xupsidedown='xrandr --orientation inverted'
+
 
 #====================================================
 # Wine related commands
