@@ -232,6 +232,298 @@ function gitUpdateAllReposUnderDir () {
 # End Section: Administration
 #==========================================================================
 
+
+#==========================================================================
+# Start Section: Package Management
+#==========================================================================
+function addCustomSource() {
+    # get sudo prompt out of way up-front so that it
+    # doesn't appear in the middle of other output
+    sudo ls -acl 2>/dev/null >/dev/null;
+
+    local useLogFile="false";
+    local logFile="/dev/null";
+    if [[ "" != "${INSTALL_LOG}" ]]; then
+        useLogFile="true";
+        logFile="${INSTALL_LOG}";
+    fi
+
+    local errorMessage="";
+    local showUsageInfo="false";
+    local hasMissingOrInvalidInfo="false";
+
+    if [[ "-h" == "$1" || "--help" == "$1" ]]; then
+        showUsageInfo="true";
+    fi
+
+    local repoName="$1";
+    local repoDetails="$2";
+    if [[ "true" != "$showUsageInfo" ]]; then
+        #if not just displaying help info, then check passed args
+        if [[ "" == "${repoName}" ]]; then
+            hasMissingOrInvalidInfo="true";
+            errorMessage="no arguments";
+
+        elif [[ "" == "${repoDetails}" ]]; then
+            hasMissingOrInvalidInfo="true";
+            errorMessage="missing arguments - must have REPO_NAME and REPO_DETAILS";
+
+        elif [[ "official-package-repositories" == "$repoName" || "additional-repositories" == "$repoName" ]]; then
+            hasMissingOrInvalidInfo="true";
+            errorMessage="invalid REPO_NAME '${repoName}'; this name is reserved for system usage";
+
+        elif [[ ! $repoName =~ ^[A-Za-z0-9][-A-Za-z0-9.]*[A-Za-z0-9]$ ]]; then
+            hasMissingOrInvalidInfo="true";
+            errorMessage="invalid REPO_NAME '${repoName}' - only alphanum/hyphen/period allowed, must start/end with alphanum";
+        fi
+
+        if [[ 'true' != "${hasMissingOrInvalidInfo}" ]]; then
+            echo "Validating repo details";
+            #check if more than 2 args
+            arg3="$3";
+            arg4="$4";
+            arg5="$5";
+            arg6="$6";
+            if [[ 'deb' == "${repoDetails}" ]]; then
+                echo "Found repoDetails as multiple arguments; attempting to combine ...";
+
+                if [[ "" == "${arg3}" || "" == "${arg4}" ]]; then
+                    hasMissingOrInvalidInfo="true";
+                    errorMessage="missing/invalid repo details (only 'deb' but not server/path). Try quoting args after file name?";
+
+                elif [[ ! $arg3 =~ ^https?://[A-Za-z0-9][-A-Za-z0-9.]*.*$ ]]; then
+                    hasMissingOrInvalidInfo="true";
+                    errorMessage="missing/invalid repo details (repo server) for '${arg3}'. Try quoting args after file name?";
+
+                elif [[ "" != "${arg6}" ]]; then
+                    repoDetails="deb $arg3 $arg4 $arg6";
+
+                elif [[ "" != "${arg5}" ]]; then
+                    repoDetails="deb $arg3 $arg4 $arg5";
+
+                else
+                    repoDetails="deb $arg3 $arg4";
+                fi
+            fi
+
+            # Check known formats
+            architecturelessRepoDetails=$(echo "$repoDetails"|sed 's/^([deb ]*)*[arch=[A-Za-z0-9][-A-Za-z0-9.]*] /1/');
+            echo "architecturelessRepoDetails: '${architecturelessRepoDetails}'";
+            if [[ $architecturelessRepoDetails =~ ^deb https?://[A-Za-z0-9][-A-Za-z0-9.]*[^ ]* [^ ]* ?[^ ]*$ ]]; then
+                echo "OK: repo details appear to be valid.";
+                repoDetails="$repoDetails";
+
+            elif [[ $architecturelessRepoDetails =~ ^https?://[A-Za-z0-9][-A-Za-z0-9.*[^ ]* [^ ]* ?[^ ]*$ ]]; then
+                echo "OK: repo details appear to be valid but does not start with 'deb'; prepending ...";
+                repoDetails="deb $repoDetails";
+
+            else
+                hasMissingOrInvalidInfo="true";
+                errorMessage="invalid/unsupported repo details format for '${repoDetails}'";
+            fi
+        fi
+    fi
+
+    if [[ "true" == "$showUsageInfo" || "true" == "$hasMissingOrInvalidInfo" ]]; then
+        if [[ "true" == "$hasMissingOrInvalidInfo" ]]; then
+            echo "ERROR: addCustomSource(): ${errorMessage}." | tee -a "${logFile}";
+        fi
+        echo "" | tee -a "${logFile}";
+        echo "usage:" | tee -a "${logFile}";
+        echo "   addCustomSource REPO_NAME REPO_DETAILS" | tee -a "${logFile}";
+        echo "" | tee -a "${logFile}";
+        echo "   Adds the specified source under /etc/apt/sources.list.d/" | tee -a "${logFile}";
+        echo "   if it does not already exist. Both the repo name and the" | tee -a "${logFile}";
+        echo "   details will be considered when checking for existing sources." | tee -a "${logFile}";
+        echo "" | tee -a "${logFile}";
+        echo "   REPO_NAME:    user-defined name; only used for the" | tee -a "${logFile}";
+        echo "                 naming the apt source list file." | tee -a "${logFile}";
+        echo "                 Names must start/end with alphanumeric characters." | tee -a "${logFile}";
+        echo "                 Hyphens/periods are allowed for intervening characters." | tee -a "${logFile}";
+        echo "" | tee -a "${logFile}";
+        echo "   REPO_DETAILS: Info that goes in the apt source list file." | tee -a "${logFile}";
+        echo "                 Generally is in the format of:" | tee -a "${logFile}";
+        echo "                 deb REPO_BASE_URL REPO_RELATIVE_PATH" | tee -a "${logFile}";
+        echo "" | tee -a "${logFile}";
+        echo "examples:" | tee -a "${logFile}";
+        echo "   addCustomSource sublimetext 'deb https://download.sublimetext.com/ apt/stable/' " | tee -a "${logFile}";
+        echo "   addCustomSource sublimetext deb https://download.sublimetext.com/ apt/stable/ " | tee -a "${logFile}";
+        echo "" | tee -a "${logFile}";
+        return;
+    fi
+
+    #check if it already exists...
+    echo "Checking if repo source file already exists..." | tee -a "${logFile}";
+    if [[ -f "/etc/apt/sources.list.d/${repoName}.list" ]]; then
+        echo "addCustomSource(): Source ${repoName} already defined; skipping..." | tee -a "${logFile}";
+        return;
+    else
+        echo "  -> PASSED";
+    fi
+
+    #check if details already exist...
+    echo "Checking if repo details not already defined in another file ..." | tee -a "${logFile}";
+    local existingRepoDetsCount=$(sudo grep -Ri "${repoDetails}" /etc/apt/sources.list.d/*.list 2>/dev/null|wc -l);
+    if [[ "0" != "${existingRepoDetsCount}" ]]; then
+        echo "addCustomSource(): Repo details already defined for '${repoDetails}'; skipping..." | tee -a "${logFile}";
+        echo "Existing matches:" | tee -a "${logFile}";
+        echo "" | tee -a "${logFile}";
+        sudo grep -RHni "${repoDetails}" /etc/apt/sources.list.d/*.list 2>/dev/null | tee -a "${logFile}";
+        return;
+    else
+        echo "  -> PASSED";
+    fi
+
+    # add new source
+    echo "Adding source as '${repoName}.list' ..." | tee -a "${logFile}";
+    echo "${repoDetails}" | sudo tee "/etc/apt/sources.list.d/${repoName}.list" >/dev/null;
+
+    # safety
+    sudo chown root:root /etc/apt/sources.list.d/*.list;
+    sudo chmod 644 /etc/apt/sources.list.d/*.list;
+
+}
+function listUninstalledPackageRecommends() {
+    local packageList="$1";
+    local hasRecommends=$(sudo apt install --assume-no "${packageList}" 2>/dev/null|grep 'Recommended packages:'|wc -l);
+    if [[ "0" == "${hasRecommends}" ]]; then
+        echo "";
+        return;
+    fi
+    # note the first sed is to remove a pipe that was present in
+    # actual output from apt install; see 'sudo apt install --assume-no ledgersmb'
+    sudo apt install --assume-no "${packageList}" 2>/dev/null|sed -E 's/(s+)|s+/1/g'|sed '/^The following NEW packages will be installed:$/Q'|sed '0,/^Recommended packages:$/d'|sed -E 's/^s+|s+$//g'|tr ' ' 'n';
+}
+function listUninstalledPackageSuggests() {
+    local packageList="$1";
+    local hasSuggests=$(sudo apt install --assume-no "${packageList}" 2>/dev/null|grep 'Suggested packages:'|wc -l);
+    if [[ "0" == "${hasSuggests}" ]]; then
+        echo "";
+        return;
+    fi
+    # note the first sed is to remove a pipe that was present in
+    # actual output from apt install; see 'sudo apt install --assume-no ledgersmb'
+    sudo apt install --assume-no "${packageList}" 2>/dev/null|sed -E 's/(s+)|s+/1/g'|sed '/^The following NEW packages will be installed:$/Q'|sed '/^Recommended packages:$/Q'|sed '0,/^Suggested packages:$/d'|sed -E 's/^s+|s+$//g'|tr ' ' 'n';
+}
+function previewUpgradablePackagesDownloadSize() {
+   #get sudo prompt out of the way so it doesn't appear in the middle of output
+    sudo ls -acl >/dev/null;
+
+    echo "";
+    echo "=============================================================";
+    echo "Updating apt cache ...";
+    echo "=============================================================";
+    sudo apt update 2>&1|grep -Pv '^(Build|Fetch|Get|Hit|Ign|Read|WARNING|$)'|sed -E 's/^(.*) Run.*$/-> 1/g';
+    echo "-> Getting list of upgradable packages ...";
+
+    local upgradablePackageList=$(sudo apt list --upgradable 2>&1|grep -Pv '^(Listing|WARNING|$)'|sed -E 's/^([^/]+)/.*$/1/g'|tr 'n' ' '|sed -E 's/^s+|s+$//g');
+    local upgradablePackageArray=($(echo "$upgradablePackageList"|tr ' ' 'n'));
+    #echo "upgradablePackageArray size: ${#upgradablePackageArray[@]}"
+
+    echo "";
+    echo "=============================================================";
+    echo "Calculating download sizes (note: there may be overlaps) ...";
+    echo "=============================================================";
+
+    echo "";
+    newPackageCount=0;
+    for packageName in "${upgradablePackageArray[@]}"; do
+        #echo "packageName: '$packageName'"
+        apt show "$packageName" 2>/dev/null|grep --color=never -P '(Package|Version|Installed-Size|Download-Size):';
+        is_installed=$(apt install --simulate --assume-yes "$packageName" 2>/dev/null|grep --color=never 'already the newest');
+        if [[ "" == "${is_installed}" ]]; then
+            newPackageCount=$(( newPackageCount + 1 ));
+            aptitude install --simulate --assume-yes --without-recommends "$packageName" 2>/dev/null|grep 'Need to get'|tail -1|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/With dependencies only:           1 2/g'
+            aptitude install --simulate --assume-yes --with-recommends    "$packageName" 2>/dev/null|grep 'Need to get'|tail -1|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/With dependencies and recommends: 1 2/g'
+        else
+            echo "${is_installed}";
+        fi
+        echo "";
+    done
+    echo "";
+    echo "=============================================================";
+    echo "Total:";
+    echo "=============================================================";
+    #echo "test: ${upgradablePackageArray[@]}"
+    aptitude install --simulate --assume-yes --without-recommends "${upgradablePackageArray[@]}" 2>/dev/null|grep 'Need to get'|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/With dependencies only:           1 2/g'
+    aptitude install --simulate --assume-yes --with-recommends    "${upgradablePackageArray[@]}" 2>/dev/null|grep 'Need to get'|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/With dependencies and recommends: 1 2/g'
+    echo "";
+}
+function previewPackageDownloadSize() {
+    if [[ "0" == "${#@}" ]]; then
+        echo "Expected usage:";
+        echo "previewPackageDownloadSize PACKAGE_NAME";
+        echo "previewPackageDownloadSize PACKAGE1 [PACKAGE2 [PACKAGE3 [...]]]] ";
+        return;
+    fi
+   #get sudo prompt out of the way so it doesn't appear in the middle of output
+    sudo ls -acl >/dev/null;
+
+    echo "=============================================================";
+    newPackageCount=0;
+    for packageName in "$@"; do
+        apt show "$packageName" 2>/dev/null|grep --color=never -P '(Package|Version|Installed-Size|Download-Size):';
+        is_installed=$(apt install --simulate --assume-yes "$packageName" 2>/dev/null|grep --color=never 'already the newest');
+        if [[ "" == "${is_installed}" ]]; then
+            newPackageCount=$(( newPackageCount + 1 ));
+            aptitude install --simulate --assume-yes --without-recommends "$packageName" 2>/dev/null|grep 'Need to get'|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/Without recommends: 1 2/g'
+            aptitude install --simulate --assume-yes --with-recommends "$packageName" 2>/dev/null|grep 'Need to get'|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/With recommends:    1 2/g'
+        else
+            echo "${is_installed}";
+        fi
+        echo "=============================================================";
+    done
+    if [[ "0" != "${newPackageCount}" ]]; then
+        echo "Total:"
+        aptitude install --simulate --assume-yes --without-recommends "${@}" 2>/dev/null|grep 'Need to get'|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/Without recommends: 1 2/g'
+        aptitude install --simulate --assume-yes --with-recommends "${@}" 2>/dev/null|grep 'Need to get'|sed -E 's/^Need to get ([0-9[[0-9.,]*) ([kmgKMG]i?[Bb]).*$/With recommends:    1 2/g'
+    fi
+}
+function installPackages() {
+    local __INS_OPTS__="-y -qq -o=Dpkg::Use-Pty=0";
+    local __PKG_LIST__="$1";
+    local __INS_RECS__="$2";
+    local __INS_SUGS__="$3";
+    local __SHOW_PROG__="$4";
+
+    if [[ "true" == "${__INS_RECS__}" ]]; then
+        __INS_OPTS__="${__INS_OPTS__} --install-recommends";
+    fi
+    if [[ "true" == "${__INS_SUGS__}" ]]; then
+        __INS_OPTS__="${__INS_OPTS__} --install-suggests";
+    fi
+    if [[ "true" == "${__SHOW_PROG__}" ]]; then
+        __INS_OPTS__="${__INS_OPTS__} --show-progress";
+    fi
+
+    if [[ "" == "$INSTALL_LOG" ]]; then
+        sudo apt install ${__INS_OPTS__} ${__PKG_LIST__} 2>&1 | grep -v 'apt does not have a stable CLI interface';
+        return;
+    fi
+    echo -e "nRunning: sudo apt install ${__INS_OPTS__} ${__PKG_LIST__} | grep -v 'apt does not have a stable CLI interface'" | tee -a "${INSTALL_LOG}";
+    sudo apt install ${__INS_OPTS__} ${__PKG_LIST__} 2>&1 | grep -v 'apt does not have a stable CLI interface' | tee -a "${INSTALL_LOG}";
+}
+function installPackagesWithRecommends() {
+    installPackages "$1" "true" "false" "$2";
+}
+function installPackagesWithRecommendsAndSuggests() {
+    installPackages "$1" "true" "true" "$2";
+}
+function list_installed_ppa_repos () {
+    echo "===================================================";
+    echo "Launchpad PPAs:";
+    echo "===================================================";
+    grep -PRh '^debs+https?://ppa.launchpad.net' /etc/apt/sources.list.d/*.list|awk -F' ' '{print $2}'|awk -F/ '{print "sudo apt-add-repository ppa:"$4"/"$5}'|sort -u;
+    echo "";
+    echo "===================================================";
+    echo "Custom PPAs:";
+    echo "===================================================";
+    grep -PR '^debs+' /etc/apt/sources.list.d/*.list --exclude=official* --exclude=additional*|grep -v 'ppa.launchpad.net'|sort -u|sed -E "s/^(\/etc\/apt\/sources.list.d\/[^:]+.list):(.*)$/echo "2"|sudo tee "1"/";
+}
+#==========================================================================
+# End Section: Package Management
+#==========================================================================
+
 #==========================================================================
 # Start Section: Processes
 #==========================================================================
