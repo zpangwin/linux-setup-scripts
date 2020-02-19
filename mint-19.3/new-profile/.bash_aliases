@@ -183,6 +183,27 @@ alias pg='pgrep --list-full --full --ignore-case'
 #override pgrep to automatically list all without having to specify args
 alias pgrep='pgrep --list-full'
 
+alias stop='stopSystemdServices'
+alias stopsvc='stopSystemdServices'
+alias stopservice='stopSystemdServices'
+
+alias disable='stopAndDisableSystemdServices'
+alias disablesvc='stopAndDisableSystemdServices'
+alias disableservice='stopAndDisableSystemdServices'
+
+alias enable='enableSystemdServices'
+alias enablesvc='enableSystemdServices'
+alias enableservic='enableSystemdServices'
+
+alias restart='restartSystemdServices'
+alias restartd='restartSystemdServices'
+alias restartsvc='restartSystemdServices'
+alias restartservice='restartSystemdServices'
+
+alias restore='enableAndRestartSystemdServices'
+alias restoresvc='enableAndRestartSystemdServices'
+alias restoreservice='enableAndRestartSystemdServices'
+
 
 #====================================================
 # Wine related commands

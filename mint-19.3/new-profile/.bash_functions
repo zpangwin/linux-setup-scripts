@@ -284,7 +284,44 @@ function unmuteAllAlsaAudioControls() {
 #==========================================================================
 # Start Section: Services
 #==========================================================================
-
+function stopSystemdServices () {
+    for passedarg in "$@"; do
+        #echo "passedarg is $passedarg"
+        sudo systemctl stop $passedarg
+    done
+}
+function disableSystemdServices () {
+    for passedarg in "$@"; do
+        #echo "passedarg is $passedarg"
+        sudo systemctl disable $passedarg
+    done
+}
+function stopAndDisableSystemdServices () {
+    for passedarg in "$@"; do
+        #echo "passedarg is $passedarg"
+        sudo systemctl stop $passedarg
+        sudo systemctl disable $passedarg
+    done
+}
+function enableSystemdServices () {
+    for passedarg in "$@"; do
+        #echo "passedarg is $passedarg"
+        sudo systemctl enable $passedarg
+    done
+}
+function restartSystemdServices () {
+    for passedarg in "$@"; do
+        #echo "passedarg is $passedarg"
+        sudo systemctl restart $passedarg
+    done
+}
+function enableAndRestartSystemdServices () {
+    for passedarg in "$@"; do
+        #echo "passedarg is $passedarg"
+        sudo systemctl enable $passedarg
+        sudo systemctl restart $passedarg
+    done
+}
 #==========================================================================
 # End Section: Services
 #==========================================================================
