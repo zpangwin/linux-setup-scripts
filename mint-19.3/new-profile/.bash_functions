@@ -219,7 +219,149 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 # Start Section: Wine
 #==========================================================================
+function createNewWine32Prefix () {
+    if [[ "" == "$1" ]]; then
+        echo -e "ERROR: Requires argument.nExpected usage:nn";
+        echo -e "createNewWine32Prefix folder-to-be-createdn";
+        echo -e "Note:  the new prefix folder must not exist yet.";
+        return;
+    elif [[ -e "$1" ]]; then
+        echo -e "ERROR: Path already exists; wine will not create a new prefix at an existng location.nExpected usage:nn";
+        echo -e "createNewWine32Prefix folder-to-be-createdn";
+        echo -e "Note:  the new prefix folder must not exist yet.";
+        return;
+    fi
+    env WINEPREFIX="$1" WINEARCH=win32 wine wineboot
+}
+function createNewWine64Prefix () {
+    if [[ "" == "$1" ]]; then
+        echo -e "ERROR: Requires argument.nExpected usage:nn";
+        echo -e "createNewWine64Prefix folder-to-be-createdn";
+        echo -e "Note:  the new prefix folder must not exist yet.";
+        return;
+    elif [[ -e "$1" ]]; then
+        echo -e "ERROR: Path already exists; wine will not create a new prefix at an existng location.nExpected usage:nn";
+        echo -e "createNewWine64Prefix folder-to-be-createdn";
+        echo -e "Note:  the new prefix folder must not exist yet.";
+        return;
+    fi
+    env WINEPREFIX="$1" WINEARCH=win64 wine wineboot
+}
+function winetricksHere() {
+    local foundValidWinePrefix='false';
+    local startingDir=$(pwd);
+    local winePrefixDir="${startingDir}";
+    if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+        foundValidWinePrefix='true';
+    else
+        while [[ "false" == "${foundValidWinePrefix}" ]]; do
+            if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+                foundValidWinePrefix='true';
+                break;
+            fi
+            winePrefixDir=$(dirname "${winePrefixDir}");
+            if [[ "/" == "${winePrefixDir}" || "" == "${winePrefixDir}" ]]; then
+                break;
+            fi
+        done;
+    fi
+    if [[ "false" == "${foundValidWinePrefix}" ]]; then
+        echo -e "ERROR: winetricksHere - Not under a valid WINEPREFIX folder.";
+        return;
+    fi
+    env WINEPREFIX="${winePrefixDir}" winetricks $1 $2 $3 $4 $5 $6 $7 $8 $9
+}
+function runWineCommandHere() {
+    local __wine_command__="$1";
+    local __func_name__="runWineCommandHere";
+    if [[ "" == "${__wine_command__}" ]]; then
+        echo "ERROR: runWineCommandHere - no args";
+        return;
+    fi
+    if [[ "" != "$2" ]]; then
+        __func_name__="$2";
+    fi
 
+    local foundValidWinePrefix='false';
+    local startingDir=$(pwd);
+    local winePrefixDir="${startingDir}";
+    if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+        foundValidWinePrefix='true';
+    else
+        while [[ "false" == "${foundValidWinePrefix}" ]]; do
+            if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+                foundValidWinePrefix='true';
+                break;
+            fi
+            winePrefixDir=$(dirname "${winePrefixDir}");
+            if [[ "/" == "${winePrefixDir}" || "" == "${winePrefixDir}" ]]; then
+                break;
+            fi
+        done;
+    fi
+    if [[ "false" == "${foundValidWinePrefix}" ]]; then
+        echo -e "ERROR: ${__func_name__} - Not under a valid WINEPREFIX folder.";
+        return;
+    fi
+    env WINEPREFIX="${winePrefixDir}" wine ${__wine_command__};
+}
+function wineCmdHere() {
+    runWineCommandHere 'cmd' 'wineCmdHere'
+}
+function wineConfigHere() {
+    runWineCommandHere 'winecfg' 'wineConfigHere'
+}
+function wineRegeditHere() {
+    runWineCommandHere 'regedit' 'wineRegeditHere'
+}
+function goToWinePrefix() {
+    local foundValidWinePrefix='false';
+    local startingDir=$(pwd);
+    local winePrefixDir="${startingDir}";
+    if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+        foundValidWinePrefix='true';
+    else
+        while [[ "false" == "${foundValidWinePrefix}" ]]; do
+            if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+                foundValidWinePrefix='true';
+                break;
+            fi
+            winePrefixDir=$(dirname "${winePrefixDir}");
+            if [[ "/" == "${winePrefixDir}" || "" == "${winePrefixDir}" ]]; then
+                break;
+            fi
+        done;
+    fi
+    if [[ "false" == "${foundValidWinePrefix}" ]]; then
+        echo -e "ERROR: goToWinePrefix - Not under a valid WINEPREFIX folder.";
+        return;
+    fi
+    cd "${winePrefixDir}";
+}
+function printWinePrefix() {
+    local foundValidWinePrefix='false';
+    local startingDir=$(pwd);
+    local winePrefixDir="${startingDir}";
+    if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+        foundValidWinePrefix='true';
+    else
+        while [[ "false" == "${foundValidWinePrefix}" ]]; do
+            if [[ -d  "${winePrefixDir}/drive_c" ]]; then
+                foundValidWinePrefix='true';
+                break;
+            fi
+            winePrefixDir=$(dirname "${winePrefixDir}");
+            if [[ "/" == "${winePrefixDir}" || "" == "${winePrefixDir}" ]]; then
+                break;
+            fi
+        done;
+    fi
+    if [[ "false" == "${foundValidWinePrefix}" ]]; then
+        echo -e "ERROR: printWinePrefix - Not under a valid WINEPREFIX folder.";
+        return;
+    fi
+    echo "${winePrefixDir}";
+}
 #==========================================================================
 # End Section: Wine
 #==========================================================================
