@@ -333,7 +333,16 @@ echo "   PRIVATE_ICON_PATH:    '${PRIVATE_ICON_PATH}'";
 echo "   WATERFOX_MENU_LINK:   '${WATERFOX_MENU_LINK}'";
 echo "   PRIVATE_MENU_LINK:    '${PRIVATE_MENU_LINK}'";
 
-if [[ -e "${WATERFOX_INSTALL_DIR}/waterfox" ]]; then
+# hack to hopefully future-proof against the binary getting renamed...
+if [[ ! -e "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox" ]]; then
+    # check if it has been renamed...
+    if [[ -e "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox-classic" ]]; then
+        # if so, create a symlink to avoid breaking the script and shortcuts...
+        sudo ln -sf "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox-classic" "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox";
+    fi
+fi
+
+if [[ -e "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox" ]]; then
 	# Make sure system link exists / that its pointing to the correct locaton
 	sudo ln -sf "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox" /usr/bin/waterfox;
 	sudo ln -sf "${WATERFOX_CLASSIC_INSTALL_DIR}/waterfox-classic" /usr/bin/waterfox;
