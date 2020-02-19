@@ -7,3 +7,16 @@ The purpose of this is to allow you to continue using system-config-samba. It wa
 * automatically add a policykit exception so that you can use the system-config-samba gui without gksu
 * fix the system-config-samba shortcut so that it executes the new pkexec wrapper script instead of trying to launch with the defunct gksu approach
 
+To use this script:
+
+```
+git clone https://github.com/zpangwin/linux-setup-scripts.git;
+find linux-setup-scripts -type f -iname '*.sh' -exec chmod a+rx "{}" \;;
+cd linux-setup-scripts/mint-19.3/apps/samba-config
+./install-scripts-with-policykit-exception.sh
+```
+
+
+Last tested : Feb 2020 with Samba Server Config Tool 1.2.63
+Last status : working (Mint 19.3 Cinnamon x64)
+
