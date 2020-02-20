@@ -3,6 +3,10 @@
 #echo "DISABLE_STDOUT_IN_FUNCTIONS: $DISABLE_STDOUT_IN_FUNCTIONS"
 
 function addPPAIfNotInSources () {
+	# get sudo prompt out of way up-front so that it
+	# doesn't appear in the middle of other output
+	sudo ls -acl 2>/dev/null >/dev/null;
+
 	local useLogFile="false";
 	local logFile="/dev/null";
 	if [[ "" != "${INSTALL_LOG}" ]]; then
@@ -185,5 +189,160 @@ function addCustomSource() {
 	# safety
 	sudo chown root:root /etc/apt/sources.list.d/*.list;
 	sudo chmod 644 /etc/apt/sources.list.d/*.list;
+}
+function checkDependenciesMap() {
+	# get sudo prompt out of way up-front so that it
+	# doesn't appear in the middle of other output
+	sudo ls -acl 2>/dev/null >/dev/null;
 
+	# ==================================================================
+	# This function expects $1 to be an associative array (aka a map)
+	# which contains:
+	#	Map<Key=localBinaryPath,Value=packageNameOfBinary>
+	# where
+	# localBinaryPath     = path to a local binary (e.g. /usr/bin/7z)
+	# packageNameOfBinary = install package for binary (e.g. p7zip-full)
+	# ==================================================================
+	# Sample usage:
+	#
+	# # 1) Define a dependenciesMap
+	# declare -A dependenciesMap=(
+	#   ['/usr/bin/7z']='p7zip-full'
+	#   ['/usr/bin/curl']='curl'
+	#   ['/usr/bin/yad']='yad'
+	#   ['/usr/bin/convert']='imagemagick'
+	# );
+	#
+	# # 2) pass map to function
+	# checkDependenciesMap "$(declare -p dependenciesMap)";
+	#
+	# # 3) check function return code (0 is pass; non-zero is fail)
+	# if [[ "0" == "$?" ]]; then echo "pass"; else echo "fail"; fi
+	# ==================================================================
+	if [[ "" == "$1" ]]; then
+		return 501;
+	fi
+
+    local binPathKey="";
+    local packageNameValue="";
+    local binExists="";
+    local status=0;
+
+    eval "declare -A dependenciesMap="${1#*=}
+	for i in "${!dependenciesMap[@]}"; do
+		binPathKey="$i";
+		reqPkgName="${dependenciesMap[$binPathKey]}";
+		#echo "-----------"
+		#printf "%s\t%s\n" "$binPathKey ==> ${reqPkgName}"
+
+		#check if binary path exists
+		binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
+		#printf "%s\t%s\t:\t%s\n" "$binPathKey ==> ${reqPkgName}" "$binExists"
+		if [[ "1" == "${binExists}" ]]; then
+			# if it exists, then we can skip that dependency
+			continue;
+
+		elif [[ "0" == "${binExists}" ]]; then
+			# attempt to install missing package
+			sudo apt-get install -y "${reqPkgName}" 2>&1 >/dev/null;
+			if [[ "$?" != "0" ]]; then
+				status=503;
+				continue;
+			fi
+			binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
+			if [[ "1" != "${binExists}" ]]; then
+				status=504;
+				continue;
+			fi
+		else
+			# any other possibility means multiple matches were
+			# returned from /usr/bin/which; which should not be possible
+			status=505;
+			continue;
+		fi
+		printf "%s\t%s\n" "$binPathKey ==> ${reqPkgName}";
+    done
+    return ${status};
+}
+function checkRequiredPackagesList() {
+	# get sudo prompt out of way up-front so that it
+	# doesn't appear in the middle of other output
+	sudo ls -acl 2>/dev/null >/dev/null;
+
+	# This function should not be called if there are no
+	# required packages; instead assume this is an error
+	if [[ "" == "$1" ]]; then
+		return 501;
+	fi
+
+	# if checks are disabled, then abort without error
+	local skipFlagName="--no-verify-depends";
+	local option="$2";
+	if [[ "${option}" == "${skipFlagName}" ]]; then
+		return 0;
+	fi
+
+	local quietFlagName="--quiet";
+	local requiredPackagesList="$1";
+	local status=0;
+	for reqPkgName in $(echo "${requiredPackagesList}"); do
+		pkgStatus=$(apt-search "${reqPkgName}"|grep -P '^i\w*\s+'|wc -l);
+		if [[ "1" == "${pkgStatus}" ]]; then
+			# package already installed; skip to next one
+			continue;
+		elif [[ "0" != "${pkgStatus}" ]]; then
+			if [[ "${option}" != "${quietFlagName}" ]]; then
+				echo "ERROR: package '${reqPkgName}' cannot be verified due to multiple matches.";
+				echo "Script needs to be updated or used with the ${skipFlagName} option.";
+			fi
+			status=502;
+			continue;
+		else
+			sudo apt-get install -y "${reqPkgName}" 2>&1 >/dev/null;
+			if [[ "$?" != "0" ]]; then
+				status=503;
+				continue;
+			fi
+			pkgStatus=$(apt-search "${reqPkgName}"|grep -P '^i\w*\s+'|wc -l);
+			if [[ "1" != "${pkgStatus}" ]]; then
+				status=504;
+				continue;
+			fi
+		fi
+	done
+	return ${status};
+}
+function whichPackage() {
+    if [[ "" == "$1" || "-h" == "$1" || "--help" == "$1" ]]; then
+        echo "Expected usage";
+        echo "   whichPackage binaryName";
+        echo "or whichPackage pathToBinary";
+        echo "";
+        echo "Finds what package a binary is from (e.g. /usr/bin/7z => p7zip-full)";
+        echo "  binaryName   - Name of a binary on \$PATH such as 7z, curl, firefox, etc";
+        echo "  pathToBinary - Path to a binary installed by a package. This can be the path of an actual file (e.g. /usr/bin/7z) or a symlink to an actual file (e.g. /usr/bin/vi); however either the resolved file must be part of a package.";
+        echo "";
+        return;
+    fi
+    local path="$1";
+    if [[ "~/" == "${path:0:2}" ]]; then
+        path="$HOME/${path:2}";
+    elif [[ "./" == "${path:0:2}" ]]; then
+        path="$PWD/${path:2}";
+    fi
+
+    # if path is really just a name, try looking it up
+    # using which
+    if [[ $path =~ ^[A-Za-z0-9][-A-Za-z0-9._+]*$ ]]; then
+        binLocation=$(which $path 2>/dev/null);
+        if [[ "" != "${binLocation}" && -e "${binLocation}" ]]; then
+            if [[ -L "${binLocation}" ]]; then
+                realLoc=$(realpath "${binLocation}");
+                path="${realLoc}";
+            else
+                path="${binLocation}";
+            fi
+        fi
+    fi
+    dpkg -S "${path}"|awk -F: '{print $1}';
 }
