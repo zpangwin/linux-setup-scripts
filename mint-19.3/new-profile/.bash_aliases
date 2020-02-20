@@ -180,6 +180,38 @@ alias mkmine="makeDirMineRecursively"
 alias mineonly="makeDirOnlyMineRecursively"
 alias onlymine="makeDirOnlyMineRecursively"
 
+alias 400="sudo chmod -R 400"
+alias 440="sudo chmod -R 440"
+alias 500="sudo chmod -R 500"
+alias 550="sudo chmod -R 550"
+alias 600="sudo chmod -R 600"
+alias 660="sudo chmod -R 660"
+alias 700="sudo chmod -R 700"
+alias 750="sudo chmod -R 750"
+alias 760="sudo chmod -R 760"
+alias 770="sudo chmod -R 770"
+alias 777="sudo chmod -R 777"
+
+alias u+r="sudo chmod -R u+r"
+alias u+w="sudo chmod -R u+w"
+alias u+x="sudo chmod -R u+x"
+alias u+rw="sudo chmod -R u+rw"
+alias u+rx="sudo chmod -R u+rx"
+alias u+wr="sudo chmod -R u+wr"
+alias u+wx="sudo chmod -R u+wx"
+alias u+xr="sudo chmod -R u+xr"
+alias u+xw="sudo chmod -R u+xw"
+
+alias g+r="sudo chmod -R g+r"
+alias g+w="sudo chmod -R g+w"
+alias g+x="sudo chmod -R g+x"
+alias g+rw="sudo chmod -R g+rw"
+alias g+rx="sudo chmod -R g+rx"
+alias g+wr="sudo chmod -R g+wr"
+alias g+wx="sudo chmod -R g+wx"
+alias g+xr="sudo chmod -R g+xr"
+alias g+xw="sudo chmod -R g+xw"
+
 #====================================================
 # Package related commands
 #====================================================
