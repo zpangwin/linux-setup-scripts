@@ -24,6 +24,55 @@ alias fuck='sudo $(history -p \!\!)'
 alias su!='sudo -i'
 alias root='sudo -i'
 
+__users_alias_col_offsets__=(5 25 30 35);
+__users_alias_printf_patt__="%-${__users_alias_col_offsets__[0]}s  %-${__users_alias_col_offsets__[1]}s %-${__users_alias_col_offsets__[2]}s %-${__users_alias_col_offsets__[3]}s\n";
+__users_alias_awk_patt__="%-${__users_alias_col_offsets__[0]}s  %-${__users_alias_col_offsets__[1]}s %-${__users_alias_col_offsets__[2]}s %-${__users_alias_col_offsets__[3]}s\n";
+__users_alias_sep0__=$(eval printf "=%.0s" {1..$(( ${__users_alias_col_offsets__[0]} - 0))});
+__users_alias_sep1__=$(eval printf "=%.0s" {1..$(( ${__users_alias_col_offsets__[1]} - 1))});
+__users_alias_sep2__=$(eval printf "=%.0s" {1..$(( ${__users_alias_col_offsets__[2]} - 1))});
+__users_alias_sep3__=$(eval printf "=%.0s" {1..$(( ${__users_alias_col_offsets__[3]} - 1))});
+
+alias lsusers='printf "${__users_alias_printf_patt__}" "uid" "user name" "home folder" "shell";printf "${__users_alias_printf_patt__}" "${__users_alias_sep0__}" "${__users_alias_sep1__}" "${__users_alias_sep2__}" "${__users_alias_sep3__}";getent passwd {1000..60000}|awk -F: "{printf \"${__users_alias_awk_patt__}\", \$3, \$1, \$6, \$7}"|sort -n'
+alias listusers='printf "${__users_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__users_alias_printf_patt__}" "${__users_alias_sep0__}" "${__users_alias_sep1__}" "${__users_alias_sep2__}" "${__users_alias_sep3__}";getent passwd {1000..60000}|awk -F: "{printf \"${__users_alias_awk_patt__}\", \$3, \$1, \$6, \$7}"|sort -n'
+alias lsallusers='printf "${__users_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__users_alias_printf_patt__}" "${__users_alias_sep0__}" "${__users_alias_sep1__}" "${__users_alias_sep2__}" "${__users_alias_sep3__}";getent passwd|awk -F: "{printf \"${__users_alias_awk_patt__}\", \$3, \$1, \$6, \$7}"|sort -n'
+alias listallusers='printf "${__users_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__users_alias_printf_patt__}" "${__users_alias_sep0__}" "${__users_alias_sep1__}" "${__users_alias_sep2__}" "${__users_alias_sep3__}";getent passwd|awk -F: "{printf \"${__users_alias_awk_patt__}\", \$3, \$1, \$6, \$7}"|sort -n'
+
+__groups_alias_col_offsets__=(5 25 50);
+__groups_alias_printf_patt__="%-${__groups_alias_col_offsets__[0]}s  %-${__groups_alias_col_offsets__[1]}s %-${__groups_alias_col_offsets__[2]}s\n";
+__groups_alias_awk_patt__="%-${__groups_alias_col_offsets__[0]}s  %-${__groups_alias_col_offsets__[1]}s %-${__groups_alias_col_offsets__[2]}s\\n";
+__groups_alias_sep0__=$(eval printf "=%.0s" {1..$(( ${__groups_alias_col_offsets__[0]} - 0))});
+__groups_alias_sep1__=$(eval printf "=%.0s" {1..$(( ${__groups_alias_col_offsets__[1]} - 1))});
+__groups_alias_sep2__=$(eval printf "=%.0s" {1..$(( ${__groups_alias_col_offsets__[2]} - 1))});
+
+alias lsgroups='printf "${__groups_alias_printf_patt__}" "gid" "group name" "members";printf "${__groups_alias_printf_patt__}" "${__groups_alias_sep0__}" "${__groups_alias_sep1__}" "${__groups_alias_sep2__}";getent group {1000..60000}|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groups_alias_awk_patt__}\", \$3, \$1, out;close(cmd);}"|sort -n'
+alias listgroups='printf "${__groups_alias_printf_patt__}" "gid" "group name" "members";printf "${__groups_alias_printf_patt__}" "${__groups_alias_sep0__}" "${__groups_alias_sep1__}" "${__groups_alias_sep2__}";getent group {1000..60000}|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groups_alias_awk_patt__}\", \$3, \$1, out;close(cmd);}"|sort -n'
+alias lsallgroups='printf "${__groups_alias_printf_patt__}" "gid" "group name" "members";printf "${__groups_alias_printf_patt__}" "${__groups_alias_sep0__}" "${__groups_alias_sep1__}" "${__groups_alias_sep2__}";getent group|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groups_alias_awk_patt__}\", \$3, \$1, out;close(cmd);}"|sort -n'
+alias listallgroups='printf "${__groups_alias_printf_patt__}" "gid" "group name" "members";printf "${__groups_alias_printf_patt__}" "${__groups_alias_sep0__}" "${__groups_alias_sep1__}" "${__groups_alias_sep2__}";getent group|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groups_alias_awk_patt__}\", \$3, \$1, out;close(cmd);}"|sort -n'
+
+__username_alias_col_offsets__=(25 5 30 35);
+__username_alias_printf_patt__="%-${__username_alias_col_offsets__[0]}s  %-${__username_alias_col_offsets__[1]}s %-${__username_alias_col_offsets__[2]}s %-${__username_alias_col_offsets__[3]}s\n";
+__username_alias_awk_patt__="%-${__username_alias_col_offsets__[0]}s  %-${__username_alias_col_offsets__[1]}s %-${__username_alias_col_offsets__[2]}s %-${__username_alias_col_offsets__[3]}s\n";
+__username_alias_sep0__=$(eval printf "=%.0s" {1..$(( ${__username_alias_col_offsets__[0]} - 0))});
+__username_alias_sep1__=$(eval printf "=%.0s" {1..$(( ${__username_alias_col_offsets__[1]} - 1))});
+__username_alias_sep2__=$(eval printf "=%.0s" {1..$(( ${__username_alias_col_offsets__[2]} - 1))});
+__username_alias_sep3__=$(eval printf "=%.0s" {1..$(( ${__username_alias_col_offsets__[3]} - 1))});
+
+alias lsallusernames='printf "${__username_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__username_alias_printf_patt__}" "${__username_alias_sep0__}" "${__username_alias_sep1__}" "${__username_alias_sep2__}" "${__username_alias_sep3__}";getent passwd|awk -F: "{printf \"${__username_alias_awk_patt__}\", \$1, \$3, \$6, \$7}"|sort -n'
+alias lsallusersbyname='printf "${__username_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__username_alias_printf_patt__}" "${__username_alias_sep0__}" "${__username_alias_sep1__}" "${__username_alias_sep2__}" "${__username_alias_sep3__}";getent passwd|awk -F: "{printf \"${__username_alias_awk_patt__}\", \$1, \$3, \$6, \$7}"|sort -n'
+alias listallusernames='printf "${__username_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__username_alias_printf_patt__}" "${__username_alias_sep0__}" "${__username_alias_sep1__}" "${__username_alias_sep2__}" "${__username_alias_sep3__}";getent passwd|awk -F: "{printf \"${__username_alias_awk_patt__}\", \$1, \$3, \$6, \$7}"|sort -n'
+alias listallusersbyname='printf "${__username_alias_printf_patt__}" "uid " "user name" "home folder" "shell";printf "${__username_alias_printf_patt__}" "${__username_alias_sep0__}" "${__username_alias_sep1__}" "${__username_alias_sep2__}" "${__username_alias_sep3__}";getent passwd|awk -F: "{printf \"${__username_alias_awk_patt__}\", \$1, \$3, \$6, \$7}"|sort -n'
+
+__groupname_alias_col_offsets__=(25 5 50);
+__groupname_alias_printf_patt__="%-${__groupname_alias_col_offsets__[0]}s  %-${__groupname_alias_col_offsets__[1]}s %-${__groupname_alias_col_offsets__[2]}s\n";
+__groupname_alias_awk_patt__="%-${__groupname_alias_col_offsets__[0]}s  %-${__groupname_alias_col_offsets__[1]}s %-${__groupname_alias_col_offsets__[2]}s\\n";
+__groupname_alias_sep0__=$(eval printf "=%.0s" {1..$(( ${__groupname_alias_col_offsets__[0]} - 0))});
+__groupname_alias_sep1__=$(eval printf "=%.0s" {1..$(( ${__groupname_alias_col_offsets__[1]} - 1))});
+__groupname_alias_sep2__=$(eval printf "=%.0s" {1..$(( ${__groupname_alias_col_offsets__[2]} - 1))});
+
+alias lsallgroupnames='printf "${__groupname_alias_printf_patt__}" "group name" "gid" "members";printf "${__groupname_alias_printf_patt__}" "${__groupname_alias_sep0__}" "${__groupname_alias_sep1__}" "${__groupname_alias_sep2__}";getent group|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groupname_alias_awk_patt__}\", \$1, \$3, out;close(cmd);}"|sort -n'
+alias lsallgroupsbyname='printf "${__groupname_alias_printf_patt__}" "group name" "gid" "members";printf "${__groupname_alias_printf_patt__}" "${__groupname_alias_sep0__}" "${__groupname_alias_sep1__}" "${__groupname_alias_sep2__}";getent group|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groupname_alias_awk_patt__}\", \$1, \$3, out;close(cmd);}"|sort -n'
+alias listallgroupnames='printf "${__groupname_alias_printf_patt__}" "group name" "gid" "members";printf "${__groupname_alias_printf_patt__}" "${__groupname_alias_sep0__}" "${__groupname_alias_sep1__}" "${__groupname_alias_sep2__}";getent group|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groupname_alias_awk_patt__}\", \$1, \$3, out;close(cmd);}"|sort -n'
+alias listallgroupsbyname='printf "${__groupname_alias_printf_patt__}" "group name" "gid" "members";printf "${__groupname_alias_printf_patt__}" "${__groupname_alias_sep0__}" "${__groupname_alias_sep1__}" "${__groupname_alias_sep2__}";getent group|awk -F: "{out=\$4;cmd=\"/usr/bin/members \" \$1;if(\$4==\"\"){out=\"<no members>\";cmd | getline out;};printf \"${__groupname_alias_awk_patt__}\", \$1, \$3, out;close(cmd);}"|sort -n'
 
 alias docuser='referenceUserCommands'
 alias docusers='referenceUserCommands'
