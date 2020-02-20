@@ -18,6 +18,7 @@ if [[ "11" != "${missing_depends}" ]]; then
 	#recheck
 	has_pngcheck=$(which pngcheck|wc -l);
 	has_wget=$(which wget|wc -l);
+	missing_depends="${has_pngcheck}${has_wget}";
 
 	if [[ "11" != "${missing_depends}" ]]; then
 		echo "ERROR: One or more dependencies are still unresolved. Please manually install wget and pngcheck and try again.";
