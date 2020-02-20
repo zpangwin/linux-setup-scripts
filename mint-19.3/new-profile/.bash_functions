@@ -455,6 +455,62 @@ function printWinePrefix() {
 #==========================================================================
 
 #==========================================================================
+# Start Section: Hard Drives
+#==========================================================================
+function displayFstabDiskMountpoints() {
+    #determine mount points as defined in /etc/fstab
+    local mntpnts=$(grep -P '^(UUID|/dev/).*' /etc/fstab|awk -F' ' '{print $2}'|tr 'n' '|');
+
+    #remove trailing delim
+    mntpnts="${mntpnts:0:${#mntpnts}-1}";
+
+    # display disk mount points from df but filter to only things defined in fstab
+    echo "Mounted fstab partitions from df -h:";
+    echo "==========================================";
+    df -h|grep -P "^.*(${mntpnts})$"|grep -Pv '^(tmpfs|/dev/loop|udev|/dev/sr0)';
+}
+function displayNonFstabDiskMountpoints() {
+    #determine mount points as defined in /etc/fstab
+    local mntpnts=$(grep -P '^(UUID|/dev/).*' /etc/fstab|awk -F' ' '{print $2}'|tr 'n' '|');
+
+    #remove trailing delim
+    mntpnts="${mntpnts:0:${#mntpnts}-1}";
+
+    # display disk mount points from df but filter out anything defined in fstab
+    echo "Mounted non-fstab partitions from df -h:";
+    echo "==========================================";
+    # display disk mount points from df but filter out anything defined in fstab
+    df -h|grep -Pv "^.*(${mntpnts})$"|grep -Pv '^(tmpfs|/dev/loop|udev|/dev/sr0)';
+
+    echo "";
+    echo "USB disks detected under /dev/disks/by-id:";
+    echo "==========================================";
+    ls -gG /dev/disk/by-id/|grep usb|awk -F' ' '{print $9"t"$7}'|sed 's/^../..//dev/';
+}
+function printAndSortByAvailableDriveSpace () {
+    local sep="============================================================";
+    echo -e "${sep}nDrive Space as of "$(date +'%a, %b %d @ %H:%M:%S')"n${sep}nFilesystem      Size  Used Avail Use% Mounted on";
+
+    # sort no suffix first (e.g. corresponds to bytes)
+    df -h | grep -Pv '(/dev/loop|tmpfs|udev|/dev/sr0)'|awk -F'\s+' '$4~/^([0-9][.0-9]*)$/ {print $0}'|sort -k4 -n
+
+    # sort suffixes in increasing order
+    local suffixOrder="K M G T";
+    for suffix in $suffixOrder; do
+        df -h | grep -Pv '(/dev/loop|tmpfs|udev|/dev/sr0)'|awk -F'\s+' "$4~/^([0-9][.0-9]*${suffix})$/ {print $0}"|sort -k4 -n;
+    done
+}
+function printAndSortByMountPoint () {
+    local sep="============================================================";
+    echo -e "${sep}nDrive Space as of "$(date +'%a, %b %d @ %H:%M:%S')"n${sep}nFilesystem      Size  Used Avail Use% Mounted on";
+
+    df -h | grep -Pv '(/dev/loop|tmpfs|udev|/dev/sr0)'|awk -F'\s+' '$4~/^([0-9].*)$/ {print $0}'|sort -k6;
+}
+#==========================================================================
+# End Section: Hard Drives
+#==========================================================================
+
+#==========================================================================
 # Start Section: Network
 #==========================================================================
 function isValidIpAddr() {

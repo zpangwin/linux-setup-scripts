@@ -550,6 +550,14 @@ alias dir="ls -1ap --group-directories-first|grep -Pv '^\.{1,2}/?$'"
 alias lsh="ls -Ahcl1p | sed '2iPerms         Ownr    Grp     Size Mod_Time     Name'";
 
 
+#show drive space
+alias drivespace='printAndSortByMountPoint'
+alias space='printAndSortByMountPoint'
+alias mostspace='printAndSortByAvailableDriveSpace'
+alias spaceleft='printAndSortByAvailableDriveSpace'
+alias spaceremaining='printAndSortByAvailableDriveSpace'
+alias remainingspace='printAndSortByAvailableDriveSpace'
+
 #python
 alias py2='python2'
 alias py3='python3'
