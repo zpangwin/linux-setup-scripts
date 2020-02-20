@@ -5,6 +5,7 @@
 alias title="setGnomeTerminalTitle";
 alias mkcd="makeThenChangeDir";
 
+alias runas='runCommandAsUser'
 
 #====================================================
 # Sudo and admin related commands
@@ -61,6 +62,23 @@ alias refperms='referencePermissions'
 alias octal='referenceOctalPermissions'
 alias octalref='referenceOctalPermissions'
 
+alias dfusb='displayNonFstabDiskMountpoints'
+alias showusb='displayNonFstabDiskMountpoints'
+
+alias isuefi='checkBIOSType'
+alias isbios='checkBIOSType'
+alias biostype='checkBIOSType'
+
+# quick backups
+alias bak='makeBackupWithDateOnly'
+alias bakhh='makeBackupWithFullTimestamp'
+alias backup='makeBackupWithDateOnly'
+alias backuphh='makeBackupWithFullTimestamp'
+alias mkbak='makeBackupWithDateOnly'
+alias mkbakhh='makeBackupWithFullTimestamp'
+alias mkbackup='makeBackupWithDateOnly'
+alias mkbackuphh='makeBackupWithFullTimestamp'
+
 alias hist='history'
 alias histoff="setGnomeTerminalTitle 'Incognito Window' && set +o history"
 alias histon="setGnomeTerminalTitle \"$USER@$HOSTNAME:\${PWD//\${HOME//\\//\\\\\\/}/\\~}\" && set -o history"
@@ -81,6 +99,26 @@ alias dgrep='ls -GAhclips1 | grep -P -i -e '
 
 alias f='find . -not -iwholename "*.git/*" '
 
+#The -L follows symlinks
+alias ff='findLinkedFilesIgnoringStdErr'
+alias fd='findLinkedDirsIgnoringStdErr'
+alias ff.='findUnlinkedFilesIgnoringStdErr'
+alias fd.='findUnlinkedDirsIgnoringStdErr'
+
+#The -L follows symlinks
+alias findf='findLinkedFilesIgnoringStdErr'
+alias findd='findLinkedDirsIgnoringStdErr'
+
+alias findfile='findLinkedFilesIgnoringStdErr'
+alias finddir='findLinkedDirsIgnoringStdErr'
+
+alias findf.='findUnlinkedFilesIgnoringStdErr'
+alias findd.='findUnlinkedDirsIgnoringStdErr'
+
+alias findfilenolink='findUnlinkedFilesIgnoringStdErr'
+alias finddirnolink='findUnlinkedDirsIgnoringStdErr'
+
+alias dupesinfile='findDuplicateLinesInFile'
 
 #====================================================
 # Config related commands
@@ -132,6 +170,15 @@ alias whichdebian='cat /etc/debian_version'
 
 alias batt='printBatteryPercentages'
 alias battery='printBatteryPercentages'
+
+#====================================================
+# Permission/ACL related commands
+#====================================================
+alias gimme="makeDirMineRecursively"
+alias mine="makeDirMineRecursively"
+alias mkmine="makeDirMineRecursively"
+alias mineonly="makeDirOnlyMineRecursively"
+alias onlymine="makeDirOnlyMineRecursively"
 
 #====================================================
 # Package related commands
@@ -447,6 +494,13 @@ alias editfunc="openFileInTextEditor ${HOME}/.bash_functions"
 #====================================================
 # Multimedia related commands
 #====================================================
+alias getmkvsubs="getMkvSubtitleTrackInfo";
+alias mkvsubs="getMkvSubtitleTrackInfo";
+alias rmmkvsubs="removeMkvSubtitleTracksById";
+alias rmdirmkvsubs="batchRemoveMkvSubtitleTracksById";
+alias logmkvsubs="batchLogMkvSubtitleTrackInfo";
+alias lsmkvsubs="batchLogMkvSubtitleTrackInfo";
+
 alias 2mp3='extractMp3AudioFromVideoFile'
 alias tomp3='extractMp3AudioFromVideoFile'
 alias flv2mp3='extractMp3AudioFromVideoFile'
@@ -475,6 +529,10 @@ alias normalizemp3='normalizeAllMp3InCurrentDir'
 alias levelogg='normalizeAllOggInCurrentDir'
 alias normalogg='normalizeAllOggInCurrentDir'
 alias normalizeogg='normalizeAllOggInCurrentDir'
+
+alias compdf='compressPdf'
+alias p2t='convertPdfToText'
+alias p2md='convertPdfToMarkdown'
 
 alias ytdl="youtube-dl -f 'bestvideo[ext=mkv][height <=? 480]+bestaudio/bestvideo[ext=mp4][height <=? 480]+bestaudio/bestvideo+bestaudio/best' -o '%(title)s.%(ext)s' --restrict-filenames --quiet --no-warnings --ignore-errors --prefer-free-formats "
 alias ytv="youtube-dl -f 'bestvideo[ext=mkv][height <=? 480]+bestaudio/bestvideo[ext=mp4][height <=? 480]+bestaudio/bestvideo+bestaudio/best' -o '%(title)s.%(ext)s' --restrict-filenames --quiet --no-warnings --ignore-errors --prefer-free-formats "
@@ -549,6 +607,8 @@ alias dir="ls -1ap --group-directories-first|grep -Pv '^\.{1,2}/?$'"
 #list directory with headers
 alias lsh="ls -Ahcl1p | sed '2iPerms         Ownr    Grp     Size Mod_Time     Name'";
 
+#list verbose
+alias lsv="ls -Ahcl1p --author --time-style=+'%Y-%m-%d %H:%M:%S' | sed '2iPerms         Auth    Ownr    Grp     Size Mod_Date   Mod_Time Name'";
 
 #show drive space
 alias drivespace='printAndSortByMountPoint'

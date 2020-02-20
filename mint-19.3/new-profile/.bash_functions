@@ -5,6 +5,254 @@ function setGnomeTerminalTitle() {
     local NEW_TITLE="$1";
     PS1="[e]0;${NEW_TITLE}a]${debian_chroot:+($debian_chroot)}[033[01;32m]u@h[033[00m] [033[01;34m]w $[033[00m]";
 }
+function findDuplicateLinesInFile() {
+    local file="$1";
+    if [[ "" == "$file" || ! -f "$file" ]]; then
+        echo "ERROR: No file passed or file does not exist.";
+        return;
+    fi
+
+    IFS='';
+    local dupeLinesArray=($(sort "$file" | uniq -c | grep -P '^s+(d{2,}|[2-9])s+'|sed -E 's/^s*([0-9][0-9]*)s+(S+)s*$/1t2/g'));
+    if [[ "0" == "${#dupeLinesArray[@]}" ]]; then
+        echo "No duplicate lines detected.";
+        return;
+    fi
+    echo "Found ${#dupeLinesArray[@]} distinct lines that occur more than once.";
+    echo "";
+    echo "-----------------------------------------------------------";
+    echo -e "CounttText";
+    echo "-----------------------------------------------------------";
+
+    local dupeTermsArray=(  );
+    for ((i = 0; i < ${#dupeLinesArray[@]}; i++)); do
+        echo "${dupeLinesArray[$i]}"
+        dupeTerm=$(echo "${dupeLinesArray[$i]}"|sed -E 's/^s*[0-9][0-9]*s+(.*)$/1/g');
+        dupeTermsArray+=("${dupeTerm}");
+    done
+    unset dupeLinesArray;
+
+    if [[ "0" != "${#dupeTermsArray[@]}" ]]; then
+        echo "";
+        echo "-----------------------------------------------------------";
+        echo "Line Numbers:";
+        echo "-----------------------------------------------------------";
+        for ((i = 0; i < ${#dupeTermsArray[@]}; i++)); do
+            dupeTerm="${dupeTermsArray[$i]}";
+            if [[ "" == "${dupeTerm}" ]]; then
+                continue;
+            fi
+            grep -Hn "${dupeTerm}" "${file}" 2>/dev/null;
+        done
+    fi
+    unset dupeTermsArray;
+}
+function findWrapper() {
+    # Default values
+    local printDebugInfo="false";
+    local linkOption='';
+    local searchPath='.';
+    local startFromArg="0";
+    local typeParam='';
+
+    # First arg = link options params (defaults to empty. can also use -P, -L, or -H; see man find for more info)
+    local linkOption='';
+    if [[ "" != "$1" ]]; then
+        if [[ $1 =~ ^-[HLP]$ ]]; then
+            linkOption="$1";
+            startFromArg="1";
+
+        elif [[ "." == "$1" || "REL" == "$1" || "RELATIVE" == "$1" ]]; then
+            searchPath=".";
+            startFromArg="1";
+
+        elif [[ "~" == "${1:0:1}" ]]; then
+            searchPath="${HOME}${1:1}";
+            startFromArg="1";
+
+        elif [[ "/" == "${1:0:1}" ]]; then
+            searchPath="$1";
+            startFromArg="1";
+
+        elif [[ "ABS" == "$1" || "PWD" == "$1" || "FULL" == "$1" || "ABSOLUTE" == "$1" ]]; then
+            if [[ -d "$1" ]]; then
+                searchPath="$1";
+            else
+                searchPath=$(pwd);
+            fi
+            startFromArg="1";
+
+        elif [[ "-dir" == "$1" ]]; then
+            typeParam="-type d";
+            startFromArg="1";
+
+        elif [[ "-file" == "$1" ]]; then
+            typeParam="-type f";
+            startFromArg="1";
+        fi
+    fi
+
+    if [[ "1" == "${startFromArg}" && "" != "$2" ]]; then
+        if [[ $2 =~ ^-[HLP]$ ]]; then
+            linkOption="$2";
+            startFromArg="2";
+
+        elif [[ "." == "$2" || "REL" == "$2" || "RELATIVE" == "$2" ]]; then
+            searchPath=".";
+            startFromArg="2";
+
+        elif [[ "~" == "${2:0:1}" ]]; then
+            searchPath="${HOME}${2:1}";
+            startFromArg="2";
+
+        elif [[ "/" == "${2:0:1}" ]]; then
+            searchPath="$2";
+            startFromArg="2";
+
+        elif [[ "ABS" == "$2" || "PWD" == "$2" || "FULL" == "$2" || "ABSOLUTE" == "$2" ]]; then
+            if [[ -d "$2" ]]; then
+                searchPath="$2";
+            else
+                searchPath=$(pwd);
+            fi
+            startFromArg="2";
+
+        elif [[ "-dir" == "$2" ]]; then
+            typeParam="-type d";
+            startFromArg="2";
+
+        elif [[ "-file" == "$2" ]]; then
+            typeParam="-type f";
+            startFromArg="2";
+        fi
+    fi
+
+    if [[ "2" == "${startFromArg}" && "" != "$3" ]]; then
+        if [[ "-dir" == "$3" ]]; then
+            typeParam="-type d";
+            startFromArg="3";
+
+        elif [[ "-file" == "$3" ]]; then
+            typeParam="-type f";
+            startFromArg="3";
+        fi
+    fi
+
+    local hasArgs="true";
+    if [[ "0" == "${startFromArg}" && "" == "$1" ]]; then
+        hasArgs="false";
+    elif [[ "1" == "${startFromArg}" && "" == "$2" ]]; then
+        hasArgs="false";
+    elif [[ "2" == "${startFromArg}" && "" == "$3" ]]; then
+        hasArgs="false";
+    elif [[ "3" == "${startFromArg}" && "" == "$4" ]]; then
+        hasArgs="false";
+    fi
+
+    # increment by 1 (since the 0 arg will be ignored anyway - see comments below)
+    startFromArg=$(( startFromArg + 1 ));
+
+    if [[ "true" == "${printDebugInfo}" ]]; then
+        echo "";
+        echo "$1: $1";
+        echo "$2: $2";
+        echo "$3: $3";
+        echo "$4: $4";
+        echo "";
+        echo "${@}: ${@}";
+        echo "${@:0}: ${@:0}";
+        echo "${@:1}: ${@:1}";
+        echo "${@:2}: ${@:2}";
+        echo "${@:3}: ${@:3}";
+        echo "${@:4}: ${@:4}";
+        echo "${@:5}: ${@:5}";
+        echo "${@:6}: ${@:6}";
+        echo "";
+        echo "hasArgs: $hasArgs";
+        echo "linkOption: $linkOption";
+        echo "searchPath: $searchPath";
+        echo "startFromArg: $startFromArg";
+        echo "typeParam: $typeParam";
+    fi
+
+    if [[ "true" == "${hasArgs}" ]]; then
+        # "${@}"   - all arguments (the zero arg, which is the function name, is omitted)
+        # "${@:1}" - all arguments (the zero arg, which is the function name, is omitted)
+        # "${@:2}" - all arguments except the first one
+        # "${@:3}" - all arguments except the first and second ones
+        find $linkOption "${searchPath}" $typeParam -not ( -wholename '*.git/*' -o -wholename '*.hg/*' -o -wholename '*.svn/*' ) "${@:${startFromArg}}" 2>/dev/null;
+    else
+        # There were no args besides possibly the ones for the linkOption / searchPath ...
+        find $linkOption "${searchPath}" $typeParam -not ( -wholename '*.git/*' -o -wholename '*.hg/*' -o -wholename '*.svn/*' ) 2>/dev/null;
+    fi
+}
+function findWrapperWithRelativePaths() {
+    findWrapper REL "${@}";
+}
+function findWrapperWithAbsolutePaths() {
+    findWrapper ABS "${@}";
+}
+function findLinkedFilesIgnoringStdErr() {
+    if [[ "" == "$1" || "-" == "${1:0:1}" ]]; then
+        findWrapper REL -L -file "${@}";
+    else
+        findWrapper REL -L -file -iname "${@}";
+    fi
+}
+function findUnlinkedFilesIgnoringStdErr() {
+    if [[ "" == "$1" || "-" == "${1:0:1}" ]]; then
+        findWrapper REL -file "${@}";
+    else
+        findWrapper REL -file -iname "${@}";
+    fi
+}
+function findLinkedDirsIgnoringStdErr() {
+    if [[ "" == "$1" || "-" == "${1:0:1}" ]]; then
+        findWrapper REL -L -dir "${@}";
+    else
+        findWrapper REL -L -dir -iname "${@}";
+    fi
+}
+function findUnlinkedDirsIgnoringStdErr() {
+    if [[ "" == "$1" || "-" == "${1:0:1}" ]]; then
+        findWrapper REL -dir "${@}";
+    else
+        findWrapper REL -dir -iname "${@}";
+    fi
+}
+function compareBinaries () {
+    if [[ "" == "$1" || "" == "$2" ]]; then
+        echo -e "ERROR: Requires two arguments.nExpected usage:nn";
+        echo -e "compareBinaries binary1 binary2n";
+        return;
+    fi
+    if [[ '' == "$(which cmp)" ]]; then
+        echo -e "ERROR: compareBinaries requires cmp to work; please install and try again.";
+        return;
+    fi
+    cmp -l "$1" "$2" | gawk '{printf "%08X %02X %02Xn", $1, strtonum(0$2), strtonum(0$3)}';
+}
+function diffBinaries () {
+    if [[ "" == "$1" || "" == "$2" ]]; then
+        echo -e "ERROR: Requires two arguments.nExpected usage:nn";
+        echo -e "diffBinaries binary1 binary2n";
+        return;
+    fi
+    if [[ '' == "$(which xxd)" || '' == "$(which diff)" ]]; then
+        echo -e "ERROR: diffBinaries requires xxd and diff to work; please install and try again.";
+        return;
+    fi
+    local __tmp_dir__="/tmp/diffBinaries-$(date +'%Y%m%d%H%M%S')";
+    mkdir -p "${__tmp_dir__}";
+    if [[ -d "${__tmp_dir__}" ]]; then
+        echo -e "diffBinaries encountered an error while creating temp dir '${__tmp_dir__}'";
+        return;
+    fi
+    xxd "$1" > "${__tmp_dir__}/xxd1.hex" 2>/dev/null;
+    xxd "$2" > "${__tmp_dir__}/xxd2.hex" 2>/dev/null;
+    echo '';
+    diff "${__tmp_dir__}/xxd1.hex" "${__tmp_dir__}/xxd2.hex";
+}
 function archiveDirWith7z () {
     local dirPath="$1";
     local zipPath="$2";
@@ -46,7 +294,6 @@ function gitArchiveLastCommit () {
     echo "   -> outFilePath: '${outFilePath}'";
     git diff --diff-filter=CRAMX -z --name-only HEAD~1 HEAD | xargs -0 git archive HEAD -o "${outFilePath}" --;
 }
-
 function gitArchiveLastCommitBackout () {
     local currDir=$(pwd);
     if [[ ! -d "${currDir}/.git" ]]; then
@@ -209,6 +456,114 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 
 #==========================================================================
+# Start Section: Office files
+#==========================================================================
+function convertPdfToText () {
+    local pdfFile="$1";
+    if [[ ! -e "${pdfFile}" ]]; then
+        echo "   -> Error: Missing or bad input file path '$pdfFile' ";
+        return;
+    fi
+    echo "Note: This conversion is an imperfect process. It is strongly recommended to review the file and make manual revisions when complete.";
+
+    local textFile="";
+    if [[ "$2" != "" ]]; then
+        textFile="$2";
+    else
+        textFile="${pdfFile%.*}.txt"
+    fi
+
+    pdftotext "${pdfFile}" "${textFile}";
+    if [[ -e "${textFile}" ]]; then
+        #1) Remove trailing spaces
+        perl -pi -e 's/[ t]+$//g' "${textFile}";
+
+        #2) Remove non-ascii characters
+        perl -pi -e 's/[^[:ascii:]]//g' "${textFile}";
+
+        #3) Convert tabs in paragraphs to spaces (perserve leading indents though)
+        perl -pi -e 's/([S])[ t]+/$1 /g' "${textFile}";
+
+        #4) Convert leading spaces to tabs (paragraph indents)
+        perl -pi -e 's/^[ t]+/t/g' "${textFile}";
+
+        #7) Convert 'form feed, new page' characters to 5x newlines
+        perl -pi -e 's/^x0c/nnnnn/g' "${textFile}";
+    fi
+}
+function convertPdfToMarkdown () {
+    local pdfFile="$1";
+    if [[ ! -e "${pdfFile}" ]]; then
+        echo "   -> Error: Missing or bad input file path '$pdfFile' ";
+        return;
+    fi
+    echo "Note: This conversion is an imperfect process. It is strongly recommended to review the file and make manual revisions when complete.";
+
+    local textFile="";
+    if [[ "$2" != "" ]]; then
+        textFile="$2";
+    else
+        textFile="${pdfFile%.*}.md"
+    fi
+
+    pdftotext "${pdfFile}" "${textFile}";
+    if [[ -e "${textFile}" ]]; then
+        #1) Remove trailing spaces
+        perl -pi -e 's/[ t]+$//g' "${textFile}";
+
+        #2) Remove non-ascii characters
+        #this was stripping out apostrophes, list bullets, and lots of other stuff...
+        #probably need to specifiy exact characters that should be removed
+        #perl -pi -e 's/[^[:ascii:]]//g' "${textFile}";
+
+        #3) Convert tabs in paragraphs to spaces (perserve leading indents though)
+        perl -pi -e 's/([S])[ t]+/$1 /g' "${textFile}";
+
+        #4) Convert leading spaces to tabs (paragraph indents)
+        perl -pi -e 's/^[ t]+/nt/g' "${textFile}";
+
+        #5) Escape literal characters that would be treated as markup
+        perl -0pi -e 's/\/\\/smg' "${textFile}";
+        perl -0pi -e 's/([#*><[]()`|])/\$1/smg' "${textFile}";
+
+        #6) Convert 'form feed, new page' characters to markdown 'page break' syntax
+        perl -pi -e 's/^x0c/\pagen/g' "${textFile}";
+
+        #7) Assume non-indented mixed-text, less than 35 characters is a title/heading...
+        perl -pi -e 's/^([A-Z][^rn]{5,34})$/##$1/g' "${textFile}";
+
+        #8) Assume any non-title, non-indented mixed-text is an insert line break and remove it
+        perl -0pi -e 's/(n[^s#\][^rn]{40,})n([^s#\][^rn]{40,})n([^s#\])/$1 $2 $3/smg' "${textFile}";
+        perl -0pi -e 's/(n[^s#\][^rn]{40,})n([^s#\][^rn]{40,})n([^s#\])/$1 $2 $3/smg' "${textFile}";
+        perl -0pi -e 's/(n[^s#\][^rn]{40,})n([^s#\])/$1 $2/smg' "${textFile}";
+        perl -0pi -e 's/(n[^s#\][^rn]{40,})n([^s#\])/$1 $2/smg' "${textFile}";
+
+        #9) Same thing but for an indented line to a non-indented line
+        perl -0pi -e 's/(nt+[^s#\][^rn]{40,})n([^s#\])/$1 $2/smg' "${textFile}";
+    fi
+}
+function compressPdf () {
+    local inputfile="$1";
+    local arg2="$2";
+    local arg3="$3";
+
+    local outfile="${inputfile%.pdf}-compressed.pdf";
+    local rvalue=150;
+    if [[ "$arg2" != "" ]]; then
+        outfile="$arg2";
+    fi
+
+    if [[ "$arg3" != "" ]]; then
+        rvalue="$arg3";
+    fi
+
+    gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default     -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages     -dCompressFonts=true -r${rvalue} -sOutputFile="${outfile}" "${inputfile}" 2>/dev/null;
+}
+#==========================================================================
+# End Section: Office files
+#==========================================================================
+
+#==========================================================================
 # Start Section: Media files
 #==========================================================================
 function extractMp3AudioFromVideoFile () {
@@ -291,7 +646,157 @@ function normalizeAllMp3InCurrentDir () {
         normalize-mp3 "${audio_file}";
     done
 }
+function getMkvAllTrackIds () {
+    local filePath="$1";
+    mkvmerge --identify "${filePath}" | grep --color=never -i Track;
+}
+function getMkvAudioTrackIds () {
+    local filePath="$1";
+    mkvmerge --identify "${filePath}" | grep --color=never -i Audio;
+}
+function getMkvSubtitleTrackIds () {
+    local filePath="$1";
+    mkvmerge --identify "${filePath}" | grep --color=never -i subtitle;
+}
+function getMkvSubtitleTrackInfo () {
+    local filePath="$1";
+    local rawsubinfo=$(mkvinfo --track-info "${filePath}" | grep -A 6 -B 3 "Track type: subtitles");
+    if [[ "" == "$rawsubinfo" ]]; then
+        return;
+    fi
+    local cleansubinfo=$(echo "$rawsubinfo" | grep -E "(Track number|Name)" | perl -0pe "s/(^|n)[s|+]+/$1/g" | perl -0pe "s/(^|n)Track number.*track ID for mkvmergeD+?(d+)[^sd]+/$1TrackID: $2/gi" | perl -0pe "s/n(Name:[^nr]+)/ $1/gi");
+    echo "${cleansubinfo}";
+}
+function removeMkvSubtitleTracksById () {
+    local filePath="$1";
+    local trackIds="$2";
+    local bakFile="${filePath}.bak";
+    if [[ "" == "${filePath}" || "" == "${trackIds}" || ! $trackIds =~ ^[1-9][0-9,]*$ ]]; then
+        echo "removeMkvSubtitleTracksById(): ERROR empty or invalid track ids";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "#call this method to remove one or more subtitle track ids";
+        echo 'removeMkvSubtitleTracksById /path/to/file.mkv id1,id2,etc';
+        return;
+    fi
+    if [[ -e "${bakFile}" ]]; then
+        echo "removeMkvSubtitleTracksById(): ERROR *.bak file already exists.";
+        return;
+    fi
+    cp -a "${filePath}" "${bakFile}";
+    mkvmerge -o "${filePath}" --subtitle-tracks !${trackIds} "${bakFile}";
+}
+function keepMkvSubtitleTracksById () {
+    local filePath="$1";
+    local trackIds="$2";
+    local bakFile="${filePath}.bak";
+    if [[ "" == "${filePath}" || "" == "${trackIds}" || ! $trackIds =~ ^[1-9][0-9,]*$ ]]; then
+        echo "keepMkvSubtitleTracksById(): ERROR empty or invalid track ids";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "#call this method to keep one or more subtitle track ids";
+        echo 'keepMkvSubtitleTracksById /path/to/file.mkv id1,id2,etc';
+        return;
+    fi
+    if [[ -e "${bakFile}" ]]; then
+        echo "keepMkvSubtitleTracksById(): ERROR *.bak file already exists.";
+        return;
+    fi
+    cp -a "${filePath}" "${bakFile}";
+    mkvmerge -o "${filePath}" --subtitle-tracks ${trackIds} "${bakFile}";
+}
+function batchRemoveMkvSubtitleTracksById () {
+    local folderPath="$1";
+    local trackIds="$2";
+    if [[ "" == "${folderPath}" || "" == "${trackIds}" || ! $trackIds =~ ^[0-9][0-9,]*$ ]]; then
+        echo "batchRemoveMkvSubtitleTracksById(): ERROR empty or invalid track ids";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "#call this method to remove one or more subtitle track ids";
+        echo 'batchRemoveMkvSubtitleTracksById /dir/with/mkvs id1,id2,etc';
+        return;
+    fi
+    if [[ ! -e "${folderPath}" ]]; then
+        echo "batchRemoveMkvSubtitleTracksById(): ERROR mkv parent folder does not exist.";
+        return;
+    fi
+    local options="";
+    local originalLocation=$(pwd);
+    cd "${folderPath}";
+    for file in *mkv; do
+        mv "$file" "${file}.bak";
+        mkvmerge -o "$file" --subtitle-tracks !${trackIds} "${file}.bak";
+        if [[ -e "${file}" ]]; then
+            rm "${file}.bak";
+        fi
+    done
+    cd "${originalLocation}";
+}
+function batchKeepMkvSubtitleTracksById () {
+    local folderPath="$1";
+    local trackIds="$2";
+    if [[ "" == "${folderPath}" || "" == "${trackIds}" || ! $trackIds =~ ^[0-9][0-9,]*$ ]]; then
+        echo "batchKeepMkvSubtitleTracksById(): ERROR empty or invalid track ids";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "#call this method to keep one or more subtitle track ids";
+        echo 'batchKeepMkvSubtitleTracksById /dir/with/mkvs id1,id2,etc';
+        return;
+    fi
+    if [[ ! -e "${folderPath}" ]]; then
+        echo "batchKeepMkvSubtitleTracksById(): ERROR mkv parent folder does not exist.";
+        return;
+    fi
+    local originalLocation=$(pwd);
+    cd "${folderPath}";
+    for file in *mkv; do
+        mv "$file" "${file}.bak";
+        mkvmerge -o "$file" --subtitle-tracks ${trackIds} "${file}.bak";
+        if [[ -e "${file}" ]]; then
+            rm "${file}.bak";
+        fi
+    done
+    cd "${originalLocation}";
+}
+function batchLogMkvSubtitleTrackInfo () {
+    local outputFileName="SUBTITLES_INFO.txt";
+    local folderPath="$1";
+    if [[ "" == "${folderPath}" ]]; then
+        echo "batchLogMkvSubtitleTrackInfo(): ERROR empty dir";
+        echo "expected usage: ";
+        echo "#output a list of subtitle track ids to ${outputFileName}";
+        echo 'batchLogMkvSubtitleTrackInfo /dir/with/mkvs';
+        return;
+    fi
+    if [[ ! -e "${folderPath}" ]]; then
+        echo "batchLogMkvSubtitleTrackInfo(): ERROR mkv parent folder does not exist.";
+        return;
+    fi
+    local originalLocation=$(pwd);
+    local SEPARATOR="------------------------------------";
+    cd "${folderPath}";
+    for file in *mkv; do
+        echo -e "n${SEPARATOR}n${file}n${SEPARATOR}n" >> "${outputFileName}";
 
+        local rawsubinfo=$(mkvinfo --track-info "${file}" | grep -A 6 -B 3 "Track type: subtitles");
+        if [[ "" == "$rawsubinfo" ]]; then
+            echo -e "t -> No subs detected." >> "${outputFileName}";
+            continue;
+        fi
+        local cleansubinfo=$(echo "$rawsubinfo" | grep -E "(Track number|Name)" | perl -0pe "s/(^|n)[s|+]+/$1/g" | perl -0pe "s/(^|n)Track number.*track ID for mkvmergeD+?(d+)[^sd]+/$1TrackID: $2/gi" | perl -0pe "s/n(Name:[^nr]+)/ $1/gi");
+
+        echo "${cleansubinfo}" >> "${outputFileName}";
+    done
+    cd "${originalLocation}";
+}
 #==========================================================================
 # End Section: Media files
 #==========================================================================
@@ -449,9 +954,306 @@ function printWinePrefix() {
 #==========================================================================
 # Start Section: Administration
 #==========================================================================
+function runCommandAsUser() {
+    if [[ "" == "$1" || "" == "$2" ]]; then
+        echo "usage:";
+        echo "  runCommandAsUser USER COMMAND";
+        echo "";
+        echo "  If the command consists of arguments or otherwise";
+        echo "  contains spaces, then it must be enclosed in quotes.";
+        return;
+    fi
 
+    # "${@:2}" - all arguments except the first one
+    su - "$1" -c "${@:2}"
+}
+function checkBIOSType() {
+    if [[ -e /sys/firmware/efi ]]; then
+        echo "OS has been booted using UEFI.";
+    else
+        echo "OS has been booted using Legacy BIOS.";
+    fi
+}
+function makeBackupWithTimestamp() {
+    local defaultTsFormat="%Y%m%d%H%M%S";
+    local defaultDelim=".";
+    local defaultBakFormat="%p${defaultDelim}%t${defaultDelim}%b";
+    local maxDescLength=40;
+
+    local targetPath="$1";
+    local tsFormat="$2";
+    local bakFormat="$3";
+    local shortDesc="$4";
+    local showUsage='false';
+    if [[ "" == "${targetPath}" ]]; then
+        echo "ERROR: No arguments.";
+        showUsage='true';
+    else
+        if [[ "-h" == "${targetPath}" || "--help" == "${targetPath}" ]]; then
+            showUsage='true';
+        elif [[ ! -e "${targetPath}" ]]; then
+            echo "ERROR: Path does not exist.";
+            echo "  passed path: '${targetPath}'";
+            showUsage='true';
+        elif [[ -L "${targetPath}" ]]; then
+            echo "ERROR: Path is a link.";
+            showUsage='true';
+        fi
+    fi
+    if [[ "true" == "${showUsage}" ]]; then
+        echo "";
+        echo "Expected usage:";
+        echo "makeBackupWithTimestamp SOURCE_PATH";
+        echo "makeBackupWithTimestamp SOURCE_PATH [tsFormat] [backupFormat] [desc]";
+        echo "";
+        echo "This will create a backup of the indicated path at: ";
+        echo " '${SOURCE_PATH}.yyyymmdd.HHMMSS.bak'";
+        echo "";
+        echo "SOURCE_PATH:  path to a file or a folder.";
+        echo "   NOTE: Links are not supported.";
+        echo "";
+        echo "tsFormat:     timeformat for /bin/date";
+        echo "   defaults to '${defaultTsFormat}'";
+        echo "";
+        echo "backupFormat: format for backup name, as follows:";
+        echo "   %p - source path";
+        echo "   %t - timestamp";
+        echo "   %d - short description";
+        echo "   %b - the bak extension (does not include dot)";
+        echo "";
+        echo "   defaults to '${defaultBakFormat}'";
+        echo "";
+        echo "desc:         short description of ${maxDescLength} chars or less.";
+        echo " The description text can only contain alphanum, dot, plus, minus, and equals characters.";
+        echo "";
+        return;
+    fi
+
+    # check if the current user has write perms for a file or folder
+    # https://askubuntu.com/questions/980658
+    if [[ ! -w "${targetPath}" ]]; then
+        # user does not own a file then
+        # get sudo prompt out of the way before other messaging
+        sudo ls -acl 2>/dev/null >/dev/null;
+    fi
+
+    # check backup name format
+    if [[ "" == "${bakFormat}" ]]; then
+        bakFormat="${defaultBakFormat}";
+    elif [[ $bakFormat =~ ^.*[^-A-Za-z0-9.+=_%].*$ ]]; then
+        # bad format; clear it and let it use default
+        echo "Warning: Backup name format contains invalid characters; falling back to default."
+        bakFormat="${defaultBakFormat}";
+    else
+        # when dealing with paths that contain more than just filename
+        # require that %p must be used AND must appear only at the start
+        if [[ $targetPath =~ ^.*/.*$ ]]; then
+            if [[ ! $bakFormat =~ ^%p.*$ || $bakFormat =~ ^..*%p.*$ ]]; then
+                # bad format; clear it and let it use default
+                echo "Warning: The passed source path contains /; In this case,the Backup name format must use %p and it must appear at the start of the pattern; falling back to default."
+                bakFormat="${defaultBakFormat}";
+            fi
+        fi
+        local testPattern=$(printf "%s" "${bakFormat}.%d"|sed 's/%[bdtp]//g');
+        if [[ $testPattern =~ ^.*%.*$ ]]; then
+            # bad format; clear it and let it use default
+            echo "Warning: Backup name format contains invalid % escape sequences; falling back to default."
+            bakFormat="${defaultBakFormat}";
+        fi
+    fi
+    # check timestamp format
+    if [[ "" != "${tsFormat}" ]]; then
+        tsFormat=$(date +"${tsFormat}");
+        if [[ "0" != "$?" || $tsFormat =~ ^.*[^-A-Za-z0-9.+=_].*$ ]]; then
+            # bad format; clear it and let it use default
+            echo "Warning: Bad timestamp format; falling back to default."
+            tsFormat="";
+        fi
+    fi
+    # set default timestamp format if none defined
+    if [[ "" == "${tsFormat}" ]]; then
+        tsFormat="${defaultTsFormat}";
+    fi
+    # check short description for spaces, invalid chars, length
+    if [[ "" != "${shortDesc}" ]]; then
+        if [[ $shortDesc =~ ^.*[^-.+=_A-Za-z0-9].*$ ]]; then
+            shortDesc=$(printf "${shortDesc}"|sed 's/s+/-/g'|sed 's/[^-.+=_A-Za-z0-9]+//g');
+        fi
+        if (( ${#shortDesc} > $maxDescLength )); then
+            shortDesc="${shortDesc:0:$maxDescLength}";
+        fi
+    fi
+    local timeStamp=$(date +"${tsFormat}");
+
+    # build backup name from pattern
+    local backupPath=$(printf "%s" "${bakFormat}"|sed 's/%b/bak/g'|sed "s/%t/${timeStamp}/g");
+    if [[ "" != "${shortDesc}" && $backupPath =~ ^.*%d.*$ ]]; then
+        backupPath=$(printf "%s" "${backupPath}"|sed "s/%d/${shortDesc}/g");
+    fi
+    if [[ "%p" == "${backupPath:0:2}" ]]; then
+        backupPath="${targetPath}${backupPath:2}";
+    elif [[ $backupPath =~ ^.*%p.*$ ]]; then
+        backupPath=$(printf "%s" "${backupPath}"|sed "s|%p|${targetPath}|g");
+    fi
+
+    # validate backup path
+    if [[ $backupPath =~ ^.*%.*$ ]]; then
+        echo "ERROR: backupPath contains unexpanded strings.";
+        echo "   backupPath: '${backupPath}'";
+        echo "";
+        echo "Aborting function call ...";
+        return;
+    fi
+    if [[ -e "${backupPath}" ]]; then
+        echo "ERROR: backupPath already exists...";
+        echo "   backupPath: '${backupPath}'";
+        echo "";
+        echo "Aborting function call ...";
+        return;
+    fi
+
+    echo "Creating backup at: '${backupPath}' ...";
+    # check if the current user has write perms for a file or folder
+    # https://askubuntu.com/questions/980658
+    if [[ ! -w "${targetPath}" ]]; then
+        # user does not write perms for a file then
+        sudo cp -a --no-clobber "${targetPath}" "${backupPath}";
+    else
+        cp -a --no-clobber "${targetPath}" "${backupPath}";
+    fi
+    if [[ "0" == "$?" ]]; then
+        echo "-> SUCCESS";
+    else
+        echo "-> FAILURE";
+    fi
+}
+function makeBackupWithDateOnly() {
+    local path="$1";
+    local bakFmt="$2";
+    local comment="$3";
+    if [[ "" == "${comment}" ]]; then
+        makeBackupWithTimestamp "$path" '%Y%m%d' '%p-%t.%b';
+    else
+        makeBackupWithTimestamp "$path" '%Y%m%d' '%p-%t-%d.%b' "${comment}";
+    fi
+}
+function makeBackupWithFullTimestamp() {
+    local path="$1";
+    local bakFmt="$2";
+    local comment="$3";
+    if [[ "" == "${comment}" ]]; then
+        makeBackupWithTimestamp "$path" '%Y%m%d%H%M%S' '%p-%t.%b';
+    else
+        makeBackupWithTimestamp "$path" '%Y%m%d%H%M%S' '%p-%t-%d.%b' "${comment}";
+    fi
+}
+function makeDirMine() {
+    local FN_NAME="makeDirMine";
+    local TARGET_DIR="$1";
+    local RECURSIVE="false";
+    if [[ "" != "$2" ]]; then
+        if [[ "-R" == "$1" || "-r" == "$1" || "--recursive" == "$1" ]]; then
+            TARGET_DIR="$2"
+            RECURSIVE="true";
+        elif [[ "-R" == "$2" || "-r" == "$2" || "--recursive" == "$2" ]]; then
+            RECURSIVE="true";
+        fi;
+    fi
+    if [[ "" == "${TARGET_DIR}" ]]; then
+        echo "${FN_NAME}: ERROR: Missing target dir. Exiting function...";
+        return;
+    fi
+    if [[ ! -e "${TARGET_DIR}" ]]; then
+        echo "${FN_NAME}: ERROR: ${TARGET_DIR} does not exist. Exiting function...";
+        return;
+    fi
+    if [[ "true" == "${RECURSIVE}" ]]; then
+        sudo chown -R ${SUDO_USER:-$USER}:${SUDO_USER:-$USER} "${TARGET_DIR}";
+    else
+        sudo chown ${SUDO_USER:-$USER}:${SUDO_USER:-$USER} "${TARGET_DIR}";
+    fi
+}
+function makeDirMineNonRecursively() {
+    makeDirMine "$1";
+}
+function makeDirMineRecursively() {
+    makeDirMine -R "$1";
+}
+function makeDirOnlyMineNonRecursively() {
+    makeDirMine "$1";
+    sudo chmod o-rwx "$1";
+}
+function makeDirOnlyMineRecursively() {
+    makeDirMine -R "$1";
+    sudo chmod -R o-rwx "$1";
+}
 #==========================================================================
 # End Section: Administration
+#==========================================================================
+
+#==========================================================================
+# Start Section: Housekeeping
+#==========================================================================
+function cleanBashHistory() {
+    local stfu="false";
+    if [[ "-q" == "$1" || "--quiet" == "$1" || "--stfu" == "$1" ]]; then
+        stfu="true";
+    fi
+    if [[ "false" == "${stfu}" ]]; then
+        echo "Cleaning up ~/.bash_history ... ";
+    fi
+
+    local hostName=$(hostname);
+
+    # cleanup trivial commands from history
+    # run as multiple passes to clean adjacent lines better...
+    for i in {1..250}; do
+        local lineCountBefore=$(cat "$HOME/.bash_history"|wc -l);
+
+        # 1. remove dead SAFE (simple no- and one-arg) commands/function calls/typos/alias/etc
+        # note: the second regex group was constructed to avoid removal of 'update-grub'
+        sed -i -z -E 's/n(agrep|apt search|cat|echo|getent|git|groups|id|kill|killall|ls?|man|md5sum|members|nmblookup|p[gks]|pgrep|pkill|printf|shad+sum|sudo|sudo apt|title|which)? ?(;|c;s|w+|w[-w]{1,9}|w[-w]{11,}|w+-[^g]w+|~?/[-w/]+)s*(&|-h|--help|--version)?s*n/n/g' "$HOME/.bash_history";
+
+        # 2. remove dead SAFE (simple no- and one-arg) SUDO commands/function calls/typos/alias/etc
+        sed -i -z -E 's/n(sudo)? ?apt(-get)? (--help|autoremove|dist-upgrade|list --upgrade?able|update) ?-?y?s*(2>s*&1|2>s*/dev/null)?s*(>s*/dev/null)?s*;?s*n/n/g' "$HOME/.bash_history";
+
+        # 3. remove any references to data files
+        sed -i -z -E 's/n[^n]*/media/[-w]+/(data|Media|Backups)b[^n]*n/n/g' "$HOME/.bash_history";
+
+        # 4. remove any references to media files
+        sed -i -z -E 's/n[^n]*.(avi|epub|ogg|m4[ab]|mkv|mobi|mp[34gv]|srt)b[^n]*n/n/g' "$HOME/.bash_history";
+
+        # 5. remove somewhat safe commands/function calls/typos/alias/etc
+        sed -i -z -E 's/n(sudo )?(arp|basename|basedir|branch|cat|commit|date|df|diff|dirname|dpkg -L|dpkg-query|du|echo|git|[asp]?grep|gthumb|head|inxi|ip|p?kill|killall|ldd|locate|ls?|lsmkvsubs|md5sum|merge|nmblookup|p[gk]|ping|printf|ps|rename|rmdirmkvsubs|shad+sum|tail|title|tree|uname|youtube-dl|ytdl)b [^n|>]*s*(2>s*&1|2>s*/dev/null)?s*(>s*/dev/null)?s*n/n/g' "$HOME/.bash_history";
+
+        # 6. remove somewhat safe single-piped commands
+        sed -i -z -E 's/n(arp|basename|basedir|cat|date|df|diff|dirname|dpkg -L|dpkg-query|du|find|echo|git|[asp]?grep|head|history|inxi|ip|ldd|locate|ls?|lsgroups|lsusers|man|md5sum|mostspace|nmblookup|p[gk]|ping|printf|ps|shad+sum|tail|tree|uname)b(|| [^n|>]*|)s*b(grep|head|sed|sort|tail|wc|xargs)b s*[^n|>]*n/n/g' "$HOME/.bash_history";
+
+        # 7. remove simple find commands (nothing with exec or delete)
+        sed -i -z -E "s/\n\b(f|ff|fd|find [~\.]?\/[-\/\w]*)\b( \-m[ai][nx]depth \d+)?( \-m[ai][nx]depth \d+)?( \-type [fdl]| \-iname)? ["']?[^\n"\|'\s]*["']?\s*\n/\n/g" "$HOME/.bash_history";
+
+        # 8. remove simple debug statements
+        sed -i -z -E 's/n[^n]*becho "(bar|crap|debug|damn|dammit|foo|foobar|fuck|grr+|shit|test)";[^n]*n/n/gi' "$HOME/.bash_history";
+
+        # 9. remove any lines with personal info
+        sed -i -z -E "s/\n[^\n]*(\bssh\b|\b${USER}\b|\b${hostName}\b|login|password|w*PWD=|w*USE?R=|d+.d+.d+.d+)[^\n]*\n/\n/gi" "$HOME/.bash_history";
+
+        local lineCountAfter=$(cat "$HOME/.bash_history"|wc -l);
+        # if we get done earlier, then quit earlier
+        if [[ "${lineCountBefore}" == "${lineCountAfter}" ]]; then
+            break;
+        fi
+        if [[ "false" == "${stfu}" ]]; then
+            echo "  -> completed pass $i: ${lineCountBefore} lines -> $ ${lineCountAfter}";
+        fi
+    done;
+}
+function backupAndCleanBashHistory() {
+    cp -a "$HOME/.bash_history" "$HOME/.bash_history."$(date +'%Y%m%d%H%M%S').bak;
+    cleanBashHistory "${@}";
+}
+#==========================================================================
+# End Section: Housekeeping
 #==========================================================================
 
 #==========================================================================
