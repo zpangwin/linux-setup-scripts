@@ -187,6 +187,21 @@ alias ispackageinstalled='apt list package'
 #alias doihave='dpkg -l'
 alias doihave='apt list package'
 
+# find what package a binary is from (e.g. /usr/bin/7z => p7zip-full)
+alias whichpkg='whichPackage'
+
+# similar to $(realpath $(which NAME)) but with better error handling
+alias realbin='whichRealBinary'
+alias whichbin='whichRealBinary'
+alias whichreal='whichRealBinary'
+
+# find out which binaries are in a package (e.g. p7zip-full => /usr/bin/7z)
+alias listbin='whichBinariesInPackage'
+alias listbins='whichBinariesInPackage'
+alias listcmds='whichBinariesInPackage'
+alias listutils='whichBinariesInPackage'
+
+# display the glibc version
 alias glibc="echo -e 'alias glibc=\"ldd --version|grep GLIBC\"\n' && ldd --version|grep --color=never GLIBC"
 
 #====================================================

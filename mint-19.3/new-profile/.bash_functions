@@ -674,6 +674,177 @@ function displayNetworkHostnames() {
 #==========================================================================
 # Start Section: Package Management
 #==========================================================================
+function whichRealBinary() {
+    if [[ "" == "$1" || "-h" == "$1" || "--help" == "$1" ]]; then
+        echo "Expected usage";
+        echo "   whichRealBinary binaryName";
+        echo "or whichRealBinary pathToBinary";
+        echo "";
+        echo "Similar to which but it will display the following additional information:";
+        echo " * file type (file or symlink)";
+        echo " * if the file is a symlink, the real path will be displayed.";
+        echo "";
+        echo "  binaryName   - Name of a binary on $PATH such as 7z, curl, firefox, etc";
+        echo "  pathToBinary - Path to a binary installed by a package. This can be the path of an actual file (e.g. /usr/bin/7z) or a symlink to an actual file (e.g. /usr/bin/vi); however either the resolved file must be part of a package.";
+        echo "";
+        return 0;
+    fi
+    local path="$1";
+    if [[ "~/" == "${path:0:2}" ]]; then
+        path="$HOME/${path:2}";
+    elif [[ "./" == "${path:0:2}" ]]; then
+        path="$PWD/${path:2}";
+    fi
+
+    # if path is really just a name, try looking it up
+    # using which
+    if [[ $path =~ ^[A-Za-z0-9][-A-Za-z0-9._+]*$ ]]; then
+       local binLocation=$();
+        if [[ "" != "${binLocation}" && -e "${binLocation}" ]]; then
+            local realLoc="${binLocation}";
+            local type="file";
+            if [[ -L "${binLocation}" ]]; then
+                realLoc=$(realpath "${binLocation}");
+                type="symlink";
+            fi
+            echo "${realLoc}";
+        fi
+    fi
+}
+function whichPackage() {
+    if [[ "" == "$1" || "-h" == "$1" || "--help" == "$1" ]]; then
+        echo "Expected usage";
+        echo "   whichPackage binaryName";
+        echo "or whichPackage pathToBinary";
+        echo "";
+        echo "Finds what package a binary is from (e.g. /usr/bin/7z => p7zip-full)";
+        echo "  binaryName   - Name of a binary on $PATH such as 7z, curl, firefox, etc";
+        echo "  pathToBinary - Path to a binary installed by a package. This can be the path of an actual file (e.g. /usr/bin/7z) or a symlink to an actual file (e.g. /usr/bin/vi); however either the resolved file must be part of a package.";
+        echo "";
+        return 0;
+    fi
+    local path="$1";
+    if [[ "~/" == "${path:0:2}" ]]; then
+        path="$HOME/${path:2}";
+    elif [[ "./" == "${path:0:2}" ]]; then
+        path="$PWD/${path:2}";
+    fi
+
+    # if path is really just a name, try looking it up
+    # using which
+    if [[ $path =~ ^[A-Za-z0-9][-A-Za-z0-9._+]*$ ]]; then
+        local binLocation=$(which "${path}" 2>/dev/null);
+        if [[ "" != "${binLocation}" && -e "${binLocation}" ]]; then
+            local realLoc="${binLocation}";
+            if [[ -L "${binLocation}" ]]; then
+                realLoc=$(realpath "${binLocation}");
+            fi
+            path="${realLoc}";
+        fi
+    fi
+    dpkg -S "${path}"|awk -F: '{print $1}';
+}
+function whichBinariesInPackage() {
+    if [[ "" == "$1" || "-h" == "$1" || "--help" == "$1" ]]; then
+        echo "Expected usage";
+        echo "   whichBinariesInPackage packageName";
+        echo "";
+        echo "Find out which binaries are in a package (e.g. p7zip-full => /usr/bin/7z)";
+        echo "  packageName   - Name of a package to find binaries for such as p7zip-full, curl, firefox, etc";
+        echo "";
+        return 0;
+    fi
+    local beVerbose="false";
+    local binariesList=(  );
+    local packageName="$1";
+    local option="$2"
+    #printf "packageName: %sn" "$packageName"
+
+    # set verbosity
+    if [[ "-v" == "$2" || "--verbose" == "$2" ]]; then
+        beVerbose="true";
+    fi
+
+    local allPackageFilesList=($(dpkg -L ${packageName} 2>/dev/null|grep -Pv '^(/.$|/usr/(?:share/)?(?:applications|dbus-d|doc|doc-base|icons|lib|lintian|man|nemo|pixmaps|polkit-d)b(?:/.*)?$|/etcb(?:/.*))'));
+    #printf "sizeof(allPackageFilesList): %sn" "${#allPackageFilesList[@]}"
+
+    for packagePath in "${allPackageFilesList[@]}"; do
+        #printf "packagePath-raw: %sn" "$packagePath"
+        if [[ "" == "${packagePath}" ]]; then
+            continue;
+
+        elif [[ -d "${packagePath}" ]]; then
+            # skip directories
+            continue;
+        fi
+        # make sure the file is executable
+        if [[ ! -x "${packagePath}" ]]; then
+            continue;
+        fi
+        #debug
+        #printf "packagePath-executable: %sn" "$packagePath"
+
+        # add to list
+        binariesList+=("${packagePath}");
+    done
+
+    if [[ "0" == "${binariesList[@]}" ]]; then
+        echo "No executable files found for package '${packageName}'";
+        echo "This is common for library packages but can occassionally be a sign that a non-library package was not installed correctly and does not have the execute permission set on one or more files.";
+        return 503;
+    fi
+
+    # trim down path list to only those that have files
+    local finalPathsList=(  );
+    local initialPathsList=($(echo "$PATH"|sed -E 's/:/n/g'));
+    for path in "${initialPathsList[@]}"; do
+        if [[ ! -d "${path}" ]]; then
+            continue;
+        fi
+        # remove any trailing slashes
+        if [[ "/" == "${path}" ]]; then
+            path="${path:0:${#path}-1}";
+        fi
+        finalPathsList+=("${path}");
+    done
+
+    if [[ "true" == "${beVerbose}" ]]; then
+        echo "=======================================================";
+        echo "List of executable files in package [ ${#binariesList[@]} file(s) ]:";
+        echo "=======================================================";
+    fi
+    local parentDir="";
+    local pathAddressableBinariesList=(  );
+    for file in "${binariesList[@]}"; do
+        #echo "---------------------------------------------";
+        if [[ "true" == "${beVerbose}" ]]; then
+            echo "${file}";
+        fi
+
+        # Check if the current package file is directly addressable
+        # on the $PATH (e.g. as opposed to via a symlink on $PATH)
+        parentDir=$(dirname "$file");
+        for path in "${finalPathsList[@]}"; do
+            # if file is directly under current path, add it and move on
+            if [[ "${parentDir}" == "${path}" ]]; then
+                pathAddressableBinariesList+=("${file}");
+                break; # break out of inner loop
+            fi
+        done
+    done
+
+    if [[ "0" != "${#pathAddressableBinariesList[@]}" ]]; then
+        if [[ "true" == "${beVerbose}" ]]; then
+            echo "";
+        fi
+        echo "=======================================================";
+        echo "PATH-addressable binaries [ ${#pathAddressableBinariesList[@]} file(s) ]:";
+        echo "=======================================================";
+        for file in "${pathAddressableBinariesList[@]}"; do
+            echo "${file}";
+        done
+    fi
+}
 function addCustomSource() {
     # get sudo prompt out of way up-front so that it
     # doesn't appear in the middle of other output
