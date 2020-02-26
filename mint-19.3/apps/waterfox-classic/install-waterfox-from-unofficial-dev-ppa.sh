@@ -107,7 +107,7 @@ if [[ "true" != "${omitSymlinks}" && "1" == "${isWaterfoxKpeInstalled}" ]]; then
     fi
 
     if [[ "" != "${applicationBinPath}" ]]; then
-        symlinkList="waterfox-kde waterfox-kpe waterfox-classic-kde waterfox-classic-kpe waterfoxk wf wfc";
+        symlinkList="waterfox waterfox-kde waterfox-kpe waterfox-classic-kde waterfox-classic-kpe waterfoxk wf wfc";
         for symlinkName in $(echo "${symlinkList}"); do
             # if symlink does not exist, simply create it and go to next iteration
             if [[ ! -L "/usr/bin/${symlinkName}" ]]; then
