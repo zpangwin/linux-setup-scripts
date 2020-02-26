@@ -220,7 +220,7 @@ function findUnlinkedDirsIgnoringStdErr() {
         findWrapper REL -dir -iname "${@}";
     fi
 }
-function compareBinaries () {
+function compareBinaries() {
     if [[ "" == "$1" || "" == "$2" ]]; then
         echo -e "ERROR: Requires two arguments.nExpected usage:nn";
         echo -e "compareBinaries binary1 binary2n";
@@ -232,7 +232,7 @@ function compareBinaries () {
     fi
     cmp -l "$1" "$2" | gawk '{printf "%08X %02X %02Xn", $1, strtonum(0$2), strtonum(0$3)}';
 }
-function diffBinaries () {
+function diffBinaries() {
     if [[ "" == "$1" || "" == "$2" ]]; then
         echo -e "ERROR: Requires two arguments.nExpected usage:nn";
         echo -e "diffBinaries binary1 binary2n";
@@ -253,7 +253,7 @@ function diffBinaries () {
     echo '';
     diff "${__tmp_dir__}/xxd1.hex" "${__tmp_dir__}/xxd2.hex";
 }
-function archiveDirWith7z () {
+function archiveDirWith7z() {
     local dirPath="$1";
     local zipPath="$2";
 
@@ -282,7 +282,7 @@ function makeThenChangeDir() {
 #==========================================================================
 # Start Section: Git
 #==========================================================================
-function gitArchiveLastCommit () {
+function gitArchiveLastCommit() {
     local currDir=$(pwd);
     if [[ ! -d "${currDir}/.git" ]]; then
         echo "   -> Error: Must be in top-level dir of a git repository.";
@@ -294,7 +294,7 @@ function gitArchiveLastCommit () {
     echo "   -> outFilePath: '${outFilePath}'";
     git diff --diff-filter=CRAMX -z --name-only HEAD~1 HEAD | xargs -0 git archive HEAD -o "${outFilePath}" --;
 }
-function gitArchiveLastCommitBackout () {
+function gitArchiveLastCommitBackout() {
     local currDir=$(pwd);
     if [[ ! -d "${currDir}/.git" ]]; then
         echo "   -> Error: Must be in top-level dir of a git repository.";
@@ -306,7 +306,7 @@ function gitArchiveLastCommitBackout () {
     echo "   -> outFilePath: '${outFilePath}'";
     git diff --diff-filter=CRAMX -z --name-only HEAD~1 HEAD | xargs -0 git archive HEAD~1 -o "${outFilePath}" --;
 }
-function gitArchiveAllCommitsSince () {
+function gitArchiveAllCommitsSince() {
     local currDir=$(pwd);
     if [[ ! -d "${currDir}/.git" ]]; then
         echo "   -> Error: Must be in top-level dir of a git repository.";
@@ -328,7 +328,7 @@ function gitArchiveAllCommitsSince () {
     echo "   -> outFilePath: '${outFilePath}'";
     git diff --diff-filter=CRAMX -z --name-only HEAD~1 HEAD | xargs -0 git archive HEAD -o "${outFilePath}" --;
 }
-function gitGrepHistoricalFileContents () {
+function gitGrepHistoricalFileContents() {
     if [[ "" == "$1" ]]; then
         echo "gitGrepHistoricalFileContents(): No passed args.";
         echo -e "tExpected gitGrepHistoricalFileContents filename regex";
@@ -346,7 +346,7 @@ function gitGrepHistoricalFileContents () {
         done
     )
 }
-function gitUpdateAllReposUnderDir () {
+function gitUpdateAllReposUnderDir() {
     local parentDir="$1";
     local startingDir=$(pwd);
     if [[ "" == "${parentDir}" ]]; then
@@ -458,7 +458,7 @@ function gitUpdateAllReposUnderDir () {
 #==========================================================================
 # Start Section: Office files
 #==========================================================================
-function convertPdfToText () {
+function convertPdfToText() {
     local pdfFile="$1";
     if [[ ! -e "${pdfFile}" ]]; then
         echo "   -> Error: Missing or bad input file path '$pdfFile' ";
@@ -491,7 +491,7 @@ function convertPdfToText () {
         perl -pi -e 's/^x0c/nnnnn/g' "${textFile}";
     fi
 }
-function convertPdfToMarkdown () {
+function convertPdfToMarkdown() {
     local pdfFile="$1";
     if [[ ! -e "${pdfFile}" ]]; then
         echo "   -> Error: Missing or bad input file path '$pdfFile' ";
@@ -542,7 +542,7 @@ function convertPdfToMarkdown () {
         perl -0pi -e 's/(nt+[^s#\][^rn]{40,})n([^s#\])/$1 $2/smg' "${textFile}";
     fi
 }
-function compressPdf () {
+function compressPdf() {
     local inputfile="$1";
     local arg2="$2";
     local arg3="$3";
@@ -566,7 +566,7 @@ function compressPdf () {
 #==========================================================================
 # Start Section: Media files
 #==========================================================================
-function extractMp3AudioFromVideoFile () {
+function extractMp3AudioFromVideoFile() {
     local videofile="$1";
     local bitrate="$2";
     local defbitrate="160k";
@@ -576,12 +576,12 @@ function extractMp3AudioFromVideoFile () {
     local filenameonly="${videofile%.*}"
     ffmpeg -i "${videofile}" -vn -acodec libmp3lame -ac 2 -ab $bitrate -ar 48000 "${filenameonly}.mp3"
 }
-function extractOggAudioFromVideoFile () {
+function extractOggAudioFromVideoFile() {
     local videofile="$1";
     local filenameonly="${videofile%.*}"
     ffmpeg -i "${videofile}" -vn -acodec libvorbis "${filenameonly}.ogg"
 }
-function extractMp3AudioFromAllVideosInCurrentDir () {
+function extractMp3AudioFromAllVideosInCurrentDir() {
     local bitrate="$1";
     local defbitrate="160k";
     if [[ "" == "$1" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
@@ -599,7 +599,7 @@ function extractMp3AudioFromAllVideosInCurrentDir () {
         fi
     done
 }
-function extractMp3AudioFromAllMp4InCurrentDir () {
+function extractMp3AudioFromAllMp4InCurrentDir() {
     local bitrate="$1";
     local defbitrate="160k";
     if [[ "" == "$1" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
@@ -614,7 +614,7 @@ function extractMp3AudioFromAllMp4InCurrentDir () {
         fi
     done
 }
-function extractMp3AudioFromAllFlvInCurrentDir () {
+function extractMp3AudioFromAllFlvInCurrentDir() {
     local bitrate="$1";
     local defbitrate="160k";
     if [[ "" == "$1" || ! $bitrate =~ ^[1-9][0-9]{1,2}k$ ]]; then
@@ -628,7 +628,7 @@ function extractMp3AudioFromAllFlvInCurrentDir () {
         fi
     done
 }
-function extractOggAudioFromAllMp4InCurrentDir () {
+function extractOggAudioFromAllMp4InCurrentDir() {
     for vid in *.mp4; do
         #skip any that already exist
         if [[ ! -f "${vid%.mp4}.ogg" ]]; then
@@ -636,29 +636,29 @@ function extractOggAudioFromAllMp4InCurrentDir () {
         fi
     done
 }
-function normalizeAllOggInCurrentDir () {
+function normalizeAllOggInCurrentDir() {
     for audio_file in *.ogg; do
         normalize-ogg "${audio_file}";
     done
 }
-function normalizeAllMp3InCurrentDir () {
+function normalizeAllMp3InCurrentDir() {
     for audio_file in *.mp3; do
         normalize-mp3 "${audio_file}";
     done
 }
-function getMkvAllTrackIds () {
+function getMkvAllTrackIds() {
     local filePath="$1";
     mkvmerge --identify "${filePath}" | grep --color=never -i Track;
 }
-function getMkvAudioTrackIds () {
+function getMkvAudioTrackIds() {
     local filePath="$1";
     mkvmerge --identify "${filePath}" | grep --color=never -i Audio;
 }
-function getMkvSubtitleTrackIds () {
+function getMkvSubtitleTrackIds() {
     local filePath="$1";
     mkvmerge --identify "${filePath}" | grep --color=never -i subtitle;
 }
-function getMkvSubtitleTrackInfo () {
+function getMkvSubtitleTrackInfo() {
     local filePath="$1";
     local rawsubinfo=$(mkvinfo --track-info "${filePath}" | grep -A 6 -B 3 "Track type: subtitles");
     if [[ "" == "$rawsubinfo" ]]; then
@@ -667,7 +667,7 @@ function getMkvSubtitleTrackInfo () {
     local cleansubinfo=$(echo "$rawsubinfo" | grep -E "(Track number|Name)" | perl -0pe "s/(^|n)[s|+]+/$1/g" | perl -0pe "s/(^|n)Track number.*track ID for mkvmergeD+?(d+)[^sd]+/$1TrackID: $2/gi" | perl -0pe "s/n(Name:[^nr]+)/ $1/gi");
     echo "${cleansubinfo}";
 }
-function removeMkvSubtitleTracksById () {
+function removeMkvSubtitleTracksById() {
     local filePath="$1";
     local trackIds="$2";
     local bakFile="${filePath}.bak";
@@ -688,7 +688,7 @@ function removeMkvSubtitleTracksById () {
     cp -a "${filePath}" "${bakFile}";
     mkvmerge -o "${filePath}" --subtitle-tracks !${trackIds} "${bakFile}";
 }
-function keepMkvSubtitleTracksById () {
+function keepMkvSubtitleTracksById() {
     local filePath="$1";
     local trackIds="$2";
     local bakFile="${filePath}.bak";
@@ -709,7 +709,7 @@ function keepMkvSubtitleTracksById () {
     cp -a "${filePath}" "${bakFile}";
     mkvmerge -o "${filePath}" --subtitle-tracks ${trackIds} "${bakFile}";
 }
-function batchRemoveMkvSubtitleTracksById () {
+function batchRemoveMkvSubtitleTracksById() {
     local folderPath="$1";
     local trackIds="$2";
     if [[ "" == "${folderPath}" || "" == "${trackIds}" || ! $trackIds =~ ^[0-9][0-9,]*$ ]]; then
@@ -738,7 +738,7 @@ function batchRemoveMkvSubtitleTracksById () {
     done
     cd "${originalLocation}";
 }
-function batchKeepMkvSubtitleTracksById () {
+function batchKeepMkvSubtitleTracksById() {
     local folderPath="$1";
     local trackIds="$2";
     if [[ "" == "${folderPath}" || "" == "${trackIds}" || ! $trackIds =~ ^[0-9][0-9,]*$ ]]; then
@@ -766,7 +766,7 @@ function batchKeepMkvSubtitleTracksById () {
     done
     cd "${originalLocation}";
 }
-function batchLogMkvSubtitleTrackInfo () {
+function batchLogMkvSubtitleTrackInfo() {
     local outputFileName="SUBTITLES_INFO.txt";
     local folderPath="$1";
     if [[ "" == "${folderPath}" ]]; then
@@ -804,7 +804,7 @@ function batchLogMkvSubtitleTrackInfo () {
 #==========================================================================
 # Start Section: Wine
 #==========================================================================
-function createNewWine32Prefix () {
+function createNewWine32Prefix() {
     if [[ "" == "$1" ]]; then
         echo -e "ERROR: Requires argument.nExpected usage:nn";
         echo -e "createNewWine32Prefix folder-to-be-createdn";
@@ -818,7 +818,7 @@ function createNewWine32Prefix () {
     fi
     env WINEPREFIX="$1" WINEARCH=win32 wine wineboot
 }
-function createNewWine64Prefix () {
+function createNewWine64Prefix() {
     if [[ "" == "$1" ]]; then
         echo -e "ERROR: Requires argument.nExpected usage:nn";
         echo -e "createNewWine64Prefix folder-to-be-createdn";
@@ -1289,7 +1289,7 @@ function displayNonFstabDiskMountpoints() {
     echo "==========================================";
     ls -gG /dev/disk/by-id/|grep usb|awk -F' ' '{print $9"t"$7}'|sed 's/^../..//dev/';
 }
-function printAndSortByAvailableDriveSpace () {
+function printAndSortByAvailableDriveSpace() {
     local sep="============================================================";
     echo -e "${sep}nDrive Space as of "$(date +'%a, %b %d @ %H:%M:%S')"n${sep}nFilesystem      Size  Used Avail Use% Mounted on";
 
@@ -1302,7 +1302,7 @@ function printAndSortByAvailableDriveSpace () {
         df -h | grep -Pv '(/dev/loop|tmpfs|udev|/dev/sr0)'|awk -F'\s+' "$4~/^([0-9][.0-9]*${suffix})$/ {print $0}"|sort -k4 -n;
     done
 }
-function printAndSortByMountPoint () {
+function printAndSortByMountPoint() {
     local sep="============================================================";
     echo -e "${sep}nDrive Space as of "$(date +'%a, %b %d @ %H:%M:%S')"n${sep}nFilesystem      Size  Used Avail Use% Mounted on";
 
@@ -2052,38 +2052,38 @@ function unmuteAllAlsaAudioControls() {
 #==========================================================================
 # Start Section: Services
 #==========================================================================
-function stopSystemdServices () {
+function stopSystemdServices() {
     for passedarg in "$@"; do
         #echo "passedarg is $passedarg"
         sudo systemctl stop $passedarg
     done
 }
-function disableSystemdServices () {
+function disableSystemdServices() {
     for passedarg in "$@"; do
         #echo "passedarg is $passedarg"
         sudo systemctl disable $passedarg
     done
 }
-function stopAndDisableSystemdServices () {
+function stopAndDisableSystemdServices() {
     for passedarg in "$@"; do
         #echo "passedarg is $passedarg"
         sudo systemctl stop $passedarg
         sudo systemctl disable $passedarg
     done
 }
-function enableSystemdServices () {
+function enableSystemdServices() {
     for passedarg in "$@"; do
         #echo "passedarg is $passedarg"
         sudo systemctl enable $passedarg
     done
 }
-function restartSystemdServices () {
+function restartSystemdServices() {
     for passedarg in "$@"; do
         #echo "passedarg is $passedarg"
         sudo systemctl restart $passedarg
     done
 }
-function enableAndRestartSystemdServices () {
+function enableAndRestartSystemdServices() {
     for passedarg in "$@"; do
         #echo "passedarg is $passedarg"
         sudo systemctl enable $passedarg
@@ -2128,10 +2128,10 @@ function openNemo() {
 # Start Section: Reference
 #==========================================================================
 # colorize man pages. See: https://www.ryanschulze.net/archives/2113
-function man () {
+function man() {
   LESS_TERMCAP_mb=$(tput setaf 4)  LESS_TERMCAP_md=$(tput setaf 4;tput bold)   LESS_TERMCAP_so=$(tput setaf 7;tput setab 4;tput bold)   LESS_TERMCAP_us=$(tput setaf 6)   LESS_TERMCAP_me=$(tput sgr0)   LESS_TERMCAP_se=$(tput sgr0)   LESS_TERMCAP_ue=$(tput sgr0)   command man "$@"
 }
-function referenceGroupCommands () {
+function referenceGroupCommands() {
     # -------------------------------------------------------------------------------------------------
     # References:
     # https://www.howtogeek.com/50787/add-a-user-to-a-group-or-second-group-on-linux/
@@ -2173,7 +2173,7 @@ function referenceGroupCommands () {
     echo "  lsallgroupsbyname                      # display all groups and their members (sorted by name)";
     echo "";
 }
-function referenceUserCommands () {
+function referenceUserCommands() {
     # -------------------------------------------------------------------------------------------------
     # References:
     # https://www.howtogeek.com/50787/add-a-user-to-a-group-or-second-group-on-linux/
@@ -2267,7 +2267,7 @@ function referenceUserCommands () {
     echo "  lsallusersbyname                       # display all users, their home dirs, and their shells (sorted by name)";
     echo "";
 }
-function referencePermissions () {
+function referencePermissions() {
     echo "Permission Administration Commands:";
     echo "=======================================";
     echo "# Ownership";
@@ -2379,7 +2379,7 @@ function referencePermissions () {
     echo "  chmod ugo=xrw FILE => -rwxrwxrwx FILE ";
     echo "";
 }
-function referenceOctalPermissions () {
+function referenceOctalPermissions() {
     echo "Octal Permission Examples:";
     echo "====================================";
     echo "  chmod 000 FILE => ---------- FILE ";
