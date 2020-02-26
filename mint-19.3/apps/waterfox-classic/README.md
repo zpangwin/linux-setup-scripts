@@ -65,13 +65,13 @@ cd linux-setup-scripts/mint-19.3/apps/waterfox-classic
 
 ** install-waterfox-from-unofficial-dev-ppa.sh **
 
-Last tested : Feb 25th, 2020 with Waterfox 2020.02 KDE Plasma Edition
+Last tested : Feb 25th, 2020 with Waterfox 2020.02.1 KDE Plasma Edition
 
 Last status : working (Mint 19.3 Cinnamon x64)
 
 ** download-and-install-official-waterfox.sh **
 
-Last tested : Feb 2020 with Waterfox 2020.02
+Last tested : Feb 25th, 2020 with Waterfox 2020.02.1
 
 Last status : working (Mint 19.3 Cinnamon x64)
 

@@ -3,7 +3,7 @@
 if [ -f ../functions.sh ]; then
     . ../functions.sh
 else
-	echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+	echo 'Error: missing functions.sh; Extract archive or clone git repo then run script from there.';
 	exit;
 fi
 
@@ -17,49 +17,53 @@ for passedarg in "$@"; do
     #echo "passedarg is $passedarg"
     if [[ "-h" == "${passedarg}" || "--help" == "${passedarg}" ]]; then
         displayHelp="true";
-    elif [[ "-n" == "${passedarg}" || "--no-clobber" == "${passedarg}" ]]; then
-        noClobberSymlinks="true";
+
     elif [[ "-k" == "${passedarg}" || "--keep-opt-symlinks" == "${passedarg}" ]]; then
         keepOptInstallSymlinks="true";
+    elif [[ "-n" == "${passedarg}" || "--no-clobber" == "${passedarg}" ]]; then
+        noClobberSymlinks="true";
     elif [[ "-o" == "${passedarg}" || "--omit-symlinks" == "${passedarg}" ]]; then
         omitSymlinks="true";
     elif [[ "-r" == "${passedarg}" || "--recreate-symlinks" == "${passedarg}" ]]; then
-        recreateSymlinks="true"
+        recreateSymlinks="true";
     fi
 done
 
 if [[ "true" == "${displayHelp}" ]]; then
-    echo "OPTIONS:";
-    echo "  -h, --help                 Displays this help text.";
-    echo "";
-    echo "  -n, --no-clobber           No symlinks will be overwritten.";
-    echo "";
-    echo "  -k, --keep-opt-symlinks    Symlinks pointing to /opt/waterfox-classic will not be overwritten.";
-    echo "";
-    echo "  -o, --omit                 Script will not add any new symlinks/overwrite any existing symlinks.";
-    echo "                             This option is only considered during initial install.";
-    echo "";
-    echo "  -r, --recreate-symlinks    Script will recreate symlinks even if application is already installed.";
-    echo "                             Other options such as -n and -k will still apply.";
-    echo "                             This option is not considered during initial install.";
-    echo "";
+    echo '';
+    echo "Usage:  $(basename $0) [options]";
+    echo '';
+    echo 'Options:';
+    echo '  -h, --help                 Displays this help text.';
+    echo '';
+    echo '  -n, --no-clobber           No symlinks will be overwritten.';
+    echo '';
+    echo '  -k, --keep-opt-symlinks    Symlinks pointing to /opt/waterfox-classic will not be overwritten.';
+    echo '';
+    echo '  -o, --omit-symlinks        Script will not add any new symlinks/overwrite any existing symlinks.';
+    echo '                             This option is only considered during initial install.';
+    echo '';
+    echo '  -r, --recreate-symlinks    Script will recreate symlinks even if application is already installed.';
+    echo '                             Other options such as -n and -k will still apply.';
+    echo '                             This option is not considered during initial install.';
+    echo '';
     exit;
 fi
 
 isWaterfoxKpeInstalled=$(apt search waterfox-classic|grep -P '^i\w*\s+waterfox-classic-kpe'|wc -l);
 if [[ "0" != "${isWaterfoxKpeInstalled}" ]]; then
     if [[ "true" == "${recreateSymlinks}" && "false" == "${omitSymlinks}" ]]; then
-        echo "Recreating symlinks for Waterfox Classic KPE ...";
-        echo "";
+        echo 'Recreating symlinks for Waterfox Classic KPE ...';
+        echo '';
     else
-        echo "Waterfox Classic KPE is already installed.";
-        echo "";
-        echo "To remove, run:";
-        echo "  sudo apt remove waterfox-classic-kpe waterfox-locale-en";
-        echo "";
-        echo "To recreate symlinks, use -r or --recreate-symlinks";
-        echo "For more details, see help with -h or --help";
-        echo "";
+        echo 'Waterfox Classic KPE is already installed.';
+        echo '';
+        echo 'To remove, run:';
+        echo '  sudo apt remove waterfox-classic-kpe waterfox-locale-en';
+        echo '';
+        echo 'To recreate symlinks, use -r or --recreate-symlinks';
+        echo 'For more details, see help with -h or --help';
+        echo '';
         exit;
     fi
 else
@@ -92,40 +96,48 @@ else
     isWaterfoxKpeInstalled=$(which waterfox-classic|wc -l);
 fi
 
-# setup additional symlink
+# setup additional symlinks
 if [[ "true" != "${omitSymlinks}" && "1" == "${isWaterfoxKpeInstalled}" ]]; then
-    applicationBinPath=$(realpath waterfox-classic);
-
-    symlinkList="waterfox-kde waterfox-kpe waterfox-classic-kde waterfox-classic-kpe waterfoxk wf wfc";
-    for symlinkName in $(echo "${symlinkList}"); do
-        # if symlink does not exist, simply create it and go to next iteration
-        if [[ ! -L "/usr/bin/${symlinkName}" ]]; then
-            sudo ln -s "${applicationBinPath}" "/usr/bin/${symlinkName}";
-            continue;
+    applicationBinPath=$(realpath /usr/bin/waterfox-classic);
+    if [[ "/opt/waterfox-classic/" == "${applicationBinPath:0:22}" || "/opt/waterfox/" == "${applicationBinPath:0:14}" ]]; then
+        applicationBinPath="";
+        if [[ -f "/usr/lib/waterfox-classic/waterfox-classic-bin.sh" ]]; then
+            applicationBinPath="/usr/lib/waterfox-classic/waterfox-classic-bin.sh";
         fi
+    fi
 
-        # otherwise, if the -n/--no-clobber flag is set, then also
-        # skip to the next iteration without making any changes
-        if [[ "true" == "${noClobberSymlinks}" ]]; then
-            continue;
-        fi
-
-        # get the symlink target
-        symlinkDest=$(realpath "/usr/bin/${symlinkName}");
-
-        # if the -k/--keep-opt-symlinks flag is set
-        # and the target is under either /opt/waterfox-classic/* or
-        # /opt/waterfox/* then skip to next iteration without changes
-        if [[ "true" == "${keepOptInstallSymlinks}" ]]; then
-            if [[ "/opt/waterfox-classic/" == "${symlinkDest:0:22}" || "/opt/waterfox/" == "${symlinkDest:0:14}" ]]; then
+    if [[ "" != "${applicationBinPath}" ]]; then
+        symlinkList="waterfox-kde waterfox-kpe waterfox-classic-kde waterfox-classic-kpe waterfoxk wf wfc";
+        for symlinkName in $(echo "${symlinkList}"); do
+            # if symlink does not exist, simply create it and go to next iteration
+            if [[ ! -L "/usr/bin/${symlinkName}" ]]; then
+                sudo ln -s "${applicationBinPath}" "/usr/bin/${symlinkName}";
                 continue;
             fi
-        fi
 
-        # finally, check that the existing symlink does not
-        # already point to the correct location
-        if [[ "${symlinkDest}" != "${applicationBinPath}" ]]; then
-            sudo ln -sf "${applicationBinPath}" "/usr/bin/${symlinkName}";
-        fi
-    done
+            # otherwise, if the -n/--no-clobber flag is set, then also
+            # skip to the next iteration without making any changes
+            if [[ "true" == "${noClobberSymlinks}" ]]; then
+                continue;
+            fi
+
+            # get the symlink target
+            symlinkDest=$(realpath "/usr/bin/${symlinkName}");
+
+            # if the -k/--keep-opt-symlinks flag is set
+            # and the target is under either /opt/waterfox-classic/* or
+            # /opt/waterfox/* then skip to next iteration without changes
+            if [[ "true" == "${keepOptInstallSymlinks}" ]]; then
+                if [[ "/opt/waterfox-classic/" == "${symlinkDest:0:22}" || "/opt/waterfox/" == "${symlinkDest:0:14}" ]]; then
+                    continue;
+                fi
+            fi
+
+            # finally, check that the existing symlink does not
+            # already point to the correct location
+            if [[ "${symlinkDest}" != "${applicationBinPath}" ]]; then
+                sudo ln -sf "${applicationBinPath}" "/usr/bin/${symlinkName}";
+            fi
+        done
+    fi
 fi
