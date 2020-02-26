@@ -1308,6 +1308,38 @@ function printAndSortByMountPoint() {
 
     df -h | grep -Pv '(/dev/loop|tmpfs|udev|/dev/sr0)'|awk -F'\s+' '$4~/^([0-9].*)$/ {print $0}'|sort -k6;
 }
+function mountAllFstabEntries() {
+    # first make sure all the auto mount stuff is mounted
+    # this also doubles as a way to get the sudo prompt out
+    # of the way up front
+    sudo mount --all;
+    sleep 1s;
+
+    local fstabMountPointsArray=($(awk -F'\s+' '/^s*[^#].*/media/.*$/ {print $2}' /etc/fstab));
+    local activeMountsArray=($(mount | awk -F'\s+' '/^.*/media/.*$/ {print $3}'));
+    local isAlreadyMounted="false";
+
+    # now check for everything else; at this point it
+    # should just be the entries with noauto
+    for mountPoint in "${fstabMountPointsArray[@]}"; do
+        isAlreadyMounted="false";
+        for activeMount in "${activeMountsArray[@]}"; do
+            if [[ "${activeMount}" == "${mountPoint}" ]]; then
+                # set flag
+                isAlreadyMounted="true";
+
+                # exit inner loop
+                break;
+            fi
+        done
+        if [[ "true" == "${isAlreadyMounted}" ]]; then
+            # already mounted; skip to next fstab entry
+            continue;
+        fi
+        #echo "Attempting to mount ${mountPoint}";
+        sudo mount "${mountPoint}" 2>/dev/null;
+    done
+}
 #==========================================================================
 # End Section: Hard Drives
 #==========================================================================
