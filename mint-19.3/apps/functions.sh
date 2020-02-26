@@ -190,38 +190,46 @@ function addCustomSource() {
 	sudo chown root:root /etc/apt/sources.list.d/*.list;
 	sudo chmod 644 /etc/apt/sources.list.d/*.list;
 }
-function checkDependenciesMap() {
-	# get sudo prompt out of way up-front so that it
-	# doesn't appear in the middle of other output
-	sudo ls -acl 2>/dev/null >/dev/null;
+function verifyAndInstallPackagesFromMap() {
+    #================================================================
+    # This function will verify all of the passed packages are
+    # installed. If any are not installed, it will attempt to
+    # install them. If all packages are verified as installed, it
+    # will return 0 to indicate success. Otherwise, it will return
+    # a non-zero value to indicate failure.
+    #================================================================
 
-	# ==================================================================
-	# This function expects $1 to be an associative array (aka a map)
-	# which contains:
-	#	Map<Key=localBinaryPath,Value=packageNameOfBinary>
-	# where
-	# localBinaryPath     = path to a local binary (e.g. /usr/bin/7z)
-	# packageNameOfBinary = install package for binary (e.g. p7zip-full)
-	# ==================================================================
-	# Sample usage:
-	#
-	# # 1) Define a dependenciesMap
-	# declare -A dependenciesMap=(
-	#   ['/usr/bin/7z']='p7zip-full'
-	#   ['/usr/bin/curl']='curl'
-	#   ['/usr/bin/yad']='yad'
-	#   ['/usr/bin/convert']='imagemagick'
-	# );
-	#
-	# # 2) pass map to function
-	# checkDependenciesMap "$(declare -p dependenciesMap)";
-	#
-	# # 3) check function return code (0 is pass; non-zero is fail)
-	# if [[ "0" == "$?" ]]; then echo "pass"; else echo "fail"; fi
-	# ==================================================================
-	if [[ "" == "$1" ]]; then
-		return 501;
-	fi
+    # get sudo prompt out of way up-front so that it
+    # doesn't appear in the middle of other output
+    sudo ls -acl 2>/dev/null >/dev/null;
+
+    # ==================================================================
+    # This function expects $1 to be an associative array (aka a map)
+    # which contains:
+    #   Map<Key=localBinaryPath,Value=packageNameOfBinary>
+    # where
+    # localBinaryPath     = path to a local binary (e.g. /usr/bin/7z)
+    # packageNameOfBinary = install package for binary (e.g. p7zip-full)
+    # ==================================================================
+    # Sample usage:
+    #
+    # # 1) Define a dependenciesMap
+    # declare -A dependenciesMap=(
+    #   ['/usr/bin/7z']='p7zip-full'
+    #   ['/usr/bin/curl']='curl'
+    #   ['/usr/bin/yad']='yad'
+    #   ['/usr/bin/convert']='imagemagick'
+    # );
+    #
+    # # 2) pass map to function
+    # verifyAndInstallPackagesFromMap "$(declare -p dependenciesMap)";
+    #
+    # # 3) check function return code (0 is pass; non-zero is fail)
+    # if [[ "0" == "$?" ]]; then echo "pass"; else echo "fail"; fi
+    # ==================================================================
+    if [[ "" == "$1" ]]; then
+        return 501;
+    fi
 
     local binPathKey="";
     local packageNameValue="";
@@ -229,43 +237,51 @@ function checkDependenciesMap() {
     local status=0;
 
     eval "declare -A dependenciesMap="${1#*=}
-	for i in "${!dependenciesMap[@]}"; do
-		binPathKey="$i";
-		reqPkgName="${dependenciesMap[$binPathKey]}";
-		#echo "-----------"
-		#printf "%s\t%s\n" "$binPathKey ==> ${reqPkgName}"
+    for i in "${!dependenciesMap[@]}"; do
+        binPathKey="$i";
+        reqPkgName="${dependenciesMap[$binPathKey]}";
+        #echo "-----------"
+        #printf "%s\t%s\n" "$binPathKey ==> ${reqPkgName}"
 
-		#check if binary path exists
-		binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
-		#printf "%s\t%s\t:\t%s\n" "$binPathKey ==> ${reqPkgName}" "$binExists"
-		if [[ "1" == "${binExists}" ]]; then
-			# if it exists, then we can skip that dependency
-			continue;
+        #check if binary path exists
+        binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
+        #printf "%s\t%s\t:\t%s\n" "$binPathKey ==> ${reqPkgName}" "$binExists"
+        if [[ "1" == "${binExists}" ]]; then
+            # if it exists, then we can skip that dependency
+            continue;
 
-		elif [[ "0" == "${binExists}" ]]; then
-			# attempt to install missing package
-			sudo apt-get install -y "${reqPkgName}" 2>&1 >/dev/null;
-			if [[ "$?" != "0" ]]; then
-				status=503;
-				continue;
-			fi
-			binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
-			if [[ "1" != "${binExists}" ]]; then
-				status=504;
-				continue;
-			fi
-		else
-			# any other possibility means multiple matches were
-			# returned from /usr/bin/which; which should not be possible
-			status=505;
-			continue;
-		fi
-		printf "%s\t%s\n" "$binPathKey ==> ${reqPkgName}";
+        elif [[ "0" == "${binExists}" ]]; then
+            # attempt to install missing package
+            sudo apt-get install -y "${reqPkgName}" 2>&1 >/dev/null;
+            if [[ "$?" != "0" ]]; then
+                status=503;
+                continue;
+            fi
+            binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
+            if [[ "1" != "${binExists}" ]]; then
+                status=504;
+                continue;
+            fi
+        else
+            # any other possibility means multiple matches were
+            # returned from /usr/bin/which; which should not be possible
+            status=505;
+            continue;
+        fi
+        printf "%s\t%s\n" "$binPathKey ==> ${reqPkgName}";
     done
     return ${status};
 }
-function checkRequiredPackagesList() {
-	# get sudo prompt out of way up-front so that it
+function verifyAndInstallPackagesFromList() {
+    #================================================================
+    # This function will verify all of the passed packages are
+    # installed. If any are not installed, it will attempt to
+    # install them. If all packages are verified as installed, it
+    # will return 0 to indicate success. Otherwise, it will return
+    # a non-zero value to indicate failure.
+    #================================================================
+
+    # get sudo prompt out of way up-front so that it
 	# doesn't appear in the middle of other output
 	sudo ls -acl 2>/dev/null >/dev/null;
 

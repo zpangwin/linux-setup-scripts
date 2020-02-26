@@ -32,7 +32,7 @@ fi
 #Script dependencies
 requiredPackagesList="p7zip-full";
 if [[ "false" == "${skipPackageChecks}" ]]; then
-	checkRequiredPackagesList "${requiredPackagesList}";
+	verifyAndInstallPackagesFromList "${requiredPackagesList}";
 	if [[ "$?" != "0" ]]; then
 		echo "";
 		echo "ERROR: Failed to validate one or more dependencies.";
