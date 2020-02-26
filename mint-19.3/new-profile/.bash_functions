@@ -242,16 +242,16 @@ function diffBinaries() {
         echo -e "ERROR: diffBinaries requires xxd and diff to work; please install and try again.";
         return;
     fi
-    local __tmp_dir__="/tmp/diffBinaries-$(date +'%Y%m%d%H%M%S')";
-    mkdir -p "${__tmp_dir__}";
-    if [[ -d "${__tmp_dir__}" ]]; then
-        echo -e "diffBinaries encountered an error while creating temp dir '${__tmp_dir__}'";
+    local tmpDir="/tmp/diffBinaries-$(date +'%Y%m%d%H%M%S')";
+    mkdir -p "${tmpDir}";
+    if [[ -d "${tmpDir}" ]]; then
+        echo -e "diffBinaries encountered an error while creating temp dir '${tmpDir}'";
         return;
     fi
-    xxd "$1" > "${__tmp_dir__}/xxd1.hex" 2>/dev/null;
-    xxd "$2" > "${__tmp_dir__}/xxd2.hex" 2>/dev/null;
+    xxd "$1" > "${tmpDir}/xxd1.hex" 2>/dev/null;
+    xxd "$2" > "${tmpDir}/xxd2.hex" 2>/dev/null;
     echo '';
-    diff "${__tmp_dir__}/xxd1.hex" "${__tmp_dir__}/xxd2.hex";
+    diff "${tmpDir}/xxd1.hex" "${tmpDir}/xxd2.hex";
 }
 function archiveDirWith7z() {
     local dirPath="$1";
@@ -857,14 +857,14 @@ function winetricksHere() {
     env WINEPREFIX="${winePrefixDir}" winetricks $1 $2 $3 $4 $5 $6 $7 $8 $9
 }
 function runWineCommandHere() {
-    local __wine_command__="$1";
-    local __func_name__="runWineCommandHere";
-    if [[ "" == "${__wine_command__}" ]]; then
+    local wineCommand="$1";
+    local functionName="runWineCommandHere";
+    if [[ "" == "${wineCommand}" ]]; then
         echo "ERROR: runWineCommandHere - no args";
         return;
     fi
     if [[ "" != "$2" ]]; then
-        __func_name__="$2";
+        functionName="$2";
     fi
 
     local foundValidWinePrefix='false';
@@ -885,10 +885,10 @@ function runWineCommandHere() {
         done;
     fi
     if [[ "false" == "${foundValidWinePrefix}" ]]; then
-        echo -e "ERROR: ${__func_name__} - Not under a valid WINEPREFIX folder.";
+        echo -e "ERROR: ${functionName} - Not under a valid WINEPREFIX folder.";
         return;
     fi
-    env WINEPREFIX="${winePrefixDir}" wine ${__wine_command__};
+    env WINEPREFIX="${winePrefixDir}" wine ${wineCommand};
 }
 function wineCmdHere() {
     runWineCommandHere 'cmd' 'wineCmdHere'
@@ -1947,28 +1947,31 @@ function previewPackageDownloadSize() {
     fi
 }
 function installPackages() {
-    local __INS_OPTS__="-y -qq -o=Dpkg::Use-Pty=0";
-    local __PKG_LIST__="$1";
-    local __INS_RECS__="$2";
-    local __INS_SUGS__="$3";
-    local __SHOW_PROG__="$4";
+    # get sudo password prompt out of the way early on (for cleaner message display)
+    sudo ls -acl 2>&1 >/dev/null
 
-    if [[ "true" == "${__INS_RECS__}" ]]; then
-        __INS_OPTS__="${__INS_OPTS__} --install-recommends";
+    local installOptions="-y -qq -o=Dpkg::Use-Pty=0";
+    local packageList="$1";
+    local installRecommends="$2";
+    local installSuggests="$3";
+    local showProgress="$4";
+
+    if [[ "true" == "${installRecommends}" ]]; then
+        installOptions="${installOptions} --install-recommends";
     fi
-    if [[ "true" == "${__INS_SUGS__}" ]]; then
-        __INS_OPTS__="${__INS_OPTS__} --install-suggests";
+    if [[ "true" == "${installSuggests}" ]]; then
+        installOptions="${installOptions} --install-suggests";
     fi
-    if [[ "true" == "${__SHOW_PROG__}" ]]; then
-        __INS_OPTS__="${__INS_OPTS__} --show-progress";
+    if [[ "true" == "${showProgress}" ]]; then
+        installOptions="${installOptions} --show-progress";
     fi
 
     if [[ "" == "$INSTALL_LOG" ]]; then
-        sudo apt install ${__INS_OPTS__} ${__PKG_LIST__} 2>&1 | grep -v 'apt does not have a stable CLI interface';
+        sudo apt install ${installOptions} ${packageList} 2>&1 | grep -v 'apt does not have a stable CLI interface';
         return;
     fi
-    echo -e "nRunning: sudo apt install ${__INS_OPTS__} ${__PKG_LIST__} | grep -v 'apt does not have a stable CLI interface'" | tee -a "${INSTALL_LOG}";
-    sudo apt install ${__INS_OPTS__} ${__PKG_LIST__} 2>&1 | grep -v 'apt does not have a stable CLI interface' | tee -a "${INSTALL_LOG}";
+    echo -e "nRunning: sudo apt install ${installOptions} ${packageList} | grep -v 'apt does not have a stable CLI interface'" | tee -a "${INSTALL_LOG}";
+    sudo apt install ${installOptions} ${packageList} 2>&1 | grep -v 'apt does not have a stable CLI interface' | tee -a "${INSTALL_LOG}";
 }
 function installPackagesWithRecommends() {
     installPackages "$1" "true" "false" "$2";
