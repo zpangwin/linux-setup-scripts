@@ -17,6 +17,7 @@ alias audol='sudo l'
 alias audok='sudo l'
 alias sudok='sudo l'
 alias sudp='sudo'
+alias sudi='sudo'
 alias audo='sudo'
 alias audp='sudo'
 alias fucking='sudo'
@@ -132,6 +133,12 @@ alias hist='history'
 alias histoff="setGnomeTerminalTitle 'Incognito Window' && set +o history"
 alias histon="setGnomeTerminalTitle \"$USER@$HOSTNAME:\${PWD//\${HOME//\\//\\\\\\/}/\\~}\" && set -o history"
 
+# remount any unmounted fstab entries such as drives with noauto
+alias mfstab='mountAllFstabEntries'
+alias mstab='mountAllFstabEntries'
+alias restoremounts='mountAllFstabEntries'
+alias restoremnts='mountAllFstabEntries'
+
 #====================================================
 # Search related commands
 #====================================================
@@ -139,12 +146,14 @@ alias histon="setGnomeTerminalTitle \"$USER@$HOSTNAME:\${PWD//\${HOME//\\//\\\\\
 alias grepa='alias|grep -Pi'
 alias agrep='alias|grep -Pi'
 
+alias grepfn="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
+alias fngrep="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
 alias listfunctions="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
 alias listfunc="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
 
 #grep dirs
-alias grepd='ls -GAhclips1 | grep -P -i -e '
-alias dgrep='ls -GAhclips1 | grep -P -i -e '
+alias grepd='LC_ALL=c ls -qAhclp1 --group-directories-first | grep -P -i -e '
+alias dgrep='LC_ALL=c ls -qAhclp1 --group-directories-first | grep -P -i -e '
 
 alias f='find . -not -iwholename "*.git/*" '
 
@@ -623,8 +632,8 @@ alias ytupdate="sudo youtube-dl -U";
 
 alias ytvl="youtube-dl -f 'worst' -o '%(title)s.%(ext)s' --restrict-filenames --quiet --no-warnings --ignore-errors --prefer-free-formats "
 
-alias ss='scrot --silent ~/Pictures/Screenshots/$(date +'%Y-%m-%d--%H%M%S').png';
-
+# Note having an 'ss' is too short to be very userful and blocks
+# the network-/socket-related command '/bin/ss'
 alias ss2='scrot --delay 2 --silent --count ~/Pictures/Screenshots/$(date +'%Y-%m-%d--%H%M%S').png && echo "Saved to ~/Pictures/Screenshots/"';
 alias ss3='scrot --delay 3 --silent --count ~/Pictures/Screenshots/$(date +'%Y-%m-%d--%H%M%S').png && echo "Saved to ~/Pictures/Screenshots/"';
 alias ss4='scrot --delay 4 --silent --count ~/Pictures/Screenshots/$(date +'%Y-%m-%d--%H%M%S').png && echo "Saved to ~/Pictures/Screenshots/"';
@@ -675,21 +684,21 @@ alias scriptcheck='echo "Note: Actual command is shellcheck"; shellcheck'
 alias checkscript='echo "Note: Actual command is shellcheck"; shellcheck'
 
 alias c='clear'
-alias l='ls -Ahclp1 --group-directories-first'
+alias l='LC_ALL=c ls -qAhclp1 --group-directories-first'
 
 alias mkdir='mkdir -p'
 
 #list directory
-alias lsd='ls -Ahcl1p --group-directories-first';
+alias lsd='LC_ALL=c ls -qAhclp1 --group-directories-first';
 
-# recreate windows dir command:
-alias dir="ls -1ap --group-directories-first|grep -Pv '^\.{1,2}/?$'"
+# recreate windows dir /b (bare) command:
+alias dir="LC_ALL=c ls -1qNAp --group-directories-first|grep -Pv '^\.{1,2}/?$'"
 
 #list directory with headers
-alias lsh="ls -Ahcl1p | sed '2iPerms         Ownr    Grp     Size Mod_Time     Name'";
+alias lsh="LC_ALL=c ls -qAhclp1 | sed '2iPerms         Ownr    Grp     Size Mod_Time     Name'";
 
 #list verbose
-alias lsv="ls -Ahcl1p --author --time-style=+'%Y-%m-%d %H:%M:%S' | sed '2iPerms         Auth    Ownr    Grp     Size Mod_Date   Mod_Time Name'";
+alias lsv="LC_ALL=c ls -qAhclp1 --author --time-style=+'%Y-%m-%d %H:%M:%S' | sed '2iPerms         Auth    Ownr    Grp     Size Mod_Date   Mod_Time Name'";
 
 #show drive space
 alias drivespace='printAndSortByMountPoint'
@@ -801,6 +810,9 @@ alias r='cd /'
 alias @='nemo .'
 alias explorer='nemo'
 
+alias ~='cd ~'
+
+alias u='cd ..'
 alias up='cd ..'
 alias up1='cd ..'
 alias up2='cd ../..'
@@ -818,13 +830,13 @@ alias cdnew="makeThenChangeDir";
 # Handle my common typos / bad spelling
 #====================================================
 alias dc='cd'
-alias ls-acl='ls -acl --group-directories-first'
+alias ls-acl='LC_ALL=c ls -qAhclp1 --group-directories-first'
 
 alias echp='echo'
 alias eco='echo'
 
-# when I hit 'K' instead of 'L'
-alias k='ls -Ahclp1 --group-directories-first'
+# when I hit lowercase 'K' instead of lowercase 'L'
+alias k='LC_ALL=c ls -qAhclp1 --group-directories-first'
 
 alias qhich='which'
 alias mna='man'
@@ -833,7 +845,8 @@ alias mnt='mount'
 alias umnt='umount'
 
 alias fepw='grep'
-alias gre[='grep'
 alias grpe='grep'
 alias greo='grep'
 alias greio='grep'
+alias rgep='grep'
+alias gre[='grep'
