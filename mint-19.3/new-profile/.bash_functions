@@ -1261,7 +1261,7 @@ function backupAndCleanBashHistory() {
 #==========================================================================
 function displayFstabDiskMountpoints() {
     #determine mount points as defined in /etc/fstab
-    local mntpnts=$(grep -P '^(UUID|/dev/).*' /etc/fstab|awk -F' ' '{print $2}'|tr 'n' '|');
+    local mntpnts=$(awk -F'\s+' '/^(UUID|/dev/).*/ {print $2}' /etc/fstab|tr 'n' '|');
 
     #remove trailing delim
     mntpnts="${mntpnts:0:${#mntpnts}-1}";
@@ -1273,7 +1273,7 @@ function displayFstabDiskMountpoints() {
 }
 function displayNonFstabDiskMountpoints() {
     #determine mount points as defined in /etc/fstab
-    local mntpnts=$(grep -P '^(UUID|/dev/).*' /etc/fstab|awk -F' ' '{print $2}'|tr 'n' '|');
+    local mntpnts=$(awk -F'\s+' '/^(UUID|/dev/).*/ {print $2}' /etc/fstab|tr 'n' '|');
 
     #remove trailing delim
     mntpnts="${mntpnts:0:${#mntpnts}-1}";
