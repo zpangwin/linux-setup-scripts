@@ -52,6 +52,8 @@ I am also adding some uninstall scripts but those should be considered as experi
 
 # How to use this script:
 
+** Install waterfox from PPA**
+
 ```
 git clone https://github.com/zpangwin/linux-setup-scripts.git;
 find linux-setup-scripts -type f -iname '*.sh' -exec chmod a+rx "{}" \;;
@@ -59,13 +61,22 @@ cd linux-setup-scripts/mint-19.3/apps/waterfox-classic
 ./install-waterfox-from-unofficial-dev-ppa.sh
 ```
 
+## Status
+
+** install-waterfox-from-unofficial-dev-ppa.sh **
+Last tested : Feb 25th, 2020 with Waterfox 2020.02 KDE Plasma Edition
+Last status : working (Mint 19.3 Cinnamon x64)
+
+** download-and-install-official-waterfox.sh **
 Last tested : Feb 2020 with Waterfox 2020.02
 Last status : working (Mint 19.3 Cinnamon x64)
-(installed using download-and-install-official-waterfox.sh)
 
-Last tested : Feb 2020 with Waterfox 2020.02 KDE Plasma Edition
-Last status : working (Mint 19.3 Cinnamon x64)
-(installed using install-waterfox-from-unofficial-dev-ppa.sh)
+** extras/add-wf-one-click-private-browsing-icon.sh **
+Needs retest; should work with either (but not both) installer but also need to confirm.
 
-Uninstall script(s): Needs retest
+** extras/backup-official-waterfox.sh **
+Needs retest
+
+** extras/remove-waterfox-from-unofficial-dev-ppa.sh **
+Needs retest
 

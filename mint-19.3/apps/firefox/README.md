@@ -42,6 +42,8 @@ cd linux-setup-scripts/mint-19.3/apps/firefox
 ./add-ff-one-click-private-browsing-icon.sh
 ```
 
+## Status
+
 Last tested : Feb 2020 with Firefox 73.0 (64-bit)
 Last status : working (Mint 19.3 Cinnamon x64)
 
