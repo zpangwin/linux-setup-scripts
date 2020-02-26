@@ -28,6 +28,7 @@ cd linux-setup-scripts/mint-19.3/apps/chown-gui-wrapper
 ## Status
 
 Last tested : Feb 2020
+
 Last status : working (Mint 19.3 Cinnamon x64)
 
 ## Screenshots

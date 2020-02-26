@@ -26,5 +26,6 @@ cd linux-setup-scripts/mint-19.3/apps/samba-config
 ## Status
 
 Last tested : Feb 2020 with Samba Server Config Tool 1.2.63
+
 Last status : working (Mint 19.3 Cinnamon x64)
 

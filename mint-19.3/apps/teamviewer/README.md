@@ -22,5 +22,6 @@ cd linux-setup-scripts/mint-19.3/apps/teamviewer
 ## Status
 
 Last tested : Feb 2020 with TestViewer 15
+
 Last status : working (Mint 19.3 Cinnamon x64)
 

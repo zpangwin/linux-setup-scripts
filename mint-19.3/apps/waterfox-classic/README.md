@@ -64,19 +64,28 @@ cd linux-setup-scripts/mint-19.3/apps/waterfox-classic
 ## Status
 
 ** install-waterfox-from-unofficial-dev-ppa.sh **
+
 Last tested : Feb 25th, 2020 with Waterfox 2020.02 KDE Plasma Edition
+
 Last status : working (Mint 19.3 Cinnamon x64)
 
 ** download-and-install-official-waterfox.sh **
+
 Last tested : Feb 2020 with Waterfox 2020.02
+
 Last status : working (Mint 19.3 Cinnamon x64)
 
 ** extras/add-wf-one-click-private-browsing-icon.sh **
-Needs retest; should work with either (but not both) installer but also need to confirm.
+
+Needs retest
+
+should work with either (but not both) installer but also need to confirm.
 
 ** extras/backup-official-waterfox.sh **
+
 Needs retest
 
 ** extras/remove-waterfox-from-unofficial-dev-ppa.sh **
+
 Needs retest
 

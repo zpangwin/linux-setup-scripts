@@ -28,5 +28,6 @@ cd linux-setup-scripts/mint-19.3/apps/sublime
 ## Status
 
 Last tested : Feb 2020 with Sublime 3
+
 Last status : working (Mint 19.3 Cinnamon x64)
 

@@ -28,5 +28,6 @@ cd linux-setup-scripts/mint-19.3/apps/virtualbox+ext-pack
 ## Status
 
 Last tested : Feb 2020 with Virtualbox 6.1
+
 Last status : working (Mint 19.3 Cinnamon x64)
 
