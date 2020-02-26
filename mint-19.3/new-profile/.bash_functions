@@ -2052,7 +2052,145 @@ function installPackagesWithRecommends() {
 function installPackagesWithRecommendsAndSuggests() {
     installPackages "$1" "true" "true" "$2";
 }
-function list_installed_ppa_repos () {
+function verifyAndInstallPackagesFromMap() {
+    #================================================================
+    # This function will verify all of the passed packages are
+    # installed. If any are not installed, it will attempt to
+    # install them. If all packages are verified as installed, it
+    # will return 0 to indicate success. Otherwise, it will return
+    # a non-zero value to indicate failure.
+    #================================================================
+
+    # get sudo prompt out of way up-front so that it
+    # doesn't appear in the middle of other output
+    sudo ls -acl 2>/dev/null >/dev/null;
+
+    # ==================================================================
+    # This function expects $1 to be an associative array (aka a map)
+    # which contains:
+    #   Map<Key=localBinaryPath,Value=packageNameOfBinary>
+    # where
+    # localBinaryPath     = path to a local binary (e.g. /usr/bin/7z)
+    # packageNameOfBinary = install package for binary (e.g. p7zip-full)
+    # ==================================================================
+    # Sample usage:
+    #
+    # # 1) Define a dependenciesMap
+    # declare -A dependenciesMap=(
+    #   ['/usr/bin/7z']='p7zip-full'
+    #   ['/usr/bin/curl']='curl'
+    #   ['/usr/bin/yad']='yad'
+    #   ['/usr/bin/convert']='imagemagick'
+    # );
+    #
+    # # 2) pass map to function
+    # verifyAndInstallPackagesFromMap "$(declare -p dependenciesMap)";
+    #
+    # # 3) check function return code (0 is pass; non-zero is fail)
+    # if [[ "0" == "$?" ]]; then echo "pass"; else echo "fail"; fi
+    # ==================================================================
+    if [[ "" == "$1" ]]; then
+        return 501;
+    fi
+
+    local binPathKey="";
+    local packageNameValue="";
+    local binExists="";
+    local status=0;
+
+    eval "declare -A dependenciesMap="${1#*=}
+    for i in "${!dependenciesMap[@]}"; do
+        binPathKey="$i";
+        reqPkgName="${dependenciesMap[$binPathKey]}";
+        #echo "-----------"
+        #printf "%st%sn" "$binPathKey ==> ${reqPkgName}"
+
+        #check if binary path exists
+        binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
+        #printf "%st%st:t%sn" "$binPathKey ==> ${reqPkgName}" "$binExists"
+        if [[ "1" == "${binExists}" ]]; then
+            # if it exists, then we can skip that dependency
+            continue;
+
+        elif [[ "0" == "${binExists}" ]]; then
+            # attempt to install missing package
+            sudo apt-get install -y "${reqPkgName}" 2>&1 >/dev/null;
+            if [[ "$?" != "0" ]]; then
+                status=503;
+                continue;
+            fi
+            binExists=$(/usr/bin/which "${binPathKey}" 2>/dev/null|wc -l);
+            if [[ "1" != "${binExists}" ]]; then
+                status=504;
+                continue;
+            fi
+        else
+            # any other possibility means multiple matches were
+            # returned from /usr/bin/which; which should not be possible
+            status=505;
+            continue;
+        fi
+        printf "%st%sn" "$binPathKey ==> ${reqPkgName}";
+    done
+    return ${status};
+}
+function verifyAndInstallPackagesFromList() {
+    #================================================================
+    # This function will verify all of the passed packages are
+    # installed. If any are not installed, it will attempt to
+    # install them. If all packages are verified as installed, it
+    # will return 0 to indicate success. Otherwise, it will return
+    # a non-zero value to indicate failure.
+    #================================================================
+
+    # get sudo prompt out of way up-front so that it
+    # doesn't appear in the middle of other output
+    sudo ls -acl 2>/dev/null >/dev/null;
+
+    # This function should not be called if there are no
+    # required packages; instead assume this is an error
+    if [[ "" == "$1" ]]; then
+        return 501;
+    fi
+
+    # if checks are disabled, then abort without error
+    local skipFlagName="--no-verify-depends";
+    local option="$2";
+    if [[ "${option}" == "${skipFlagName}" ]]; then
+        return 0;
+    fi
+
+    local quietFlagName="--quiet";
+    local requiredPackagesList="$1";
+    local status=0;
+    for reqPkgName in $(echo "${requiredPackagesList}"); do
+        pkgStatus=$(apt-search "${reqPkgName}"|grep -P '^iw*s+'|wc -l);
+        if [[ "1" == "${pkgStatus}" ]]; then
+            # package already installed; skip to next one
+            continue;
+        elif [[ "0" != "${pkgStatus}" ]]; then
+            if [[ "${option}" != "${quietFlagName}" ]]; then
+                echo "ERROR: package '${reqPkgName}' cannot be verified due to multiple matches.";
+                echo "Script needs to be updated or used with the ${skipFlagName} option.";
+            fi
+            status=502;
+            continue;
+        else
+            sudo apt-get install -y "${reqPkgName}" 2>&1 >/dev/null;
+            if [[ "$?" != "0" ]]; then
+                status=503;
+                continue;
+            fi
+            pkgStatus=$(apt-search "${reqPkgName}"|grep -P '^iw*s+'|wc -l);
+            if [[ "1" != "${pkgStatus}" ]]; then
+                status=504;
+                continue;
+            fi
+        fi
+    done
+    return ${status};
+}
+function list_installed_ppa_repos() {
     echo "===================================================";
     echo "Launchpad PPAs:";
     echo "===================================================";
