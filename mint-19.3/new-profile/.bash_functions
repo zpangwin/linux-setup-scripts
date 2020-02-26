@@ -1735,6 +1735,47 @@ function whichBinariesInPackage() {
         done
     fi
 }
+function addPPAIfNotInSources () {
+    # get sudo prompt out of way up-front so that it
+    # doesn't appear in the middle of other output
+    sudo ls -acl 2>/dev/null >/dev/null;
+
+    local useLogFile="false";
+    local logFile="/dev/null";
+    if [[ "" != "${INSTALL_LOG}" ]]; then
+        useLogFile="true";
+        logFile="${INSTALL_LOG}";
+    fi
+
+    local ppaUrl="$1";
+    local ppaPath="${ppaUrl:4}";
+
+    if [[ "" == "$ppaUrl" ]]; then
+        echo " ERROR: addPPAIfNotInSources(): Found empty PPA URL." | tee -a "${logFile}";
+        echo " Aborting function call" | tee -a "${logFile}";
+        return;
+    fi
+
+    if [[ ! $ppaUrl =~ ^ppa:[A-Za-z0-9][-A-Za-z0-9_.+]*/[A-Za-z0-9][-A-Za-z0-9_.+]*$ ]]; then
+        echo " ERROR: addPPAIfNotInSources(): Invalid PPA URL format." | tee -a "${logFile}";
+        echo "           Found '${ppaUrl}'" | tee -a "${logFile}";
+        echo "           Expected 'ppa:[A-Za-z0-9][-A-Za-z0-9_.+]*/[A-Za-z0-9][-A-Za-z0-9_.+]*'" | tee -a "${logFile}";
+        echo " Aborting function call" | tee -a "${logFile}";
+        return;
+    fi
+    #echo "Detected '${ppaUrl}' as valid";
+
+    local existingSourceMatches=$(grep -R "${ppaPath}" /etc/apt/sources.list.d/*.list|wc -l);
+    #echo "existingSourceMatches: $existingSourceMatches";
+    if [[ "0" != "${existingSourceMatches}" ]]; then
+        echo "addPPAIfNotInSources(): Found '${ppaPath}' in existing source(s); skipping..." | tee -a "${logFile}";
+        echo " Aborting function call" | tee -a "${logFile}";
+        return;
+    fi
+
+    #PPA doesn't exist in sources, so add it...
+    sudo add-apt-repository -y $* > /dev/null;
+}
 function addCustomSource() {
     # get sudo prompt out of way up-front so that it
     # doesn't appear in the middle of other output
