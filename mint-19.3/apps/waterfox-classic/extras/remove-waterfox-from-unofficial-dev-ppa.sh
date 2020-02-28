@@ -52,15 +52,15 @@ sudo rm /etc/apt/sources.list.d/waterfox-unofficial.list 2>&1 >/dev/null;
 sudo rm /etc/apt/sources.list.d/waterfox-hawkeye116477-unofficial.list 2>&1 >/dev/null;
 
 # remove hawkeye116477 signing key
-sudo apt-key --keyring del "E64C7A04DC653D07ACA3EA585E62D791625A271E" 2>/dev/null; # correct as of 2020 FEb 19
+sudo apt-key del "E64C7A04DC653D07ACA3EA585E62D791625A271E" 2>/dev/null; # correct as of 2020 FEb 19
 
 # but also future-proof by getting key dynamically... this prevent missed keys as long as the key is not changed more than once
 TEMP_KEYRING="/tmp/hawkeye116477-test";
 wget -qO - https://download.opensuse.org/repositories/home:hawkeye116477:waterfox/xUbuntu_18.04/Release.key | sudo apt-key --keyring ${TEMP_KEYRING} add -;
 TEMP_KEY=$(sudo apt-key --keyring ${TEMP_KEYRING} list 2>/dev/null|grep -Pv '^(\s*$|/tmp|[-]|pub|uid)'|head -1|sed -E 's/\s+//g');
-if [[ $TEMP_KEY =~ ^[A-F0-9]{8,}$ && "E64C7A04DC653D07ACA3EA585E62D791625A271E" != "${TEMP_KEY}" ]]; then
+if [[ "" != "${TEMP_KEY}" && $TEMP_KEY =~ ^[A-F0-9]{8,}$ && "E64C7A04DC653D07ACA3EA585E62D791625A271E" != "${TEMP_KEY}" ]]; then
     echo "Found a newer signing key for hawkeye116477; Attempting to make sure this is removed as well ...";
-    sudo apt-key --keyring del "${TEMP_KEY}";
+    sudo apt-key del "${TEMP_KEY}";
 fi
 
 # update local apt cache
