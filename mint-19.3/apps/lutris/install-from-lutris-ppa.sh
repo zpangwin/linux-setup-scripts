@@ -31,6 +31,6 @@ fi
 # add ppa
 addPPAIfNotInSources ppa:lutris-team/lutris;
 
-sudo apt update;
+sudo apt-get update;
 
-sudo apt install -y --install-recommends lutris;
+sudo apt-get install -y --install-recommends lutris;

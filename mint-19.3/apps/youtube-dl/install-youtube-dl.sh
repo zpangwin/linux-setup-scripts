@@ -9,7 +9,7 @@ if [[ "1" == "${is_installed}" ]]; then
     # If installed, check version
     installed_from_central_repo=$(apt search youtube-dl|grep -P '^i'|wc -l);
     if [[ "1" == "${installed_from_central_repo}" ]]; then
-        sudo apt remove -y youtube-dl;
+        sudo apt-get remove -y youtube-dl;
     else
         # if it is already installed and NOT from central repo, then either this script was already run
         # OR ytdl was installed via pip / pip3

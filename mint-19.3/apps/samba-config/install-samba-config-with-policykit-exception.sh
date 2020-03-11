@@ -4,14 +4,14 @@
 sudo ls -acl 2>&1 >/dev/null;
 
 # 1. install SCS dependencies:
-sudo apt update >/dev/null;
+sudo apt-get update >/dev/null;
 is_samba_installed=$(which samba|wc -l);
 if [[ "1" != "$is_samba_installed" ]]; then
-	sudo apt install -y samba;
+	sudo apt-get install -y samba;
 fi
 
 # 2. install SCS GUI
-sudo apt install -y system-config-samba;
+sudo apt-get install -y system-config-samba;
 
 # 3. Fix issue
 sudo touch /etc/libuser.conf;

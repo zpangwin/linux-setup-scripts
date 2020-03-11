@@ -9,8 +9,8 @@
 # https://techcommunity.microsoft.com/t5/Microsoft-Teams-Blog/Microsoft-Teams-is-now-available-on-Linux/ba-p/1056267
 #
 
-sudo apt update -y;
-sudo apt install -y gdebi-core libxml2:i386 libcanberra-gtk-module:i386 gtk2-engines-murrine:i386 libatk-adaptor:i386;
+sudo apt-get update -y;
+sudo apt-get install -y gdebi-core libxml2:i386 libcanberra-gtk-module:i386 gtk2-engines-murrine:i386 libatk-adaptor:i386;
 
 mkdir /tmp/ms-teams-client;
 cd /tmp/ms-teams-client;

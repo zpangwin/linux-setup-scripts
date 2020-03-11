@@ -12,7 +12,7 @@
 #   https://github.com/korcankaraokcu/PINCE
 #
 # 1. install PINCE dependencies:
-sudo apt install -y python3-setuptools python3-pip python3-pyqt5 python3-dev gcc g++ git;
+sudo apt-get install -y python3-setuptools python3-pip python3-pyqt5 python3-dev gcc g++ git;
 sudo -H pip3 install psutil pexpect distorm3 pygdbmi;
 
 # 2. Download PINCE source code project

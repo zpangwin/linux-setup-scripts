@@ -5,7 +5,7 @@
 
 yad_installed=$(which yad);
 if [[ "" == "${yad_installed}" ]]; then
-	ERROR_MSG="ERROR: Missing dependency 'yad'; Please run: sudo apt install -y yad;";
+	ERROR_MSG="ERROR: Missing dependency 'yad'; Please run: sudo apt-get install -y yad;";
 	notify-send --icon=error "${ERROR_MSG}";
 	echo "${ERROR_MSG}";
 	exit;

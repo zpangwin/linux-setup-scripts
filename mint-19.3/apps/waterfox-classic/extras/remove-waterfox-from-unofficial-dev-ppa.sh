@@ -63,8 +63,8 @@ if [[ $TEMP_KEY =~ ^[A-F0-9]{8,}$ && "E64C7A04DC653D07ACA3EA585E62D791625A271E" 
     sudo apt-key --keyring del "${TEMP_KEY}";
 fi
 
-# update local apt cache
-sudo apt update 2>/dev/null >/dev/null;
+# update apt's local cache
+sudo apt-get update 2>/dev/null >/dev/null;
 
 # cleanup symlinks and menu items (but don't touch use data -- this is remove not purge)
 if [[ "" != "${applicationBinPath}" ]]; then

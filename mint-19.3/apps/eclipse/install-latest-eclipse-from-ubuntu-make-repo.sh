@@ -18,11 +18,11 @@ fi
 # Add PPA
 addPPAIfNotInSources "ppa:lyzardking/ubuntu-make";
 
-# update local apt cache
-sudo apt update;
+# update apt's local cache
+sudo apt-get update 2>&1 >/dev/null;
 
 # install ubuntu-make
-sudo apt install -y ubuntu-make;
+sudo apt-get install -y ubuntu-make;
 
 # use ubuntu-make to install eclipse
 umake ide "${ECLIPSE_INSTALL_TYPE}" "${ECLIPSE_INSTALL_DIR}";

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-sudo apt update;
+sudo apt-get update 2>&1 >/dev/null;
 
-sudo apt install -y --install-recommends conky;
+sudo apt-get install -y --install-recommends conky;
 
 if [[ ! -e /usr/bin/conky ]]; then
 	echo "ERROR: Install failed, please check repo.";

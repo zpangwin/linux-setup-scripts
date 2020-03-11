@@ -28,9 +28,9 @@ echo "Adding official PPA for virtualbox.org (if not already present) ...";
 addCustomSource virtualbox 'deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian bionic contrib';
 
 echo "==========================================================="
-echo "Updating local cache of apt packages ...";
+echo "Updating apt's local package cache ...";
 
-# update local apt cache
+# update apt's local cache
 sudo apt-get update 2>&1 >/dev/null;
 
 echo "Determining newest version of virtualbox from cache ...";
@@ -70,7 +70,7 @@ fi
 
 # install latest virtual box
 echo "Installing virtualbox-${latestVersion} ...";
-sudo apt install --install-recommends -y virtualbox-${latestVersion};
+sudo apt-get install --install-recommends -y virtualbox-${latestVersion};
 
 echo "Attempting to download extensions pack for virtualbox-${latestVersion} ...";
 

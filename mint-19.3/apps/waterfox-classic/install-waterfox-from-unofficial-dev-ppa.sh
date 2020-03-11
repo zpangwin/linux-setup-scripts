@@ -59,7 +59,7 @@ if [[ "0" != "${isWaterfoxKpeInstalled}" ]]; then
         echo 'Waterfox Classic KPE is already installed.';
         echo '';
         echo 'To remove, run:';
-        echo '  sudo apt remove waterfox-classic-kpe waterfox-locale-en';
+        echo '  sudo apt-get remove waterfox-classic-kpe waterfox-locale-en';
         echo '';
         echo 'To recreate symlinks, use -r or --recreate-symlinks';
         echo 'For more details, see help with -h or --help';
@@ -77,8 +77,8 @@ else
     # add key for hawkeye116477 repo
     wget -qO - https://download.opensuse.org/repositories/home:hawkeye116477:waterfox/xUbuntu_18.04/Release.key | sudo apt-key add -;
 
-    # update local apt cache
-    sudo apt update 2>/dev/null >/dev/null;
+    # update apt's cache
+    sudo apt-get update 2>/dev/null >/dev/null;
 
     # waterfox-classic => resolves to waterfox-classic-kpe
     # normally this package prompts you with a package configuration

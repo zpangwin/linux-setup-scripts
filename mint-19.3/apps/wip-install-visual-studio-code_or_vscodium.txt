@@ -17,7 +17,7 @@ wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.g
 echo 'deb https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/repos/debs/ vscodium main' | sudo tee --append /etc/apt/sources.list.d/vscodium.list
 
 #Now update your system and install VSCodium:
-sudo apt update && sudo apt install -y vscodium
+sudo apt-get update && sudo apt-get install -y vscodium
 
 
 ==============================================================================================
@@ -26,7 +26,7 @@ IF YOU DON'T CARE ABOUT PRIVACY AND STILL WANT TO INSTALL VISUAL STUDIO CODE ITS
 https://code.visualstudio.com/docs/setup/linux
 
 Debian and Ubuntu based distributions
--> installing the .deb package will automatically install the apt repository and signing key to enable auto-updating using the system's package manager
+-> installing the .deb package will automatically install the repository and signing key to enable auto-updating using the system's package manager
 
 ------------------------------
 OR you can do this manually:

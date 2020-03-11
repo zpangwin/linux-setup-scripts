@@ -6,11 +6,11 @@ echo "================================================================";
 
 #uninstall vulkin
 echo "Removing vulkan packages ...";
-sudo apt purge -y libvulkan1 libvulkan1:i386
+sudo apt-get purge -y libvulkan1 libvulkan1:i386
 
 #uninstall nvidia drivers
 echo "Removing nvidia related packages ...";
-sudo apt purge -y nvidia* libnvidia*;
+sudo apt-get purge -y nvidia* libnvidia*;
 
 # Remove PPA if present
 echo "Checking for and removing any nvidia PPA ...";

@@ -34,8 +34,8 @@ if [[ ! -e "${PRIVATE_ICON_PATH}" ]]; then
 	mkdir "${TMP_DIR}" 2>/dev/null;
 	/usr/bin/wget --user-agent "${CHROME_WINDOWS_UA}" "${PBICON_LINK}" --output-document="${PB_TMP_FILE}" 2>/dev/null;
 	if [[ ! -e /usr/bin/convert ]]; then
-        sudo apt update;
-		sudo apt install -y imagemagick;
+        sudo apt-get update 2>&1 /dev/null;
+		sudo apt-get install -y imagemagick;
 	fi
 
 	# ================================================================================================================

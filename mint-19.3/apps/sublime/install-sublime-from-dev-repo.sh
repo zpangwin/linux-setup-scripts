@@ -19,9 +19,9 @@ wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add
 # add repo
 addCustomSource sublimetext deb https://download.sublimetext.com/ apt/stable/
 
-sudo apt update;
+sudo apt-get update;
 
-sudo apt install -y --install-recommends sublime-text;
+sudo apt-get install -y --install-recommends sublime-text;
 
 if [[ "" != "${SCRIPT_DIR}" && -f "${SCRIPT_DIR}/usr/share/nemo/actions/edit-with-sublime.nemo_action" ]]; then
     if [[ ! -f "/usr/share/nemo/actions/edit-with-sublime.nemo_action" ]]; then

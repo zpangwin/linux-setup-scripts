@@ -7,8 +7,8 @@ sudo ls -acl 2>&1 >/dev/null
 
 is_installed=$(which acroread|wc -l);
 if [[ "0" == "${is_installed}" ]]; then
-	sudo apt update -y;
-	sudo apt install -y gdebi-core libxml2:i386 libcanberra-gtk-module:i386 gtk2-engines-murrine:i386 libatk-adaptor:i386;
+	sudo apt-get update -y;
+	sudo apt-get install -y gdebi-core libxml2:i386 libcanberra-gtk-module:i386 gtk2-engines-murrine:i386 libatk-adaptor:i386;
 
 	mkdir /tmp/acroreader;
 	cd /tmp/acroreader;

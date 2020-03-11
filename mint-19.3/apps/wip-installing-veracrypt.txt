@@ -1,7 +1,7 @@
 
 sudo add-apt-repository ppa:unit193/encryption
 sudo apt-get update
-sudo apt install veracrypt
+sudo apt-get install veracrypt
 
 ==>
 Hit:34 http://ppa.launchpad.net/yktooo/ppa/ubuntu bionic InRelease

@@ -3,7 +3,7 @@
 # get the sudo prompt out of the way up front
 sudo ls -acl 2>&1 >/dev/null;
 
-sudo apt install -y yad;
+sudo apt-get install -y yad;
 
 # copy script files
 sudo cp -a ./usr/bin/chown-gui-wrapper /usr/bin/chown-gui-wrapper;
