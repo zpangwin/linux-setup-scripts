@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# This should resolve the issue where teamviewer does not populate a random user id / password on startup
+sudo systemctl restart teamviewerd.service
+
+# now launch teamviewer
+teamviewer &

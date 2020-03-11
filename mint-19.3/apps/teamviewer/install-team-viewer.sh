@@ -1,4 +1,6 @@
 #!/bin/bash
+TURN_ON_FIREWALL="false";
+
 SCRIPT_DIR="$( cd "$( /usr/bin/dirname "${BASH_SOURCE[0]}" )" && /bin/pwd )";
 echo "SCRIPT_DIR: ${SCRIPT_DIR}";
 
@@ -12,7 +14,7 @@ DESKTOP_SHORTCUT="${USER_DESKTOP_DIR}/${SHORTCUT_FILENAME}";
 START_MENU_SHORTCUT="/usr/share/applications/${SHORTCUT_FILENAME}";
 
 #Remove any old versions of TeamViewer first (keep configs, if they exist)
-sudo apt remove -y teamviewer;
+sudo apt-get remove -y teamviewer;
 sudo rm "${START_MENU_SHORTCUT}" 2>/dev/null;
 rm "${DESKTOP_SHORTCUT}" 2>/dev/null;
 rm "${USER_DESKTOP_DIR}/TeamViewer.desktop" 2>/dev/null;
@@ -22,7 +24,7 @@ find "${USER_DESKTOP_DIR}" -type f -iname '*TeamViewer*.desktop' -delete 2>/dev/
 cd /tmp
 
 #install dependencies
-apt install --install-recommends -y gdebi;
+apt-get install --install-recommends -y gdebi;
 
 echo "";
 echo "================================================================";
@@ -48,7 +50,7 @@ if [[ $MAJOR_VERSION_RAW =~ ^[0-9][0-9]*$ ]]; then
 fi
 
 echo "Attempting to install TeamViewer ${MAJOR_VERSION} dependencies...";
-sudo apt install -y ${DEPENDENCIES_LIST_CLEANED};
+sudo apt-get install -y ${DEPENDENCIES_LIST_CLEANED};
 TEAMVIEWER_DEPENDENCIES_OK="$?";
 if [[ "0" == "${TEAMVIEWER_DEPENDENCIES_OK}" ]]; then
 	echo "TeamViewer ${MAJOR_VERSION} dependencies installed successfully.";
@@ -99,6 +101,16 @@ if [[ ! -e "${DESKTOP_SHORTCUT}" ]]; then
 fi
 sudo chown ${SUDO_USER:-$USER}:${SUDO_USER:-$USER} "${DESKTOP_SHORTCUT}";
 
+if [[ "" != "${SCRIPT_DIR}" && "${SCRIPT_DIR}/usr/bin/launch-teamviewer" ]]; then
+	sudo cp -a -t /usr/bin "${SCRIPT_DIR}/usr/bin/launch-teamviewer";
+	sudo chown root:root /usr/bin/launch-teamviewer;
+	sudo chmod 755 /usr/bin/launch-teamviewer;
+
+	if [[ -f /usr/bin/launch-teamviewer ]]; then
+		sudo find /usr/share/applications \( -type f -o -type l \) -iname '*teamviewer*' -exec sed -Ei "s|^(Exec)=.*|\1=/usr/bin/launch-teamviewer|gi" "{}" \;;
+	fi
+fi
+
 # if the desktop file is a symlink, then make sure the source file has correct perms; otherwise, make sure desktop file has them
 if [[ -f "${DESKTOP_SHORTCUT}" ]]; then
 	if [[  -L "${DESKTOP_SHORTCUT}" ]]; then
@@ -111,6 +123,11 @@ if [[ -f "${DESKTOP_SHORTCUT}" ]]; then
 	NAME_HAS_VERSION=$(grep -P "^Name.*=TeamViewer ${MAJOR_VERSION}" "${DESKTOP_SHORTCUT}"|wc -l);
 	if [[ "0" == "${NAME_HAS_VERSION}" ]]; then
 		sudo sed -E -i "s/^(Name[^=]*)=(TeamViewer).*/\\1=\\2 ${MAJOR_VERSION}/g" "${DESKTOP_SHORTCUT}";
+	fi
+
+	if [[ -f /usr/bin/launch-teamviewer ]]; then
+		sudo sed -Ei "s|^(Exec)=.*|\1=/usr/bin/launch-teamviewer|gi" "${DESKTOP_SHORTCUT}";
+		sudo chown ${SUDO_USER:-$USER}:${SUDO_USER:-$USER} "${DESKTOP_SHORTCUT}";
 	fi
 fi
 
@@ -149,9 +166,11 @@ else
 	sudo sed -i 's|\(\[int32\] MsgBoxDontShow\\QuitWithAutostart =\).*$|\1 1|g' "/etc/skel/.config/teamviewer/client.conf";
 fi
 
-UFW_STATUS=$(sudo ufw status|head -1|sed -E 's/^Status: //g');
-if [[ "inactive" == "${UFW_STATUS}" ]]; then
-	#turn on firewall
-	echo "Turning on ufw firewall back on...";
-	sudo ufw enable;
+if [[ "true" == "${TURN_ON_FIREWALL}" ]]; then
+	UFW_STATUS=$(sudo ufw status|head -1|sed -E 's/^Status: //g');
+	if [[ "inactive" == "${UFW_STATUS}" ]]; then
+		#turn on firewall
+		echo "Turning on ufw firewall back on...";
+		sudo ufw enable;
+	fi
 fi
