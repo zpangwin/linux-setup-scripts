@@ -30,3 +30,10 @@ if [[ "" != "${SCRIPT_DIR}" && -f "${SCRIPT_DIR}/usr/share/nemo/actions/edit-wit
     sudo chown root:root "/usr/share/nemo/actions/edit-with-sublime.nemo_action";
     sudo chmod 644 "/usr/share/nemo/actions/edit-with-sublime.nemo_action";
 fi
+
+# Create symlinks for sublime
+if [[ -f /opt/sublime_text/sublime_text ]]; then
+    ln -s /opt/sublime_text/sublime_text /usr/bin/sublime;
+    ln -s /opt/sublime_text/sublime_text /usr/bin/sublime-text;
+    ln -s /opt/sublime_text/sublime_text /usr/bin/sublime_text;
+fi
