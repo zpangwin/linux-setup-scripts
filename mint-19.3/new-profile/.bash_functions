@@ -1655,6 +1655,12 @@ function whichBinariesInPackage() {
         beVerbose="true";
     fi
 
+    local isPackageMissing=$(dpkg -L foo 2>&1|grep "package '${packageName}' is not installed"|wc -l);
+    if [[ "0" != "${isPackageMissing}" ]]; then
+        echo "Package '${packageName}' is not installed.";
+        return 0;
+    fi
+
     local allPackageFilesList=($(dpkg -L ${packageName} 2>/dev/null|grep -Pv '^(/.$|/usr/(?:share/)?(?:applications|dbus-d|doc|doc-base|icons|lib|lintian|man|nemo|pixmaps|polkit-d)b(?:/.*)?$|/etcb(?:/.*))'));
     #printf "sizeof(allPackageFilesList): %sn" "${#allPackageFilesList[@]}"
 
@@ -2164,7 +2170,7 @@ function verifyAndInstallPackagesFromList() {
     local requiredPackagesList="$1";
     local status=0;
     for reqPkgName in $(echo "${requiredPackagesList}"); do
-        pkgStatus=$(apt-search "${reqPkgName}"|grep -P '^iw*s+'|wc -l);
+        pkgStatus=$(apt search "${reqPkgName}"|grep -P "^i\w*\s+\b${reqPkgName}\b"|wc -l);
         if [[ "1" == "${pkgStatus}" ]]; then
             # package already installed; skip to next one
             continue;
@@ -2181,7 +2187,7 @@ function verifyAndInstallPackagesFromList() {
                 status=503;
                 continue;
             fi
-            pkgStatus=$(apt-search "${reqPkgName}"|grep -P '^iw*s+'|wc -l);
+            pkgStatus=$(apt search "${reqPkgName}"|grep -P "^i\w*\s+\b${reqPkgName}\b"|wc -l);
             if [[ "1" != "${pkgStatus}" ]]; then
                 status=504;
                 continue;
