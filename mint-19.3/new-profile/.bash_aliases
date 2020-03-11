@@ -146,8 +146,8 @@ alias restoremnts='mountAllFstabEntries'
 alias grepa='alias|grep -Pi'
 alias agrep='alias|grep -Pi'
 
-alias grepfn="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
-alias fngrep="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
+alias grepfn="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort|grep -Pi"
+alias fngrep="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort|grep -Pi"
 alias listfunctions="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
 alias listfunc="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
 
@@ -849,4 +849,5 @@ alias grpe='grep'
 alias greo='grep'
 alias greio='grep'
 alias rgep='grep'
-alias gre[='grep'
+alias gre\[='grep'
+
