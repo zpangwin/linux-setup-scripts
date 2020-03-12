@@ -1,6 +1,77 @@
 #!/bin/bash
+
+requireNemoActions="true";
+
+SCRIPT_DIR="$( cd "$( /usr/bin/dirname "${BASH_SOURCE[0]}" )" && /bin/pwd )";
+echo "SCRIPT_DIR: ${SCRIPT_DIR}";
+
+# define script paths and flags
+missingRequiredFiles="false";
+sysShDir="/usr/bin";
+nemoActionsDir="/usr/share/nemo/actions";
+nemoShDir="${nemoActionsDir}/scripts";
+
+if [[ "" == "${SCRIPT_DIR}" || ! -d "${SCRIPT_DIR}" ]]; then
+	echo "ERROR: SCRIPT_DIR is empty or does not exist; Aborting script.";
+	exit;
+fi
+
 #get sudo prompt out of the way
 sudo ls -acl >/dev/null
+
+# Make sure nemo actions/scripts folder exists
+sudo mkdir -p "${nemoShDir}" 2>&1 >/dev/null;
+
+# define scripts to install
+requiredScriptsArray=(  );
+requiredScriptsArray+=("${sysShDir}/is-git-dir");
+requiredScriptsArray+=("${sysShDir}/is-non-git-dir");
+requiredScriptsArray+=("${sysShDir}/which-git-top-dir");
+requiredScriptsArray+=("${nemoShDir}/launch-gitext-browse.sh");
+requiredScriptsArray+=("${nemoShDir}/launch-gitext-clone.sh");
+requiredScriptsArray+=("${nemoShDir}/launch-gitext-commit.sh");
+requiredScriptsArray+=("${nemoShDir}/launch-gitext-filehistory.sh");
+
+for scriptPath in "${requiredScriptsArray[@]}"; do
+	sourcePath="${SCRIPT_DIR}${scriptPath}";
+	if [[ ! -f "${sourcePath}" ]]; then
+		echo "ERROR: Missing Required File '${sourcePath}'";
+		missingRequiredFiles="true";
+	else
+		sudo cp -a "${sourcePath}" "${scriptPath}";
+		sudo chmod 755 "${scriptPath}";
+	fi
+done
+
+requiredNemoActionsArray=(  );
+requiredNemoActionsArray+=("${nemoActionsDir}/gitext-browse.nemo_action");
+requiredNemoActionsArray+=("${nemoActionsDir}/gitext-clone-background.nemo_action");
+requiredNemoActionsArray+=("${nemoActionsDir}/gitext-commit.nemo_action");
+requiredNemoActionsArray+=("${nemoActionsDir}/gitext-filehistory.nemo_action");
+
+for actionPath in "${requiredNemoActionsArray[@]}"; do
+	sourcePath="${SCRIPT_DIR}${actionPath}";
+	if [[ ! -f "${sourcePath}" ]]; then
+		echo "ERROR: Missing Required File '${sourcePath}'";
+		missingRequiredFiles="true";
+	else
+		sudo cp -a "${sourcePath}" "${actionPath}";
+		sudo chmod 644 "${actionPath}";
+	fi
+done
+
+if [[ "true" == "${missingRequiredFiles}" ]]; then
+	if [[ "true" == "${requireNemoActions}" ]]; then
+		echo "Missing one or more required files; Aborting setup script...";
+		echo "";
+		echo "Script is not designed for standalone execution; clone full repo and try rerunning.";
+		exit;
+	else
+		echo "Missing one or more required files; Nemo actions may not work...";
+		echo "";
+		echo "Script is not designed for standalone execution; clone full repo and try rerunning.";
+	fi
+fi
 
 if [[ "" == "${FIREFOX_WINDOWS_USER_AGENT}" ]]; then
    FIREFOX_WINDOWS_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0";
@@ -205,178 +276,5 @@ sudo chmod 755 "${GIT_EXT_SH}";
 #create a symlink
 sudo ln -fs "${GIT_EXT_SH}" "/usr/bin/gitext";
 
-#Make sure scripts called by nemo actions are present
-GITEXT_SCRIPTS_DIR="/usr/share/nemo/actions/scripts"
-
-sudo mkdir -p "${GITEXT_SCRIPTS_DIR}" 2>/dev/null;
-
-IS_GIT_DIR_SH="/usr/bin/is-git-dir";
-IS_NON_GIT_DIR_SH="/usr/bin/is-non-git-dir";
-WHICH_GIT_TOP_DIR_SH="/usr/bin/which-git-top-dir";
-BROWSE_SH="${GITEXT_SCRIPTS_DIR}/launch-gitext-browse.sh";
-CLONE_SH="${GITEXT_SCRIPTS_DIR}/launch-gitext-clone.sh";
-COMMIT_SH="${GITEXT_SCRIPTS_DIR}/launch-gitext-commit.sh";
-FILEHIST_SH="${GITEXT_SCRIPTS_DIR}/launch-gitext-filehistory.sh";
-
-sudo rm "${IS_GIT_DIR_SH}" 2>/dev/null;
-sudo rm "${IS_NON_GIT_DIR_SH}" 2>/dev/null;
-sudo rm "${WHICH_GIT_TOP_DIR_SH}" 2>/dev/null;
-sudo rm "${BROWSE_SH}" 2>/dev/null;
-sudo rm "${COMMIT_SH}" 2>/dev/null;
-sudo rm "${CLONE_SH}" 2>/dev/null;
-sudo rm "${FILEHIST_SH}" 2>/dev/null;
-
-# Add script for determining if passed path is under a git repo
-# See: https://github.com/linuxmint/nemo/pull/2056
-sudo touch "${IS_GIT_DIR_SH}";
-echo '#!/bin/bash' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'path="$1";' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'if [[ "" == "$1" ]]; then' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo '	exit 500;' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'if [[ -f "$path" ]]; then' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo '	path=$(dirname "$path");' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'if [[ ! -d "$path" ]]; then' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo '	exit 501;' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'ismetadir=$(echo "$path"|grep -P "/\\.git(/|\$)"|wc -l);' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'if [[ "0" != "$ismetadir" ]]; then' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo '	exit 502;' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-echo 'git -C "$path" rev-parse;' | sudo tee -a "${IS_GIT_DIR_SH}" >/dev/null;
-
-# Add script for determining if passed path is NOT under a git repo
-sudo touch "${IS_NON_GIT_DIR_SH}";
-echo '#!/bin/bash' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo 'path="$1";' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo 'if [[ "" == "$1" ]]; then' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo '	exit 500;' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo "test=\$(\"${IS_GIT_DIR_SH}\" \"\$path\");" | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo 'if [[ "0" == "$?" ]]; then' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo '	exit 501;' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-echo 'git --version;' | sudo tee -a "${IS_NON_GIT_DIR_SH}" >/dev/null;
-
-# Add script for determing the top level git dir, given some path under the repo
-sudo touch "${WHICH_GIT_TOP_DIR_SH}";
-echo '#!/bin/bash' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo 'passedPath="$1";' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo 'if [[ -s "${passedPath}" ]]; then' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo '	if [[ -f "${passedPath}" ]]; then' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo '		passedPath=$(dirname "${passedPath}");' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo '	fi' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo '	if [[ -d "${passedPath}" ]]; then' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo '		git -C "${passedPath}" rev-parse --show-toplevel 2>/dev/null;' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo '	fi' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${WHICH_GIT_TOP_DIR_SH}" >/dev/null;
-
-sudo touch "${BROWSE_SH}";
-echo '#!/bin/bash' | sudo tee -a "${BROWSE_SH}" >/dev/null;
-echo "gitTopLevelDir=\$(\"${WHICH_GIT_TOP_DIR_SH}\" \"\$1\");" | sudo tee -a "${BROWSE_SH}" >/dev/null;
-echo 'if [[ "" != "${gitTopLevelDir}" ]]; then' | sudo tee -a "${BROWSE_SH}" >/dev/null;
-echo '	cd "${gitTopLevelDir}";' | sudo tee -a "${BROWSE_SH}" >/dev/null;
-echo "    /usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" browse &" | sudo tee -a "${BROWSE_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${BROWSE_SH}" >/dev/null;
-
-sudo touch "${COMMIT_SH}";
-echo '#!/bin/bash' | sudo tee -a "${COMMIT_SH}" >/dev/null;
-echo "gitTopLevelDir=\$(\"${WHICH_GIT_TOP_DIR_SH}\" \"\$1\");" | sudo tee -a "${COMMIT_SH}" >/dev/null;
-echo 'if [[ "" != "${gitTopLevelDir}" ]]; then' | sudo tee -a "${COMMIT_SH}" >/dev/null;
-echo '	cd "${gitTopLevelDir}";' | sudo tee -a "${COMMIT_SH}" >/dev/null;
-echo "    /usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" commit &" | sudo tee -a "${COMMIT_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${COMMIT_SH}" >/dev/null;
-
-sudo touch "${CLONE_SH}";
-echo '#!/bin/bash' | sudo tee -a "${CLONE_SH}" >/dev/null;
-echo "/usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" clone \"\$@\" &" | sudo tee -a "${CLONE_SH}" >/dev/null;
-
-sudo touch "${FILEHIST_SH}";
-echo '#!/bin/bash' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-echo "gitTopLevelDir=\$(\"${WHICH_GIT_TOP_DIR_SH}\" \"\$1\");" | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-echo 'if [[ "" != "${gitTopLevelDir}" ]]; then' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-echo '	cd "${gitTopLevelDir}";' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-echo "    /usr/bin/mono \"${GIT_EXT_INSTALL_DIR}/GitExtensions.exe\" filehistory \"\$1\" &" | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-echo 'fi' | sudo tee -a "${FILEHIST_SH}" >/dev/null;
-
-#set script perms
-sudo chmod 755 "${IS_GIT_DIR_SH}";
-sudo chmod 755 "${IS_NON_GIT_DIR_SH}";
-sudo chmod 755 "${WHICH_GIT_TOP_DIR_SH}";
-sudo chmod 755 "${BROWSE_SH}";
-sudo chmod 755 "${COMMIT_SH}";
-sudo chmod 755 "${CLONE_SH}";
-sudo chmod 755 "${FILEHIST_SH}";
-
-#Create Nemo actions
-BROWSE_ACTION="/usr/share/nemo/actions/gitext-browse.nemo_action";
-CLONE_ACTION="/usr/share/nemo/actions/gitext-clone-background.nemo_action";
-COMMIT_ACTION="/usr/share/nemo/actions/gitext-commit.nemo_action";
-FILEHIST_ACTION="/usr/share/nemo/actions/gitext-filehistory.nemo_action";
-
-sudo rm "${BROWSE_ACTION}" 2>/dev/null;
-sudo rm "${COMMIT_ACTION}" 2>/dev/null;
-sudo rm "${CLONE_ACTION}" 2>/dev/null;
-sudo rm "${FILEHIST_ACTION}" 2>/dev/null;
-
-sudo touch "${BROWSE_ACTION}";
-echo '[Nemo Action]' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo 'Name=GitExt Browse' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo 'Comment=GitExt Browse' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo "Exec=\"${BROWSE_SH}\" %F" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${BROWSE_SH};" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo 'Icon-Name=git-ext-browse' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo 'Selection=Any' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo 'Extensions=any;' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo 'Quote=double' | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-echo "Conditions=exec ${IS_GIT_DIR_SH} %F" | sudo tee -a "${BROWSE_ACTION}" >/dev/null;
-
-sudo touch "${COMMIT_ACTION}";
-echo '[Nemo Action]' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo 'Name=GitExt Commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo 'Comment=GitExt Commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo "Exec=\"${COMMIT_SH}\" %F" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${COMMIT_SH};" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo 'Icon-Name=git-ext-commit' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo 'Selection=Any' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo 'Extensions=any;' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo 'Quote=double' | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-echo "Conditions=exec ${IS_GIT_DIR_SH} %F" | sudo tee -a "${COMMIT_ACTION}" >/dev/null;
-
-sudo touch "${CLONE_ACTION}";
-echo '[Nemo Action]' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo 'Name=GitExt Clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo 'Comment=GitExt Clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo "Exec=\"${CLONE_SH}\" %F" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${CLONE_SH};" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo 'Icon-Name=git-ext-clone' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo 'Selection=none' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo 'Extensions=none;' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo 'Quote=double' | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-echo "Conditions=exec ${IS_NON_GIT_DIR_SH} %F" | sudo tee -a "${CLONE_ACTION}" >/dev/null;
-
-sudo touch "${FILEHIST_ACTION}";
-echo '[Nemo Action]' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo 'Name=GitExt File History' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo 'Comment=GitExt File History' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo "Exec=\"${FILEHIST_SH}\" %F" | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo "Dependencies=git;mono;${GIT_EXT_INSTALL_DIR}/gitext.sh;${COMMIT_SH};" | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo 'Icon-Name=git-ext-file-history' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo 'Selection=s' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo 'Extensions=nodirs;' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo 'Quote=double' | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-echo "Conditions=exec ${IS_GIT_DIR_SH} %F" | sudo tee -a "${FILEHIST_ACTION}" >/dev/null;
-
-
-#set action perms
-sudo chmod 644 "${BROWSE_ACTION}";
-sudo chmod 644 "${COMMIT_ACTION}";
-sudo chmod 644 "${CLONE_ACTION}";
-sudo chmod 644 "${FILEHIST_ACTION}";
-
 #Get rid of plugins which cause issues in Linux
 rm "${GIT_EXT_INSTALL_DIR}/Plugins/Bitbucket.dll" 2>/dev/null
-
-
-

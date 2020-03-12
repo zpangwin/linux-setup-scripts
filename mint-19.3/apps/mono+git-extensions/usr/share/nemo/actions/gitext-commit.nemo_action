@@ -1,0 +1,10 @@
+[Nemo Action]
+Name=GitExt Commit
+Comment=GitExt Commit
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-commit.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-commit.sh;
+Icon-Name=git-ext-commit
+Selection=Any
+Extensions=any;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F
