@@ -13,7 +13,7 @@ function findDuplicateLinesInFile() {
     fi
 
     IFS='';
-    local dupeLinesArray=($(sort "$file" | uniq -c | grep -P '^s+(d{2,}|[2-9])s+'|sed -E 's/^s*([0-9][0-9]*)s+(S+)s*$/1t2/g'));
+    local dupeLinesArray=($(grep -Pv '^W*$' "$file" | sort | uniq -c | grep -P '^s+(d{2,}|[2-9])s+'|sed -E 's/^s*([0-9][0-9]*)s+(S+)s*$/1t2/g'));
     if [[ "0" == "${#dupeLinesArray[@]}" ]]; then
         echo "No duplicate lines detected.";
         return;
