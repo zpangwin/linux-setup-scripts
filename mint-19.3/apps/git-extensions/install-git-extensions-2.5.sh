@@ -1,6 +1,12 @@
 #!/bin/bash
 
 requireNemoActions="true";
+enableAllActions="false";
+reinstallActionsOnly="false";
+
+if [[ "-r" == "$1" || "--reinstall-actions" == "$1" ]]; then
+	reinstallActionsOnly="true";
+fi
 
 SCRIPT_DIR="$( cd "$( /usr/bin/dirname "${BASH_SOURCE[0]}" )" && /bin/pwd )";
 echo "SCRIPT_DIR: ${SCRIPT_DIR}";
@@ -30,7 +36,7 @@ requiredScriptsArray+=("${sysShDir}/which-git-top-dir");
 requiredScriptsArray+=("${nemoShDir}/launch-gitext-browse.sh");
 requiredScriptsArray+=("${nemoShDir}/launch-gitext-clone.sh");
 requiredScriptsArray+=("${nemoShDir}/launch-gitext-commit.sh");
-requiredScriptsArray+=("${nemoShDir}/launch-gitext-filehistory.sh");
+requiredScriptsArray+=("${nemoShDir}/launch-gitext-file-history.sh");
 
 for scriptPath in "${requiredScriptsArray[@]}"; do
 	sourcePath="${SCRIPT_DIR}${scriptPath}";
@@ -43,11 +49,28 @@ for scriptPath in "${requiredScriptsArray[@]}"; do
 	fi
 done
 
+extraScriptsArray=(  );
+extraScriptsArray+=("${nemoShDir}/launch-gitext-diff-file.sh");
+extraScriptsArray+=("${nemoShDir}/launch-gitext-init.sh");
+extraScriptsArray+=("${nemoShDir}/launch-gitext-pull.sh");
+extraScriptsArray+=("${nemoShDir}/launch-gitext-push.sh");
+extraScriptsArray+=("${nemoShDir}/launch-gitext-revert-file.sh");
+extraScriptsArray+=("${nemoShDir}/launch-gitext-settings.sh");
+extraScriptsArray+=("${nemoShDir}/launch-gitext-stash.sh");
+
+for scriptPath in "${extraScriptsArray[@]}"; do
+	sourcePath="${SCRIPT_DIR}${scriptPath}";
+	if [[ -f "${sourcePath}" ]]; then
+		sudo cp -a "${sourcePath}" "${scriptPath}";
+		sudo chmod 755 "${scriptPath}";
+	fi
+done
+
 requiredNemoActionsArray=(  );
 requiredNemoActionsArray+=("${nemoActionsDir}/gitext-browse.nemo_action");
 requiredNemoActionsArray+=("${nemoActionsDir}/gitext-clone-background.nemo_action");
 requiredNemoActionsArray+=("${nemoActionsDir}/gitext-commit.nemo_action");
-requiredNemoActionsArray+=("${nemoActionsDir}/gitext-filehistory.nemo_action");
+requiredNemoActionsArray+=("${nemoActionsDir}/gitext-file-history.nemo_action");
 
 for actionPath in "${requiredNemoActionsArray[@]}"; do
 	sourcePath="${SCRIPT_DIR}${actionPath}";
@@ -57,6 +80,26 @@ for actionPath in "${requiredNemoActionsArray[@]}"; do
 	else
 		sudo cp -a "${sourcePath}" "${actionPath}";
 		sudo chmod 644 "${actionPath}";
+	fi
+done
+
+extraNemoActionsArray=(  );
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-diff-file.nemo_action");
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-init-background.nemo_action");
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-pull.nemo_action");
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-push.nemo_action");
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-revert-file.nemo_action");
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-settings.nemo_action");
+extraNemoActionsArray+=("${nemoActionsDir}/gitext-stash-changes.nemo_action");
+
+for actionPath in "${extraNemoActionsArray[@]}"; do
+	sourcePath="${SCRIPT_DIR}${actionPath}";
+	if [[ -f "${sourcePath}" ]]; then
+		sudo cp -a "${sourcePath}" "${actionPath}";
+		sudo chmod 644 "${actionPath}";
+		if [[ "true" != "${enableAllActions}" ]]; then
+			sudo mv "${actionPath}" "${actionPath}.disabled";
+		fi
 	fi
 done
 
@@ -71,6 +114,11 @@ if [[ "true" == "${missingRequiredFiles}" ]]; then
 		echo "";
 		echo "Script is not designed for standalone execution; clone full repo and try rerunning.";
 	fi
+fi
+if [[ "true" == "${reinstallActionsOnly}" ]]; then
+	echo "Nemo actions / scripts reinstalled.";
+	echo "Exiting without Mono / GitExtensions download.";
+	exit;
 fi
 
 if [[ "" == "${FIREFOX_WINDOWS_USER_AGENT}" ]]; then
@@ -88,32 +136,18 @@ fi
 
 echo "";
 echo "================================================================";
-echo "Installing Depenencies from central repos...";
+echo "Installing Mono (required for GitExt on Linux) ...";
 echo "================================================================";
+# Mono is required to run Git Extensions on Linux;
+# Make sure it is installed first
+/bin/bash ../mono/install-mono.sh;
 
+echo "";
+echo "================================================================";
+echo "Installing other dependencies ...";
+echo "================================================================";
 sudo dpkg --add-architecture i386;
 sudo apt-get install --install-recommends -q -y curl git imagemagick language-pack-en perl unzip wget;
-
-if [[ ! -e /etc/apt/sources.list.d/mono-official-stable.list ]]; then
-	echo "";
-	echo "================================================================";
-	echo "Installing latest Mono from mono-project.org...";
-	echo "================================================================";
-
-
-	# Instructions from (last updated 2019-05-04 for ubuntu 18.04):
-	#	https://www.mono-project.com/download/stable/#download-lin
-	#
-	sudo apt-get install gnupg ca-certificates
-	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-	echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list;
-    sudo chmod 644 /etc/apt/sources.list.d/mono-official-stable.list;
-	sudo apt-get update --quiet --yes;
-fi
-
-MONO_PACKAGES="mono-runtime mono-devel mono-complete referenceassemblies-pcl ca-certificates-mono mono-xsp4";
-echo -e "\nRunning: apt-get install --install-recommends -y $MONO_PACKAGES";
-sudo apt-get install --install-recommends -q -y $MONO_PACKAGES;
 
 echo "";
 echo "================================================================";
