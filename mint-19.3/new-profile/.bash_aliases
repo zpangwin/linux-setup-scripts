@@ -569,6 +569,7 @@ alias connection="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d
 alias onvpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
 alias vpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
 
+
 #====================================================
 # Text editor related commands
 #====================================================
@@ -742,6 +743,7 @@ alias pull='git pull --all'
 alias reflog='git reflog'
 #this would block /usr/bin/stat which is used for determining filesizes
 #alias stat='git status'
+alias unstage='git reset HEAD'
 
 #git CLI abbreviated commands
 alias ga='git add'
@@ -850,4 +852,3 @@ alias greo='grep'
 alias greio='grep'
 alias rgep='grep'
 alias gre\[='grep'
-

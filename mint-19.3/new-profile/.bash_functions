@@ -1347,6 +1347,15 @@ function mountAllFstabEntries() {
 #==========================================================================
 # Start Section: Network
 #==========================================================================
+function getGbUsedThisSession() {
+    local ethernetInterface=$(ifconfig 2>/dev/null|grep -P '^ew+:'|head -1|sed -E 's/^(ew+):s.*$/1/g');
+    local ethernetBytes=$(cat "/sys/class/net/${ethernetInterface}/statistics/rx_bytes");
+    local vpnBytes=$(cat "/sys/class/net/tun0/statistics/rx_bytes");
+    local totalBytes=$(echo "${ethernetBytes} + ${vpnBytes}"|bc -l)
+    local totalGB=$(printf "%.2f" $(echo "${totalBytes} / 1024 / 1024 / 1024 "|bc -l));
+
+    echo "Total GB used since PC was started: ${totalGB} GB";
+}
 function isValidIpAddr() {
     # return code only version
     local ipaddr="$1";
@@ -2364,8 +2373,23 @@ function referenceGroupCommands() {
     echo "======================================================================================================";
     echo " sudo groupadd GROUP                     # create new group 'GROUP' ";
     echo " sudo groupadd -g 1337 GROUP             # create new group 'GROUP' with groupid (gid) as 1337 ";
-    echo " sudo usermod -a -G GROUP USER           # addsexisting user 'USER' to existing group 'GROUP'";
-    echo " sudo usermod -a -G GROUP1,GROUP2 USER   # add existing user 'USER' to groups 'GROUP1' and 'GROUP2'";
+    echo "";
+    echo "# adds existing user 'USER' to existing group 'GROUP'";
+    echo " sudo usermod -a -G GROUP USER";
+    echo " sudo gpasswd -a USER GROUP";
+    echo " sudo gpasswd --add USER GROUP";
+    echo "";
+    echo "# adds existing user 'USER' to a list of muliple groups 'GROUP1' and 'GROUP2'";
+    echo " sudo usermod -a -G GROUP1,GROUP2 USER";
+    echo "";
+    echo "# removes existing user 'USER' from existing group 'GROUP'";
+    echo " sudo gpasswd -d USER GROUP";
+    echo " sudo gpasswd --delete USER GROUP";
+    echo "";
+    echo "# remove the user 'USER' from any groups not explicitly listed";
+    echo " sudo usermod -G USER USER         # User 'USER' will belong to *only* the default group 'USER' ";
+    echo " sudo usermod -G USER,GROUP2 USER  # User will belong to *only* to groups 'USER' and 'GROUP2' ";
+    echo "";
     echo " sudo usermod -g GROUP USER              # change the primary group of user 'USER' to group 'GROUP'";
     echo " sudo useradd -G GROUP USER              # create new user 'USER' and adds to existing group 'GROUP'";
     echo " sudo groupdel GROUP                     # delete group 'GROUP'";
