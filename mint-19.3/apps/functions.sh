@@ -362,3 +362,64 @@ function whichPackage() {
     fi
     dpkg -S "${path}"|awk -F: '{print $1}';
 }
+function installDependenciesFromDebFile() {
+	local debFilePath="$1";
+	local excludedPackagesRegex="$2"
+	if [[ "" == "${debFilePath}" || ".deb" != "${debFilePath:${#debFilePath}-4}" ]]; then
+		if [[ "-h" != "$1" && "--help" != "$1" ]]; then
+			echo "ERROR: Missing or invalid .deb file.";
+		fi
+		echo "Expected usage:";
+		echo "installDependenciesFromDebFile /path/to/some.deb [EXCLUDE_REGEX]";
+		echo "";
+		echo "This function will parse the dependencies required by the deb file and attempt to install them, provided they exist in the central repositories.";
+		echo "";
+		echo "EXCLUDE_REGEX - an optional Perl-style regex pattern of any packages to be excluded.";
+		echo "";
+		echo "Examples:";
+		echo " # To exclude all occurrences of 'qt56-teamviewer' any of the following would work: ";
+		echo " installDependenciesFromDebFile teamviewer_amd64.deb 'qt56-teamviewer'";
+		echo " installDependenciesFromDebFile teamviewer_amd64.deb 'qt\\d+-teamviewer'";
+		echo " installDependenciesFromDebFile teamviewer_amd64.deb '[\\S]*teamviewer[\\S]*'";
+		return -1;
+	fi
+	if [[ ! -f "${debFilePath}" ]]; then
+		echo "ERROR: Passed file '${debFilePath}' does not exist.";
+		return 2;
+	fi
+
+	local debFileName=$(basename "${debFilePath}");
+	local canonFileName="${debFileName%%.*}";
+	canonFileName="${canonFileName/[\-_]i386/}";
+	canonFileName="${canonFileName/[\-_]amd64/}";
+
+	local rawDependenciesList=$(dpkg -I "${debFilePath}"|grep Depends);
+	#echo "rawDependenciesList: ${rawDependenciesList}";
+
+	local cleanedDependenciesList=$(echo "${rawDependenciesList:10}"|sed -E 's/\([^\(\)]+\)|\||,//g' 2>/dev/null);
+	#echo "cleanedDependenciesList[0]: ${cleanedDependenciesList}";
+
+	# if the filename is a name only and something distinct (e.g. 8 characters or more)
+	# then also filter out the unique name from any package requirements. this is not
+	# always needed but can be required in some cases such as with teamviewer's deb file.
+	if [[ "" != "${canonFileName}" && "${canonFileName}" != "${excludedPackagesRegex}" ]]; then
+		if [[ "$canonFileName" && $canonFileName =~ ^[a-z][-a-z]*[a-z]$ ]]; then
+			if (( ${#canonFileName} > 8 )); then
+				cleanedDependenciesList=$(echo "${cleanedDependenciesList}"|perl -pe "s/[\\S]*${canonFileName}[\\S]*//g" 2>/dev/null);
+			fi
+		fi
+	fi
+	#echo "cleanedDependenciesList[1]: ${cleanedDependenciesList}";
+
+	if [[ "" != "${excludedPackagesRegex}" ]]; then
+		cleanedDependenciesList=$(echo "${cleanedDependenciesList}"|perl -pe "s/${excludedPackagesRegex}//g" 2>/dev/null);
+	fi
+	#echo "cleanedDependenciesList[2]: ${cleanedDependenciesList}";
+
+	if [[ "" != "${cleanedDependenciesList}" ]]; then
+		echo "Attempting to install dependencies for ${debFileName} ...";
+		sudo apt-get install -y ${cleanedDependenciesList};
+	else
+		echo "No dependencies found for ${debFileName}";
+	fi
+}
