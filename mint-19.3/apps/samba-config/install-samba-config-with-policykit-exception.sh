@@ -1,4 +1,15 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+#echo "SCRIPT_DIR is $SCRIPT_DIR";
+
+SCRIPT_DIR_PARENT=$(dirname "${SCRIPT_DIR}");
+#echo "SCRIPT_DIR_PARENT is $SCRIPT_DIR_PARENT";
+
+if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
+fi
+. "${SCRIPT_DIR_PARENT}/functions.sh";
 
 # get the sudo prompt out of the way up front
 sudo ls -acl 2>&1 >/dev/null;
@@ -17,12 +28,12 @@ sudo apt-get install -y system-config-samba;
 sudo touch /etc/libuser.conf;
 
 # copy script files
-sudo cp -a ./usr/bin/pkexec-system-config-samba /usr/bin/pkexec-system-config-samba;
-sudo cp -a ./usr/share/applications/system-config-samba.desktop /usr/share/applications/system-config-samba.desktop;
+sudo cp -a "${SCRIPT_DIR}/usr/bin/pkexec-system-config-samba" /usr/bin/pkexec-system-config-samba;
+sudo cp -a "${SCRIPT_DIR}/usr/share/applications/system-config-samba.desktop" /usr/share/applications/system-config-samba.desktop;
 
 # Install policykit exception...
 if [[ ! -f /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy ]]; then
-	sudo cp -a ./usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy;
+	sudo cp -a "${SCRIPT_DIR}/usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy" /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy;
 else
 	# check if the policy is already defined...
 	policy_defined=$(grep 'id="org.freedesktop.policykit.pkexec.run-system-config-samba"' /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy|wc -l);
@@ -34,7 +45,7 @@ else
 		sudo sed -i -E 's/^<\/policyconfig>//g' /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy;
 
 		# copy the <action> tag and new closing tag from file in install folder to actual policykit file
-		cat ./usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy|sed -n '/^.*<action/,$p'|sudo tee --append /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy >/dev/null;
+		cat "${SCRIPT_DIR}/usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy"|sed -n '/^.*<action/,$p'|sudo tee --append /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy >/dev/null;
 	fi
 fi
 

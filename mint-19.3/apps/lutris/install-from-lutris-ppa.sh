@@ -1,11 +1,15 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+#echo "SCRIPT_DIR is $SCRIPT_DIR";
 
-if [ -f ../functions.sh ]; then
-    . ../functions.sh
-else
-	echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
-	exit;
+SCRIPT_DIR_PARENT=$(dirname "${SCRIPT_DIR}");
+#echo "SCRIPT_DIR_PARENT is $SCRIPT_DIR_PARENT";
+
+if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
 fi
+. "${SCRIPT_DIR_PARENT}/functions.sh";
 
 HAS_WINE_STAGING=$(echo $(which wine && wine --version) | grep -i staging|wc -l);
 if [[ "1" != "${HAS_WINE_STAGING}" ]]; then

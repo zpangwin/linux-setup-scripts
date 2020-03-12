@@ -1,10 +1,15 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+#echo "SCRIPT_DIR is $SCRIPT_DIR";
 
-if [[ ! -f ../functions.sh ]]; then
-	echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
-	exit;
+SCRIPT_DIR_PARENT=$(dirname "${SCRIPT_DIR}");
+#echo "SCRIPT_DIR_PARENT is $SCRIPT_DIR_PARENT";
+
+if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
 fi
-. ../functions.sh
+. "${SCRIPT_DIR_PARENT}/functions.sh";
 
 userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36";
 
@@ -46,7 +51,7 @@ downloadPath="${tempDir}/$(basename "${appDownloadLink}")";
 
 cd "${tempDir}";
 wget --user-agent "${userAgent}" "${appDownloadLink}" --output-document="${downloadPath}" 2>/dev/null;
-if [[ "0" == "$?" ]]; then
+if [[ "0" != "$?" ]]; then
 	downloadSuccessful="false";
 elif [[ ! -e "${downloadPath}" ]]; then
 	downloadSuccessful="false";

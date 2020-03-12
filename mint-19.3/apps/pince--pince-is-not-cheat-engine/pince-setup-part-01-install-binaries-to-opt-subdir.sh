@@ -1,4 +1,15 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+#echo "SCRIPT_DIR is $SCRIPT_DIR";
+
+SCRIPT_DIR_PARENT=$(dirname "${SCRIPT_DIR}");
+#echo "SCRIPT_DIR_PARENT is $SCRIPT_DIR_PARENT";
+
+if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
+fi
+. "${SCRIPT_DIR_PARENT}/functions.sh";
 
 #equivalents to cheat engine
 #===========================================================================================================
@@ -40,8 +51,11 @@ if [[ ! -e "${PINCE_SOURCE_DIR}/install.sh" ]]; then
 fi
 
 # 4. Run the install script (note the install will take a fairly long time... was 10-15 minutes for me)
+STARTING_DIR=$(pwd);
 cd "${PINCE_SOURCE_DIR}";
 ./install.sh;
+
+cd "${STARTING_DIR}";
 
 # 5. Copy icon to central location. Note main image is a transparency and looks like shit in menus
 #    So first we are making a temp copy, then adding a background, then using one of the copies that

@@ -1,12 +1,16 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+#echo "SCRIPT_DIR is $SCRIPT_DIR";
 
-functionsLibPath="../../functions.sh";
-if [ -f "${functionsLibPath}" ]; then
-    . "${functionsLibPath}"
-else
-	echo "Error: missing '${functionsLibPath}'; Extract archive or clone git repo then run script from there.";
-	exit;
+SCRIPT_DIR_PARENT=$(dirname "${SCRIPT_DIR}");
+#echo "SCRIPT_DIR_PARENT is $SCRIPT_DIR_PARENT";
+
+if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
 fi
+. "${SCRIPT_DIR_PARENT}/functions.sh";
+
 applicationDisplayName="Waterfox Classic";
 applicationPackageName="waterfox-classic-kpe";
 applicationBinName="waterfox-classic";
