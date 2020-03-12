@@ -12,6 +12,17 @@ fi
 HOME_MENU_SHORTCUT="${HOME}/.local/share/applications/conky.desktop";
 USR_MENU_SHORTCUT="/usr/share/applications/conky.desktop";
 has_menu_shortcut="false";
+
+# check for chroot environment
+if [[ "root" == "${USER}" && "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+	# if chroot, then change "Home" to mean
+	# /etc/skel rather than /root
+	HOME_MENU_SHORTCUT="/etc/skel/.local/share/applications/conky.desktop";
+
+	# make sure folder exists
+	mkdir -p "/etc/skel/.local/share/applications" 2>&1 >/dev/null;
+fi
+
 if [[ -e "${HOME_MENU_SHORTCUT}" || -e "${USR_MENU_SHORTCUT}" ]]; then
 	has_menu_shortcut="true";
 fi

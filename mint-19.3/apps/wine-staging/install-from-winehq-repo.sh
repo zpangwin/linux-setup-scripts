@@ -1,11 +1,10 @@
 #!/bin/bash
 
-if [ -f ../functions.sh ]; then
-    . ../functions.sh
-else
+if [[ ! -f ../functions.sh ]]; then
 	echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
 	exit;
 fi
+. ../functions.sh
 
 #LIBFAUDIO fix
 # The OBS Repo contains FAudio (e.g. libfaudio0:i386) among other things

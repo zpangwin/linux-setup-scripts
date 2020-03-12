@@ -1,17 +1,12 @@
 #!/bin/bash
+if [[ ! -f ../functions.sh ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
+fi
+. ../functions.sh
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
 #echo "SCRIPT_DIR is $SCRIPT_DIR";
-
-if [ -f ../functions.sh ]; then
-    . ../functions.sh
-
-elif [ -f ~/Scripts/functions.sh ]; then
-    . ~/Scripts/functions.sh;
-
-elif [ -f ~/Scripts/apps/functions.sh ]; then
-    . ~/Scripts/apps/functions.sh;
-fi
 
 # add key
 wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -;

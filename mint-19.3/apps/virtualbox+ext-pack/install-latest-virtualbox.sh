@@ -1,13 +1,15 @@
 #!/bin/bash
-
-if [ -f ../functions.sh ]; then
-    . ../functions.sh
-else
+if [[ ! -f ../functions.sh ]]; then
 	echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
 	exit;
 fi
+. ../functions.sh
 
 DOWNLOAD_DIR="$HOME/Downloads";
+# check for chroot environment
+if [[ "root" == "${USER}" && "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+	DOWNLOAD_DIR=$(mktemp -d /tmp/virtualbox-XXXX);
+fi
 
 CHROME_WINDOWS_UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36";
 

@@ -13,6 +13,19 @@ SHORTCUT_FILENAME="com.teamviewer.TeamViewer.desktop";
 DESKTOP_SHORTCUT="${USER_DESKTOP_DIR}/${SHORTCUT_FILENAME}";
 START_MENU_SHORTCUT="/usr/share/applications/${SHORTCUT_FILENAME}";
 
+# check for chroot environment
+isChroot="false";
+if [[ "root" == "${USER}" && "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+	# if chroot, then change "Desktop" to mean
+	# /etc/skel/Desktop rather than /root/Desktop
+	USER_DESKTOP_DIR="/etc/skel/Desktop";
+
+	# make sure desktop exists
+	mkdir -p "${USER_DESKTOP_DIR}" 2>&1 >/dev/null;
+
+	isChroot="true";
+fi
+
 #Remove any old versions of TeamViewer first (keep configs, if they exist)
 sudo apt-get remove -y teamviewer;
 sudo rm "${START_MENU_SHORTCUT}" 2>/dev/null;
@@ -24,7 +37,7 @@ find "${USER_DESKTOP_DIR}" -type f -iname '*TeamViewer*.desktop' -delete 2>/dev/
 cd /tmp
 
 #install dependencies
-apt-get install --install-recommends -y gdebi;
+sudo apt-get install --install-recommends -y gdebi;
 
 echo "";
 echo "================================================================";
@@ -61,6 +74,14 @@ fi
 echo "Attempting to install TeamViewer ${MAJOR_VERSION}...";
 sudo dpkg -i teamviewer*.deb;
 rm ./teamviewer*.deb;
+
+if [[ ! -L "${START_MENU_SHORTCUT}" && ! -f "${START_MENU_SHORTCUT}"  ]]; then
+	# if the predefined path does not exist, then check for one with a different name...
+	startMenuShortcutExists=$(find /usr/share/applications \( -type f -o -type l \) -iname '*teamviewer*'|wc -l);
+	if [[ "0" != "${startMenuShortcutExists}" ]]; then
+		START_MENU_SHORTCUT=$(find /usr/share/applications \( -type f -o -type l \) -iname '*teamviewer*'|head -1);
+	fi
+fi
 
 #create desktop shortcut if it doesn't exist
 if [[ ! -e "${DESKTOP_SHORTCUT}" ]]; then
@@ -100,6 +121,7 @@ if [[ ! -e "${DESKTOP_SHORTCUT}" ]]; then
 	fi
 fi
 sudo chown ${SUDO_USER:-$USER}:${SUDO_USER:-$USER} "${DESKTOP_SHORTCUT}";
+sudo chmod 755 "${DESKTOP_SHORTCUT}";
 
 if [[ "" != "${SCRIPT_DIR}" && "${SCRIPT_DIR}/usr/bin/launch-teamviewer" ]]; then
 	sudo cp -a -t /usr/bin "${SCRIPT_DIR}/usr/bin/launch-teamviewer";
@@ -148,14 +170,18 @@ else
 	sudo sed -i 's|\(\[int32\] LicenseType =\).*$|\1 10000|g' /etc/teamviewer/global.conf;
 fi
 
-mkdir "${HOME}/.config/teamviewer" 2>/dev/null;
-touch "${HOME}/.config/teamviewer/client.conf"
+USER_TEAMVIEWER_CONFIG_DIR="${HOME}/.config/teamviewer";
+if [[ "true" == "${isChroot}" ]]; then
+	USER_TEAMVIEWER_CONFIG_DIR="/etc/skel/.config/teamviewer";
+fi
+mkdir -p "${USER_TEAMVIEWER_CONFIG_DIR}" 2>/dev/null;
+touch "${USER_TEAMVIEWER_CONFIG_DIR}/client.conf";
 
-HAS_SETTING=$(grep -P '^\[int32\] MsgBoxDontShow' "${HOME}/.config/teamviewer/client.conf" 2>/dev/null | wc -l);
+HAS_SETTING=$(grep -P '^\[int32\] MsgBoxDontShow' "${USER_TEAMVIEWER_CONFIG_DIR}/client.conf" 2>/dev/null | wc -l);
 if [[ "0" == "${HAS_SETTING}" ]]; then
-	echo '[int32] MsgBoxDontShow\QuitWithAutostart = 1' | tee -a "${HOME}/.config/teamviewer/client.conf";
+	echo '[int32] MsgBoxDontShow\QuitWithAutostart = 1' | tee -a "${USER_TEAMVIEWER_CONFIG_DIR}/client.conf";
 else
-	sudo sed -i 's|\(\[int32\] MsgBoxDontShow\\QuitWithAutostart =\).*$|\1 1|g' "${HOME}/.config/teamviewer/client.conf";
+	sudo sed -i 's|\(\[int32\] MsgBoxDontShow\\QuitWithAutostart =\).*$|\1 1|g' "${USER_TEAMVIEWER_CONFIG_DIR}/client.conf";
 fi
 
 HAS_SETTING=$(grep -P '^\[int32\] MsgBoxDontShow' "/etc/skel/.config/teamviewer/client.conf" 2>/dev/null | wc -l);
