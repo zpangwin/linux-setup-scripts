@@ -253,22 +253,166 @@ function diffBinaries() {
     echo '';
     diff "${tmpDir}/xxd1.hex" "${tmpDir}/xxd2.hex";
 }
-function archiveDirWith7z() {
-    local dirPath="$1";
-    local zipPath="$2";
+function create7zArchive() {
+    echo "Note: The 7z format does not perserve Linux file permissions.";
+    echo "If this is desired, it is recommended to use the tar.xz format instead as";
+    echo "it also uses LZMA2 compression but is able to perserve existing permissions.";
+    echo "";
 
-    if [[ "" == "${dirPath}" || ! -e "${dirPath}" ]]; then
-        echo -e "tError: Missing or empty directory path '$dirPath' ";
-        echo -e "ntarchiveDirWith7z /dir/to/archive [/path/of/archive/to/create.7z]";
-        return;
+    local functionName="create7zArchive";
+    local ext="7z";
+    local firstPath="$1";
+
+    # get the last arg as archive path
+    local archivePath="";
+    if (( ${#@} >= 2 )); then
+        archivePath="${@:${#@}:1}";
     fi
 
-    if [[ "" == "${zipPath}" || ".7z" != "${zipPath:(-3)}" ]]; then
-        local datestr=$(date +"%Y-%m-%d");
-        zipPath="${dirPath}_${datestr}.7z"
+    if [[ "" == "${firstPath}" || ! -e "${firstPath}" ]]; then
+        echo "ERROR: Missing or non-existent path '$firstPath' ";
+        echo "Expected usage:";
+        echo "  ${functionName} /path/to/be/archived [/path2 /path3 etc] [/path/to/new/archive/file.${ext}]";
+        echo "";
+        echo "If the path to the new archive file is not provided or does not end with the correct file extension,";
+        echo "then this will default to the first path with an appended timestamp and extension.";
+        echo " e.g. '/path/to/be/archived_%Y-%m-%d@%H%M.${ext}' ";
+        echo "";
+        return -1;
     fi
 
-    7z a -t7z -m0=lzma2 -mx=9 -md=32m -ms=on "${zipPath}" "${dirPath}" | grep -v "Compressing"
+    # check remaining paths
+    if (( ${#@} > 2 )); then
+        local filePath="";
+        for (( i=2; i<${#@}; i++ )); do
+            filePath="${@:$i:1}";
+            if [[ ! -e "${filePath}" ]]; then
+                echo "ERROR: Path '${filePath}' does not exist.";
+                return -2;
+            fi
+        done
+    fi
+
+    #echo "test: ${archivePath:${#archivePath}-${#ext}-1}"
+    if [[ "" == "${archivePath}" || ".${ext}" != "${archivePath:${#archivePath}-${#ext}-1}" ]]; then
+        local datestr=$(date +"%Y-%m-%d@%H%M");
+        archivePath="${firstPath}_${datestr}.${ext}"
+    fi
+    # The "${@:1:${#@}-1}" part will expand to "all passed args except the last one"
+    7z a -t7z -m0=lzma2 -mx=9 -md=32m -ms=on "${archivePath}" "${@:1:${#@}-1}" >/dev/null;
+    return $?;
+}
+function createTarArchive() {
+    local compressionLevel="9";
+    local functionName="createTarArchive";
+    local displayHelp="false";
+    local fileExt="$1";
+    if [[ "" == "${fileExt}" ]]; then
+        displayHelp="true";
+    elif [[ "tar" != "fileExt" && ! $fileExt =~ ^tar.[bgx]z[0-9]*$ ]]; then
+        echo "ERROR: Invalid output format";
+        displayHelp="true";
+    elif [[ "tar" != "fileExt" && ! $fileExt =~ ^tar.[bgx]z[0-9]$ ]]; then
+        compressionLevel="${fileExt:${#fileExt}-1}";
+        fileExt="${fileExt:0:${#fileExt}-1}";
+        shift 1 # removes initial value of $1 from the parameter list
+    else
+        shift 1 # removes initial value of $1 from the parameter list
+    fi
+    local firstPath="$1";
+    if [[ "" == "${firstPath}" || ! -e "${firstPath}" ]]; then
+        echo "ERROR: Missing or non-existent path '$firstPath' ";
+        displayHelp="true";
+    fi
+
+    if [[ "true" == "${displayHelp}" ]]; then
+        echo "";
+        echo "Expected usage:";
+        echo "  ${functionName} /path/to/be/archived [/path2 /path3 etc] [/path/to/new/archive/file.${ext}]";
+        echo "";
+        echo "If the path to the new archive file is not provided or does not end with the correct file extension,";
+        echo "then this will default to the first path with an appended timestamp and extension.";
+        echo " e.g. '/path/to/be/archived_%Y-%m-%d@%H%M.${ext}' ";
+        echo "";
+        return -1;
+    fi
+
+    # get the last arg as archive path
+    local archivePath="";
+    if (( ${#@} >= 2 )); then
+        archivePath="${@:${#@}:1}";
+    fi
+
+    # check remaining paths
+    if (( ${#@} > 2 )); then
+        local filePath="";
+        for (( i=2; i<${#@}; i++ )); do
+            filePath="${@:$i:1}";
+            if [[ ! -e "${filePath}" ]]; then
+                echo "ERROR: Path '${filePath}' does not exist.";
+                return -2;
+            fi
+        done
+    fi
+
+    if [[ "" != "${archivePath}" ]]; then
+        local requestedExtension="${archivePath:${#archivePath}-${#fileExt}-1}";
+        if [[ ".${fileExt}" != "${requestedExtension}" ]]; then
+            if [[ "tar" == "${fileExt}" && $archivePath =~ ^.*.tar.[7bgx]z$ ]]; then
+                echo "W: Wrong function arguments; correcting to output as '${archivePath:${#archivePath}-6}' ...";
+                fileExt="${archivePath:${#archivePath}-6}";
+            else
+                archivePath="${archivePath%.*}.${fileExt}";
+                echo "W: Corrected output path to '${archivePath}' ..."|grep --color -E ".${fileExt}";
+            fi
+        fi
+    fi
+
+    #echo "test: ${archivePath:${#archivePath}-${#fileExt}-1}"
+    if [[ "" == "${archivePath}" || ".${fileExt}" != "${archivePath:${#archivePath}-${#fileExt}-1}" ]]; then
+        local datestr=$(date +"%Y-%m-%d@%H%M");
+        archivePath="${firstPath}_${datestr}.${fileExt}"
+    fi
+
+    local compressionFlag="";
+    case "${fileExt##*.}" in
+        bz) compressionFlag="--bzip2" ;;
+        gz) compressionFlag="--gzip"; GZIP_OPT=-${compressionLevel}; export GZIP_OPT; ;;
+        xz) compressionFlag="--xz"; XZ_OPT=-${compressionLevel}e; export XZ_OPT; ;;
+        *) compressionFlag="" ;;
+    esac
+
+    # The "${@:1:${#@}-1}" part will expand to "all passed args except the last one"
+    tar --create ${compressionFlag} --preserve-permissions --file="${archivePath}" "${@:1:${#@}-1}" >/dev/null|grep -Pv 'Removing leading.*from member names';
+    return $?;
+}
+function createTarGzArchive() {
+    echo "Note: The gz format is an older format with a worse compression ratio.";
+    echo "It is recommended to use tar.xz if possible.";
+    echo "";
+    createTarArchive 'tar.gz' "${@}";
+}
+function createTarXzArchive() {
+    # this should default to compression level 9 (slowest but best compression)
+    createTarArchive 'tar.xz' "${@}";
+}
+function createTarXzArchive9() {
+    # use compression level 9 (slowest but best compression)
+    createTarArchive 'tar.xz9' "${@}";
+}
+function createTarXzArchive6() {
+    # use compression level 6 (default)
+    createTarArchive 'tar.xz6' "${@}";
+}
+function createTarXzArchive3() {
+    # use compression level 3 (faster)
+    createTarArchive 'tar.xz3' "${@}";
+}
+function createTarBzArchive() {
+    echo "Note: The bzip2 format is an older format with a worse compression ratio.";
+    echo "It is recommended to use tar.xz if possible.";
+    echo "";
+    createTarArchive 'tar.bz' "${@}";
 }
 function makeThenChangeDir() {
     local NEW_DIR="$1";

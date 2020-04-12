@@ -527,8 +527,9 @@ alias gam29='xgamma -gamma 2.9';
 #====================================================
 # Archive related commands
 #====================================================
-alias 7zdir="archiveDirWith7z";
-alias zipdir="archiveDirWith7z";
+alias 7zdir="create7zArchive";
+alias zipdir="createTarXzArchive";
+alias xzdir="createTarXzArchive";
 alias tardir='echo "dirname=\"foo\";";echo "tar -czf \"\${dirname}.tar.gz\" \"\${dirname}\";";'
 
 #====================================================
