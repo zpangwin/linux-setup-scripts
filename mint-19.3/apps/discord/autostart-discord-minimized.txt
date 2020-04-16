@@ -1,4 +1,15 @@
+#!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+#echo "SCRIPT_DIR is $SCRIPT_DIR";
 
+SCRIPT_DIR_PARENT=$(dirname "${SCRIPT_DIR}");
+#echo "SCRIPT_DIR_PARENT is $SCRIPT_DIR_PARENT";
+
+if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
+    echo "Error: missing functions.sh; Extract archive or clone git repo then run script from there.";
+    exit;
+fi
+. "${SCRIPT_DIR_PARENT}/functions.sh";
 
 
 # Experimental / Unconfirmed WIP
@@ -12,7 +23,7 @@ Prep:
 1. Install dependencies
 sudo apt-get install wmctrl xdotool python3;
 
-2. 
+2.
 
 =============
 Setup:
@@ -24,11 +35,11 @@ Setup:
 
 2 Make /usr/bin/discord-to-systray executable:
     sudo chmod 755 /usr/bin/discord-to-systray;
-    
+
 3. Close Discord, then run the script to confirm it works:
     discord-to-systray &
 
-5. (Start) Menu > Preferences > Startup Applications > Select Discord > click edit button > then 
+5. (Start) Menu > Preferences > Startup Applications > Select Discord > click edit button > then
     change from /usr/share/discord/Discord
     to /usr/bin/python3 /usr/bin/discord-to-systray
     and adjust the delay as needed
