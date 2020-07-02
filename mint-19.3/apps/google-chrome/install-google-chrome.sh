@@ -41,7 +41,9 @@ wget -qO - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key 
 addCustomSource google-chrome "deb http://dl.google.com/linux/chrome/deb/ stable main";
 
 # update apt's local cache
+echo "Updating apt's local cache ...";
 sudo apt-get update 2>&1 >/dev/null;
 
 # install package
+echo "Installing Chrome ...";
 sudo apt-get install -y google-chrome-stable;
