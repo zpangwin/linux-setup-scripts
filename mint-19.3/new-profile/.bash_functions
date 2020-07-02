@@ -695,8 +695,96 @@ function getHexBlobWithSingleByteSpacing() {
 #==========================================================================
 
 #==========================================================================
-# Start Section: Git
+# Start Section: Git functions
 #==========================================================================
+function gitCloneWithFormattedDir() {
+    local formatPattern="$1";
+    local cloneUrl="$2";
+    if [[ "" == "$1" || "" == "$2" || "-h" == "$1" || "--help" == "$1" || $formatPattern =~ ^ssh:.*$ || $formatPattern =~ ^git[@:].*$ || $formatPattern =~ ^[fh]t?tps?:.*$ || ! ( 'git@github.com:' == "${cloneUrl}" || 'git@gitlab.com:' == "${cloneUrl}" || $cloneUrl =~ ^[a-zA-Z][a-zA-Z0-9]*@.*:.*/.*$ || $cloneUrl =~ ^[fh]t?tps?://.*$ || $cloneUrl =~ ^[gs][is][th]://.*$ ) ]]; then
+        if [[ "" == "$1" || "" == "$2" ]]; then
+            echo 'ERROR: Missing one or more arguments.';
+            echo '';
+        elif [[ $formatPattern =~ ^ssh:.*$ || $formatPattern =~ ^git[@:].*$ || $formatPattern =~ ^[fh]t?tps?:.*$ ]]; then
+            echo 'ERROR: Invalid format pattern / incorrect argument order. The first argument should be FORMAT_PATTERN.';
+            echo '';
+        elif [[ ! ( 'git@github.com:' == "${cloneUrl}" || 'git@gitlab.com:' == "${cloneUrl}" || $cloneUrl =~ ^[a-zA-Z][a-zA-Z0-9]*@.*:.*/.*$ || $cloneUrl =~ ^[fh]t?tps?://.*$ || $cloneUrl =~ ^[gs][is][th]://.*$ ) ]]; then
+            echo 'ERROR: Invalid clone url / incorrect argument order. The second argument should be a valid CLONE_URL.';
+            echo "Note: this function does not support LOCAL clone urls";
+            echo "Found: ${cloneUrl}";
+            echo '';
+        fi
+        echo 'Expected usage:';
+        echo '  gitCloneWithFormattedDir FORMAT_PATTERN CLONE_URL [OPTIONAL_ARGS]';
+        echo '';
+        echo 'Allows you to clone a git repository using a format pattern for the generated directory.';
+        echo 'Currently only supports REMOTE clone urls (github/gitlab/bitbucket/http/https/ssh/ftp/ftps).';
+        echo '';
+        echo 'ARGUMENTS:';
+        echo '  FORMAT_PATTERN    A format pattern to be used for the output folder that will be created.';
+        echo '                    This can be relative to the current directory or prefixed with a path.';
+        echo '                    See below for formatting options.';
+        echo '  CLONE_URL         The clone url that will be passed to git clone';
+        echo '  OPTIONAL_ARGS     Optional/arbitrary values that can be passed and referenced in the format string as %1, %2, etc';
+        echo '                    Up to 9 OPTIONAL_ARGS may be passed after the clone url.';
+        echo '';
+        echo 'FORMATTING OPTIONS:';
+        echo 'For literal percent signs, simply double them up (e.g. "This produces a literal %% symbol")';
+        echo '';
+        echo '  %o                Owner Name; this is taken from the clone url (e.g. https://github.com/OwnerName/RepoName)';
+        echo '  %n                Repo Name; this is taken from the clone url (e.g. https://github.com/OwnerName/RepoName)';
+        echo '  %1                First OPTIONAL_ARGS argument';
+        echo '  %2                Second OPTIONAL_ARGS argument';
+        echo '  %3                Third OPTIONAL_ARGS argument';
+        echo '  %4                Fourth OPTIONAL_ARGS argument';
+        echo '  %5                Fifth OPTIONAL_ARGS argument';
+        echo '  %6                Sixth OPTIONAL_ARGS argument';
+        echo '  %7                Seventh OPTIONAL_ARGS argument';
+        echo '  %8                Eigthth OPTIONAL_ARGS argument';
+        echo '  %9                Nineth OPTIONAL_ARGS argument';
+        echo '';
+        echo 'Examples:';
+        echo $'  gitCloneWithFormattedDir '%o_%n' https://github.com/OwnerName/RepoName';
+        echo '';
+        return;
+    fi
+    shift 2;
+
+    # note that sed does not have a non-greedy match equivalent to perl's .*?
+    # there are workarounds such as https://0x2a.at/blog/2008/07/sed--non-greedy-matching/
+    # but nothing simple/elegant like perl's solution
+    # for max portability, we *could* cheat and just use 2 sed calls; one to trim off the .git if it exists
+    # and another to work backwards from the right
+    local repoName=$(echo "${cloneUrl}"|sed -E 's|^(.*).git$|1|g'|sed -E 's|.*/([^/]+)$|1|g');
+    local ownerName=$(echo "${cloneUrl}"|sed -E 's|^(.*).git$|1|g'|sed -E 's|.*[:/]([^:/]+)/[^/]+$|1|g');
+
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%n/\1${repoName}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%o/\1${ownerName}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%1/\1${1}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%2/\1${2}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%3/\1${3}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%4/\1${4}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%5/\1${5}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%6/\1${6}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%7/\1${7}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%8/\1${8}/g");
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/(^|[^%])%9/\1${9}/g");
+
+    # Replace any doubled up percent signs with a literal percent sign
+    formatPattern=$(echo "${formatPattern}"|sed -E "s/%%/%/g");
+
+    git clone "${cloneUrl}" "${formatPattern}";
+}
+function gitCloneListWithFormattedDir() {
+    local formatPattern="$1";
+    # check remaining paths
+    if (( ${#@} > 2 )); then
+        local cloneUrl="";
+        for (( i=2; i<${#@}; i++ )); do
+            cloneUrl="${@:$i:1}";
+            gitCloneWithFormattedDir "${formatPattern}" "${cloneUrl}";
+        done
+    fi
+}
 function gitArchiveLastCommit() {
     local currDir=$(pwd);
     if [[ ! -d "${currDir}/.git" ]]; then
@@ -864,6 +952,72 @@ function gitUpdateAllReposUnderDir() {
         # call git pull in the targeted subdir
         git fetch --all --quiet --progress;
         git pull --all --quiet --progress;
+    done
+}
+function gitListRemotesForAllReposUnderDir() {
+    local parentDir="$1";
+    local startingDir=$(pwd);
+    if [[ "" == "${parentDir}" ]]; then
+        parentDir="${startingDir}";
+    fi
+
+    # print header - this gets printed from all logic paths so doing it once as a header up top saves space per output line
+    echo "gitListRemotesForAllReposUnderDir():";
+
+    # git commands must be performed relative to repo base folder
+    cd "${parentDir}";
+
+    local repoName='';
+    local remoteName='';
+    local remoteUrl='';
+
+    # check if we are somewhere under a working directory in a git repo
+    local repoTopLevelDir=$(git rev-parse --show-toplevel 2>/dev/null);
+    if [[ "" != "${repoTopLevelDir}" ]]; then
+        printf '%-60st%sn' "${repoTopLevelDir}" $(git config --get remote.origin.url);
+
+        # then change back to starting dir and return (we're all done)
+        cd "${startingDir}";
+        return;
+    fi
+
+    # check for permission errors
+    local permErrorCount=$(find "${parentDir}" -type d -name '.git' 2>&1|grep 'Permission denied'|wc -l);
+    if [[ "0" != "${permErrorCount}" ]]; then
+        echo "  WARNING: Permission issues were detected for ${permErrorCount} subdirs. These subdirs will be ignored.";
+        echo "  To view a list of subdirs with permission issues run:";
+        echo "    find "${parentDir}" -type d -name '.git' >/dev/null";
+    fi
+
+    # otherwise, check if subfolders contain repos. if not then exit
+    local totalRepos=$(find "${parentDir}" -type d -name '.git' 2>/dev/null|wc -l);
+    if [[ "0" == "" ]]; then
+        echo "  No git repos found for '${parentDir}'";
+        echo "";
+        return;
+    fi
+
+    echo "  Found ${totalRepos} git repos under:";
+    echo "    '${parentDir}'";
+    echo "";
+
+    # otherwise (if there are subfolders that contain repos) then update each of the subfolder repos
+    local gitdir='';
+    local subdir='';
+    local displaysubdir='';
+    find "${parentDir}" -type d -name '.git' 2>/dev/null | while IFS='' read gitdir; do
+        subdir=$(dirname "$gitdir");
+        cd "${subdir}";
+
+        repoName=$(dirname "$subdir");
+        displaysubdir="$subdir";
+        if [[ "${subdir:0:${#HOME}}" == "${HOME}" ]]; then
+            displaysubdir="~${subdir:${#HOME}}";
+        elif [[ "${subdir:0:${#startingDir}}" == "${startingDir}" ]]; then
+            displaysubdir=".${subdir:${#startingDir}}";
+        fi
+
+        printf '%-60st%sn' "${displaysubdir}" $(git config --get remote.origin.url);
     done
 }
 #==========================================================================
