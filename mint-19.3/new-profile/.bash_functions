@@ -3452,6 +3452,99 @@ function getProcessInfoByWindowName() {
     local TARGET_NAME="$1";
     ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(xdotool search --class "$TARGET_NAME" getwindowpid);
 }
+function printAtQueue() {
+    declare -A jobSchedulesMap;
+
+    local MINJOB=$(/usr/bin/atq | sort | head -n1 | awk '{ print $1; }');
+    local MAXJOB=$(/usr/bin/atq | sort | tail -n1 | awk '{ print $1; }');
+    if [[ "" != "${MINJOB}" && "" != "${MAXJOB}" && $MINJOB =~ ^[0-9]+$ && $MAXJOB =~ ^[0-9]+$ ]]; then
+        ## put job list into a Map, then find paths, then use printf to display both data points together
+        eval $(/usr/bin/atq|gawk -F'\s+' '{print $1" ""$0"""}'|xargs -n 2 sh -c 'echo "jobSchedulesMap["$1"]="$2""' argv0);
+
+        # print a header
+        printf '%-7s %-10s %s %-6s %-20s %sn' 'JOBID' 'DATE' 'TIME     YEAR' 'QUEUE' 'USER' 'COMMAND';
+        printf '==================================================================================================================n';
+
+        local jobId='';
+        for jobId in $(seq ${MINJOB} ${MAXJOB}); do
+            # the command to be run is always in the 2nd to last line returned by $(at -c ID)
+            # and last line is blank
+            #
+            local commandToBeRun=$(at -c ${jobId}|grep -Pv '^$'|tail -1);
+            local scheduleInfo="${jobSchedulesMap[$jobId]}";
+
+            local scheduledDate=$(echo "${scheduleInfo}" | sed -E 's/^[1-9][0-9]*s+(.*)s+[0-9]{2}:[0-9]{2}:[0-9]{2}s+[1-9][0-9]{3}.*$/1/g');
+            local scheduledTimeAndYear=$(echo "${scheduleInfo}" | sed -E 's/^.*s+([0-9]{2}:[0-9]{2}:[0-9]{2}s+[1-9][0-9]{3})s+.*$/1/g');
+            local queueName=$(echo "${scheduleInfo}" | sed -E 's/^.*:[0-9]{2}s+[1-9][0-9]{3}s+(S+)s+.*$/1/g');
+            local jobUser=$(echo "${scheduleInfo}" | sed -E 's/^.*:[0-9]{2}s+[1-9][0-9]{3}s+S+s+(S+)$/1/g');
+
+            # Print consolidated row as output
+            printf '%-7s %-10s %s %-6s %-20s %sn' "${jobId}" "${scheduledDate}" "${scheduledTimeAndYear}" "${queueName}" "${jobUser}" "${commandToBeRun}";
+        done
+    fi
+    unset jobSchedulesMap;
+}
+function rescheduleAtJob() {
+    local jobId="$1";
+    if [[ "" == "$1" || ! $jobId =~ ^[1-9][0-9]*$ ]]; then
+        echo "ERROR: rescheduleAtJob(): Invalid jobId '${jobId}'; aborting...";
+        return -1;
+    fi
+
+    local newTime="$2";
+    if [[ "" == "$2" || ! $newTime =~ ^[0-9][0-9]:[0-9][0-9].*$ ]]; then
+        echo "ERROR: rescheduleAtJob(): Invalid newTime '${newTime}'.";
+        echo "newTime must begin with %H:%M (e.g. 02:00). This can be in 24-hr format or 12-hr format with am/pm (e.g. 02:00am)";
+        echo "newTime may also include a date or keywords such as 'today'/'tomorrow' after the time (e.g. '02:00am tomorrow')";
+        echo "For more info, see 'man at'";
+        echo "";
+        return -2;
+    fi
+
+    local jobExists=$(/usr/bin/atq|grep -Pc "^${jobId}\b");
+    if [[ "1" != "${jobExists}" ]]; then
+        echo "ERROR: rescheduleAtJob(): No AT jobs with jobId '${jobId}'; aborting...";
+        return -3;
+    fi
+
+    at -c ${jobId}|grep -Pv '^$'|tail -1|at ${newTime};
+    atrm ${jobId};
+}
+function addMinutesToAtJob() {
+    local jobId="$1";
+    if [[ "" == "$1" || ! $jobId =~ ^[1-9][0-9]*$ ]]; then
+        echo "ERROR: addMinutesToAtJob(): Invalid jobId '${jobId}'; aborting...";
+        return -1;
+    fi
+
+    local minutesToAdd="$2";
+    if [[ "" == "$2" || ! $minutesToAdd =~ ^[-+][1-9][0-9]*$ ]]; then
+        echo "ERROR: addMinutesToAtJob(): Invalid minutesToAdd '${minutesToAdd}'; expected a plus sign followed by a number of minutes, e.g. '+30'. Aborting...";
+        return -2;
+    fi
+
+    local jobExists=$(/usr/bin/atq|grep -Pc "^${jobId}\b");
+    if [[ "1" != "${jobExists}" ]]; then
+        echo "ERROR: addMinutesToAtJob(): No AT jobs with jobId '${jobId}'; aborting...";
+        return -3;
+    fi
+    local currentScheduleDate=$(/usr/bin/atq|grep -P "^${jobId}\s+"|sed -E 's/[1-9][0-9]*s+(Mon|T[hu][eu]|Wed|Fri|S[au][nt])s+(J[au][nl]|Feb|Ma[ry]|A[up][rg]|Sep|Oct|Nov|Dec)s+([0-3]?[0-9])s+([0-2][0-9]:[0-5][0-9]):.*$/2 3/g');
+    local currentSchedule24HourTime=$(/usr/bin/atq|grep -P "^${jobId}\s+"|sed -E 's/[1-9][0-9]*s+(Mon|T[hu][eu]|Wed|Fri|S[au][nt])s+(J[au][nl]|Feb|Ma[ry]|A[up][rg]|Sep|Oct|Nov|Dec)s+[0-3]?[0-9]s+([0-2][0-9]:[0-5][0-9]):.*$/3/g');
+    local todaysDate=$(date --date 'today' +'%b %d');
+    local tomorrowsDate=$(date --date 'tomorrow' +'%b %d');
+
+    local newTime="";
+    if [[ "$currentScheduleDate" == "${todaysDate}" ]]; then
+        newTime=$(date --date "${currentSchedule24HourTime} today ${minutesToAdd} minute" +'%I:%M%p %b %d');
+    elif [[ "$currentScheduleDate" == "${tomorrowsDate}" ]]; then
+        newTime=$(date --date "${currentSchedule24HourTime} tomorrow ${minutesToAdd} minute" +'%I:%M%p %b %d');
+    else
+        newTime=$(date --date "${currentSchedule24HourTime} ${currentScheduleDate} ${minutesToAdd} minute" +'%I:%M%p %b %d');
+    fi
+
+    at -c ${jobId}|grep -Pv '^$'|tail -1|at ${newTime};
+    atrm ${jobId};
+}
 #==========================================================================
 # End Section: Process functions
 #==========================================================================
