@@ -5,6 +5,30 @@ function setGnomeTerminalTitle() {
     local NEW_TITLE="$1";
     PS1="[e]0;${NEW_TITLE}a]${debian_chroot:+($debian_chroot)}[033[01;32m]u@h[033[00m] [033[01;34m]w $[033[00m]";
 }
+function body() {
+    #   https://unix.stackexchange.com/questions/11856/sort-but-keep-header-line-at-the-top
+    #   print the header (the first line of input) and then pass the body (the rest of the input) back for processing on
+    #   the terminal for use in a piped command etc. - e.g. $(ps | body grep somepattern) OR $(lsof -i -P -n | sort)
+    IFS= read -r header
+    printf '%sn' "$header"
+    "$@"
+}
+function filePathToFileUri() {
+    local filePath="$1";
+    if [[ "" == "${filePath}" ]]; then
+        return 500;
+    fi
+    local fileUri=$(echo "${filePath}" | perl -MURI::file -e 'print URI::file->new(<STDIN>)."n"');
+    printf '%sn' "${fileUri}";
+}
+function fileUriToFilePath() {
+    local fileUri="$1";
+    if [[ "" == "${fileUri}" || 'file://' != "${fileUri:0:7}" ]]; then
+        return 500;
+    fi
+    local filePath=$(perl -MURI::Escape -e 'print uri_unescape($ARGV[0])' "${fileUri:7}");
+    printf '%sn' "${filePath}";
+}
 function findDuplicateLinesInFile() {
     local file="$1";
     if [[ "" == "$file" || ! -f "$file" ]]; then
