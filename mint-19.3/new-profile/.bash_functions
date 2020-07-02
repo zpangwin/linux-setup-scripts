@@ -1,5 +1,5 @@
 #==========================================================================
-# Start Section: General Utility Functions
+# Start Section: General Utility functions
 #==========================================================================
 function setGnomeTerminalTitle() {
     local NEW_TITLE="$1";
@@ -420,7 +420,9 @@ function makeThenChangeDir() {
     cd "${NEW_DIR}";
 }
 #==========================================================================
-# End Section: General Utility Functions
+# End Section: General Utility functions
+#==========================================================================
+
 #==========================================================================
 
 #==========================================================================
@@ -596,11 +598,11 @@ function gitUpdateAllReposUnderDir() {
     done
 }
 #==========================================================================
-# End Section: Git
+# End Section: Git functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Office files
+# Start Section: Office file functions
 #==========================================================================
 function convertPdfToText() {
     local pdfFile="$1";
@@ -704,11 +706,11 @@ function compressPdf() {
     gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default     -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages     -dCompressFonts=true -r${rvalue} -sOutputFile="${outfile}" "${inputfile}" 2>/dev/null;
 }
 #==========================================================================
-# End Section: Office files
+# End Section: Office file functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Media files
+# Start Section: Media file functions
 #==========================================================================
 function extractMp3AudioFromVideoFile() {
     local videofile="$1";
@@ -942,11 +944,11 @@ function batchLogMkvSubtitleTrackInfo() {
     cd "${originalLocation}";
 }
 #==========================================================================
-# End Section: Media files
+# End Section: Media file functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Wine
+# Start Section: Wine functions
 #==========================================================================
 function createNewWine32Prefix() {
     if [[ "" == "$1" ]]; then
@@ -1092,11 +1094,11 @@ function printWinePrefix() {
     echo "${winePrefixDir}";
 }
 #==========================================================================
-# End Section: Wine
+# End Section: Wine functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Administration
+# Start Section: Administration functions
 #==========================================================================
 function runCommandAsUser() {
     if [[ "" == "$1" || "" == "$2" ]]; then
@@ -1332,11 +1334,11 @@ function makeDirOnlyMineRecursively() {
     sudo chmod -R o-rwx "$1";
 }
 #==========================================================================
-# End Section: Administration
+# End Section: Administration functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Housekeeping
+# Start Section: Housekeeping functions
 #==========================================================================
 function cleanBashHistory() {
     local stfu="false";
@@ -1397,11 +1399,11 @@ function backupAndCleanBashHistory() {
     cleanBashHistory "${@}";
 }
 #==========================================================================
-# End Section: Housekeeping
+# End Section: Housekeeping functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Hard Drives
+# Start Section: Hard Drive functions
 #==========================================================================
 function displayFstabDiskMountpoints() {
     #determine mount points as defined in /etc/fstab
@@ -1485,11 +1487,11 @@ function mountAllFstabEntries() {
     done
 }
 #==========================================================================
-# End Section: Hard Drives
+# End Section: Hard Drive functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Network
+# Start Section: Network functions
 #==========================================================================
 function getGbUsedThisSession() {
     local ethernetInterface=$(ifconfig 2>/dev/null|grep -P '^ew+:'|head -1|sed -E 's/^(ew+):s.*$/1/g');
@@ -1711,11 +1713,11 @@ function displayNetworkHostnames() {
     done
 }
 #==========================================================================
-# End Section: Network
+# End Section: Network functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Package Management
+# Start Section: Package Management functions
 #==========================================================================
 function whichRealBinary() {
     if [[ "" == "$1" || "-h" == "$1" || "--help" == "$1" ]]; then
@@ -2361,11 +2363,11 @@ function list_installed_ppa_repos() {
     grep -PR '^debs+' /etc/apt/sources.list.d/*.list --exclude=official* --exclude=additional*|grep -v 'ppa.launchpad.net'|sort -u|sed -E "s/^(\/etc\/apt\/sources.list.d\/[^:]+.list):(.*)$/echo "2"|sudo tee "1"/";
 }
 #==========================================================================
-# End Section: Package Management
+# End Section: Package Management functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Processes
+# Start Section: Process functions
 #==========================================================================
 function getProcessInfoByInteractiveMouseClick() {
     ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(echo $(PIDSTR=$(xprop _NET_WM_PID); echo "$PIDSTR" | sed "s/^.*[^0-9]([0-9][0-9]*)[^0-9]*$/1/g"))
@@ -2379,11 +2381,11 @@ function getProcessInfoByWindowName() {
     ps -o pid,comm,start,etime,pcpu,pmem,size,args -p $(xdotool search --class "$TARGET_NAME" getwindowpid);
 }
 #==========================================================================
-# End Section: Processes
+# End Section: Process functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Hardware
+# Start Section: Hardware functions
 #==========================================================================
 function printBatteryPercentages() {
     # this assumes that you only have 1 wireless device
@@ -2419,11 +2421,11 @@ function unmuteAllAlsaAudioControls() {
     IFS="$INITIAL_IFS";
 }
 #==========================================================================
-# End Section: Hardware
+# End Section: Hardware functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Services
+# Start Section: Service functions
 #==========================================================================
 function stopSystemdServices() {
     for passedarg in "$@"; do
@@ -2464,11 +2466,11 @@ function enableAndRestartSystemdServices() {
     done
 }
 #==========================================================================
-# End Section: Services
+# End Section: Service functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Launchers
+# Start Section: Launcher functions
 #==========================================================================
 function openGitExtensionsBrowse() {
     #launch background process
@@ -2494,11 +2496,11 @@ function openNemo() {
     (/usr/bin/nemo "$1" >/dev/null 2>/dev/null)&
 }
 #==========================================================================
-# End Section: Launchers
+# End Section: Launcher functions
 #==========================================================================
 
 #==========================================================================
-# Start Section: Reference
+# Start Section: Reference functions
 #==========================================================================
 # colorize man pages. See: https://www.ryanschulze.net/archives/2113
 function man() {
@@ -2810,5 +2812,5 @@ function referenceOctalPermissions() {
     echo "";
 }
 #==========================================================================
-# End Section: Reference
+# End Section: Reference functions
 #==========================================================================
