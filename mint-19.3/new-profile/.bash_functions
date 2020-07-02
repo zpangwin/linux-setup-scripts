@@ -516,7 +516,7 @@ function createTarArchive() {
     elif [[ "tar" != "fileExt" && ! $fileExt =~ ^tar.[bgx]z[0-9]*$ ]]; then
         echo "ERROR: Invalid output format";
         displayHelp="true";
-    elif [[ "tar" != "fileExt" && ! $fileExt =~ ^tar.[bgx]z[0-9]$ ]]; then
+    elif [[ "tar" != "fileExt" && $fileExt =~ ^tar.[bgx]z[0-9]$ ]]; then
         compressionLevel="${fileExt:${#fileExt}-1}";
         fileExt="${fileExt:0:${#fileExt}-1}";
         shift 1 # removes initial value of $1 from the parameter list
