@@ -1217,30 +1217,96 @@ function normalizeAllMp3InCurrentDir() {
 }
 function getMkvAllTrackIds() {
     local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   getMkvAllTrackIds /path/to/mkvfile";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
     mkvmerge --identify "${filePath}" | grep --color=never -i Track;
 }
 function getMkvAudioTrackIds() {
     local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   getMkvAudioTrackIds /path/to/mkvfile";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
     mkvmerge --identify "${filePath}" | grep --color=never -i Audio;
 }
 function getMkvSubtitleTrackIds() {
     local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   getMkvSubtitleTrackIds /path/to/mkvfile";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
     mkvmerge --identify "${filePath}" | grep --color=never -i subtitle;
 }
 function getMkvSubtitleTrackInfo() {
     local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   getMkvSubtitleTrackInfo /path/to/mkvfile";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
     local rawsubinfo=$(mkvinfo --track-info "${filePath}" | grep -A 6 -B 3 "Track type: subtitles");
     if [[ "" == "$rawsubinfo" ]]; then
-        return;
+        return 503;
     fi
     local cleansubinfo=$(echo "$rawsubinfo" | grep -E "(Track number|Name)" | perl -0pe "s/(^|n)[s|+]+/$1/g" | perl -0pe "s/(^|n)Track number.*track ID for mkvmergeD+?(d+)[^sd]+/$1TrackID: $2/gi" | perl -0pe "s/n(Name:[^nr]+)/ $1/gi");
     echo "${cleansubinfo}";
 }
+function getMkvAudioTrackInfo() {
+    local mkvFilePath="$1";
+    if [[ "" == "$mkvFilePath" ]]; then
+        echo "Expected usage:";
+        echo "   getMkvAudioTrackInfo /path/to/mkvfile";
+        return 501;
+    elif [[ ! -f "$mkvFilePath" ]]; then
+        echo "File '$mkvFilePath' does not exist.";
+        return 502;
+    fi
+    local rawAudioInfo=$(mkvinfo --track-info "${mkvFilePath}"|grep -Pv 'Default flag|Codec|Lacing|UID|Name'|grep -B 2 "Track type: audio");
+    if [[ "" == "$rawAudioInfo" ]]; then
+        return 503;
+    fi
+    local cleanedAudioInfo=$(echo "${rawAudioInfo}" | grep -E "(Track number|Lang)" | perl -0pe "s/(^|n)[s|+]+/$1/g" | perl -0pe "s/(^|n)Track number.*track ID for mkvmergeD+?(d+)[^sd]+/$1TrackID: $2/gi" | perl -0pe "s/n(Language:[^nr]+)/ $1/gi");
+    echo "${cleanedAudioInfo}";
+}
 function removeMkvSubtitleTracksById() {
+    local makeChangesInplace="$1";
+    if [[ "-i" == "${makeChangesInplace}" || $makeChangesInplace =~ ^--*inplace$ ]]; then
+        makeChangesInplace="true";
+        # shift remaining args once to the left
+        shift;
+    else
+        makeChangesInplace="false";
+    fi
+
     local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   removeMkvSubtitleTracksById /path/to/mkvfile id1,id2,etc";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
+
     local trackIds="$2";
-    local bakFile="${filePath}.bak";
-    if [[ "" == "${filePath}" || "" == "${trackIds}" || ! $trackIds =~ ^[1-9][0-9,]*$ ]]; then
+    if [[ "" == "${trackIds}" || ! $trackIds =~ ^[1-9][0-9,]*$ ]]; then
         echo "removeMkvSubtitleTracksById(): ERROR empty or invalid track ids";
         echo "expected usage: ";
         echo "#get list of subtitle track ids";
@@ -1250,18 +1316,43 @@ function removeMkvSubtitleTracksById() {
         echo 'removeMkvSubtitleTracksById /path/to/file.mkv id1,id2,etc';
         return;
     fi
+
+    local bakFile="${filePath}.bak";
     if [[ -e "${bakFile}" ]]; then
         echo "removeMkvSubtitleTracksById(): ERROR *.bak file already exists.";
         return;
     fi
-    cp -a "${filePath}" "${bakFile}";
+    mv "${filePath}" "${bakFile}";
     mkvmerge -o "${filePath}" --subtitle-tracks !${trackIds} "${bakFile}";
+
+    # mkvmerge doesn't actually provide an option for making changes inpace;
+    # this flag just tells whether or not to keep the backup file
+    if [[ "true" == "${makeChangesInplace}" ]]; then
+        rm "${bakFile}" 2>/dev/null;
+    fi
 }
 function keepMkvSubtitleTracksById() {
+    local makeChangesInplace="$1";
+    if [[ "-i" == "${makeChangesInplace}" || $makeChangesInplace =~ ^--*inplace$ ]]; then
+        makeChangesInplace="true";
+        # shift remaining args once to the left
+        shift;
+    else
+        makeChangesInplace="false";
+    fi
+
     local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   keepMkvSubtitleTracksById /path/to/mkvfile id1,id2,etc";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
+
     local trackIds="$2";
-    local bakFile="${filePath}.bak";
-    if [[ "" == "${filePath}" || "" == "${trackIds}" || ! $trackIds =~ ^[1-9][0-9,]*$ ]]; then
+    if [[ "" == "${trackIds}" || ! $trackIds =~ ^[1-9][0-9,]*$ ]]; then
         echo "keepMkvSubtitleTracksById(): ERROR empty or invalid track ids";
         echo "expected usage: ";
         echo "#get list of subtitle track ids";
@@ -1271,16 +1362,178 @@ function keepMkvSubtitleTracksById() {
         echo 'keepMkvSubtitleTracksById /path/to/file.mkv id1,id2,etc';
         return;
     fi
+
+    local bakFile="${filePath}.bak";
     if [[ -e "${bakFile}" ]]; then
         echo "keepMkvSubtitleTracksById(): ERROR *.bak file already exists.";
         return;
     fi
-    cp -a "${filePath}" "${bakFile}";
+    mv "${filePath}" "${bakFile}";
     mkvmerge -o "${filePath}" --subtitle-tracks ${trackIds} "${bakFile}";
+
+    # mkvmerge doesn't actually provide an option for making changes inpace;
+    # this flag just tells whether or not to keep the backup file
+    if [[ "true" == "${makeChangesInplace}" ]]; then
+        rm "${bakFile}" 2>/dev/null;
+    fi
+}
+function setMkvDefaultTrackId() {
+    local makeChangesInplace="$1";
+    if [[ "-i" == "${makeChangesInplace}" || $makeChangesInplace =~ ^--*inplace$ ]]; then
+        makeChangesInplace="true";
+        # shift remaining args once to the left
+        shift;
+    else
+        makeChangesInplace="false";
+    fi
+
+    local filePath="$1";
+    if [[ "" == "$filePath" ]]; then
+        echo "Expected usage:";
+        echo "   setMkvDefaultTrackId /path/to/mkvfile id";
+        return 501;
+    elif [[ ! -f "$filePath" ]]; then
+        echo "File '$filePath' does not exist.";
+        return 502;
+    fi
+
+    local defTrackId="$2";
+    if [[ "" == "${defTrackId}" || ! $defTrackId =~ ^[1-9][0-9]*$ ]]; then
+        echo "setMkvDefaultTrackId(): ERROR empty or invalid track id";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "# call this method to set exactly one track per track type (e.g. audio/subtitle/etc)";
+        echo "# as the default track. the same method can be used to set either audio or subtitle tracks.";
+        echo 'setMkvDefaultTrackId /path/to/file.mkv audioTrackId';
+        echo 'setMkvDefaultTrackId /path/to/file.mkv subtitleTrackId';
+        return;
+    fi
+
+    local bakFile="${filePath}.bak";
+    if [[ -e "${bakFile}" ]]; then
+        echo "setMkvDefaultTrackId(): ERROR *.bak file already exists.";
+        return;
+    fi
+    mv "${filePath}" "${bakFile}";
+    mkvmerge -o "${filePath}" --default-track ${defTrackId} "${bakFile}";
+
+    # mkvmerge doesn't actually provide an option for making changes inpace;
+    # this flag just tells whether or not to keep the backup file
+    if [[ "true" == "${makeChangesInplace}" ]]; then
+        rm "${bakFile}" 2>/dev/null;
+    fi
+}
+function extractMkvSubtitleTextById() {
+    local mkvFilePath="$1";
+    if [[ "" == "$mkvFilePath" ]]; then
+        echo "Expected usage:";
+        echo "   extractMkvSubtitleTextById /path/to/mkvfile [trackId]";
+        echo "";
+        echo "If no subtitle tracj id is provided, then the first subtitle track will be used automatically.";
+        return 501;
+    elif [[ ! -f "$mkvFilePath" ]]; then
+        echo "File '$mkvFilePath' does not exist.";
+        return 502;
+    fi
+
+    local trackId="$2";
+    if [[ "" == "${trackId}" ]]; then
+        echo 'W: No subtitle trackId provided; looking up first subtitle track...';
+        local firstSubtitleTrackId=$(mkvmerge -i "${mkvFilePath}"|grep -P '^Track ID.*subtitle'|sed -E 's/^Track ID ([1-9][0-9]*): .*subtitle.*$/1/g'|head -1);
+
+        if [[ $firstSubtitleTrackId =~ ^[1-9][0-9]*$ ]]; then
+            echo "W: Set subtitle trackId as track ${firstSubtitleTrackId}";
+            trackId="${firstSubtitleTrackId}";
+        fi
+    fi
+
+    if [[ "" == "${trackId}" || ! $trackId =~ ^[1-9][0-9]*$ ]]; then
+        echo "extractMkvSubtitleTextById(): ERROR empty or invalid track id";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "#call this method to remove one or more subtitle track ids";
+        echo 'extractMkvSubtitleTextById /path/to/file.mkv subtitleTrackId';
+        return;
+    fi
+
+    #local tmpSrt=$(date +"/tmp/%Y%m%d%H%M%S%N_$RANDOM.srt");
+    #mkvextract "${mkvFilePath}" tracks "${trackId}:${tmpSrt}";
+    #mv "${tmpSrt}" "${mkvFilePath%.*}.srt";
+    mkvextract "${mkvFilePath}" tracks "${trackId}:${mkvFilePath%.*}.srt";
+}
+function addMkvSubtitleText() {
+    local makeChangesInplace="$1";
+    if [[ "-i" == "${makeChangesInplace}" || $makeChangesInplace =~ ^--*inplace$ ]]; then
+        makeChangesInplace="true";
+        # shift remaining args once to the left
+        shift;
+    else
+        makeChangesInplace="false";
+    fi
+
+    local mkvFilePath="$1";
+    if [[ "" == "$mkvFilePath" ]]; then
+        echo "Expected usage:";
+        echo "   addMkvSubtitleText [-i]  /path/to/file.mkv /path/to/subtitle.srt [/path/to/output-file] [subtitle track name]";
+        echo "";
+        echo "  -i, --inplace   makes the changes in place (e.g. in the same file without creating a backup)";
+        return 501;
+    elif [[ ! -f "$mkvFilePath" ]]; then
+        echo "File '${mkvFilePath}' does not exist.";
+        return 502;
+    fi
+
+    local srtFilePath="$2";
+    if [[ "" == "$srtFilePath" ]]; then
+        echo "Expected usage:";
+        echo "   addMkvSubtitleText [-i] /path/to/file.mkv /path/to/subtitle.srt [/path/to/output-file]";
+        return 501;
+    elif [[ ! -f "$srtFilePath" ]]; then
+        echo "File '${srtFilePath}' does not exist.";
+        return 502;
+    fi
+
+    mkvFilePath=$(realpath "$mkvFilePath");
+    srtFilePath=$(realpath "$srtFilePath");
+
+    local outputFilePath="$3";
+
+    local subtitleTrackName="$4";
+    if [[ "" == "$subtitleTrackName" ]]; then
+        subtitleTrackName="English";
+    fi
+
+    if [[ "" != "$outputFilePath" && "$outputFilePath" != "$mkvFilePath" ]]; then
+        mkvmerge -o "$outputFilePath" "$mkvFilePath" --language 0:eng --track-name 0:"$subtitleTrackName" "$srtFilePath";
+    else
+        local bakFile="${mkvFilePath}.bak";
+        if [[ -e "${bakFile}" ]]; then
+            echo "addMkvSubtitleText(): ERROR *.bak file already exists.";
+            return;
+        fi
+        mv "${mkvFilePath}" "${bakFile}";
+        mkvmerge -o "$mkvFilePath" "$bakFile" --language 0:eng --track-name 0:"$subtitleTrackName" "$srtFilePath";
+
+        # mkvmerge doesn't actually provide an option for making changes inpace;
+        # this flag just tells whether or not to keep the backup file
+        if [[ "true" == "${makeChangesInplace}" ]]; then
+            rm "${bakFile}" 2>/dev/null;
+        fi
+    fi
 }
 function batchRemoveMkvSubtitleTracksById() {
     local folderPath="$1";
     local trackIds="$2";
+
+    if [[ "" == "${trackIds}" && "" != "${folderPath}" && $folderPath =~ ^[0-9][0-9,]*$ ]]; then
+        trackIds="${folderPath}";
+        folderPath=$(pwd);
+    fi
+
     if [[ "" == "${folderPath}" || "" == "${trackIds}" || ! $trackIds =~ ^[0-9][0-9,]*$ ]]; then
         echo "batchRemoveMkvSubtitleTracksById(): ERROR empty or invalid track ids";
         echo "expected usage: ";
@@ -1310,6 +1563,12 @@ function batchRemoveMkvSubtitleTracksById() {
 function batchKeepMkvSubtitleTracksById() {
     local folderPath="$1";
     local trackIds="$2";
+
+    if [[ "" == "${trackIds}" && "" != "${folderPath}" && $folderPath =~ ^[0-9][0-9,]*$ ]]; then
+        trackIds="${folderPath}";
+        folderPath=$(pwd);
+    fi
+
     if [[ "" == "${folderPath}" || "" == "${trackIds}" || ! $trackIds =~ ^[0-9][0-9,]*$ ]]; then
         echo "batchKeepMkvSubtitleTracksById(): ERROR empty or invalid track ids";
         echo "expected usage: ";
@@ -1335,10 +1594,134 @@ function batchKeepMkvSubtitleTracksById() {
     done
     cd "${originalLocation}";
 }
+function batchExtractMkvSubtitleTextById() {
+    local folderPath="$1";
+    local trackId="$2";
+
+    if [[ "" == "${trackId}" && "" != "${folderPath}" && $folderPath =~ ^[0-9][0-9]*$ ]]; then
+        trackId="${folderPath}";
+        folderPath=$(pwd);
+    fi
+
+    if [[ "" == "${folderPath}" || "" == "${trackId}" || ! $trackId =~ ^[0-9][0-9]*$ ]]; then
+        echo "batchExtractMkvSubtitleTextById(): ERROR empty or invalid track id";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "#call this function to extract the given subtitle track from the mkv as text (srt)";
+        echo 'batchExtractMkvSubtitleTextById /dir/with/mkvs id';
+        return;
+    fi
+    if [[ ! -e "${folderPath}" ]]; then
+        echo "batchExtractMkvSubtitleTextById(): ERROR mkv parent folder does not exist.";
+        return;
+    fi
+    local originalLocation=$(pwd);
+    cd "${folderPath}";
+    for file in *mkv; do
+        mkvextract "${file}" tracks "${trackId}:${file%.*}.srt";
+    done
+    cd "${originalLocation}";
+}
+function batchAddMkvSubtitleText() {
+    local replaceExisting="$1";
+    if [[ "-r" == "${replaceExisting}" || $replaceExisting =~ ^--*replace-existing$ ]]; then
+        replaceExisting="true";
+        # shift remaining args once to the left
+        shift;
+    else
+        replaceExisting="false";
+    fi
+
+    local folderPath="$1";
+
+    if [[ "" == "${folderPath}" || "-h" == "${folderPath}" || "--help" == "${folderPath}" ]]; then
+        echo "expected usage: ";
+        echo '';
+        echo "# call this function to add subtitle track to the mkv";
+        echo "# expects one srt per mkv and all mkv/srt pairs should have matching names"
+        echo 'batchAddMkvSubtitleText /dir/with/mkvs';
+        echo '';
+        echo '# same as above but replace existing tracks and only keep the track being added'
+        echo 'batchAddMkvSubtitleText -r /dir/with/mkvs';
+        echo 'batchAddMkvSubtitleText --replace-existing /dir/with/mkvs';
+        return;
+    fi
+    if [[ ! -e "${folderPath}" ]]; then
+        echo "batchAddMkvSubtitleText(): ERROR mkv parent folder does not exist.";
+        return;
+    fi
+    local originalLocation=$(pwd);
+    cd "${folderPath}";
+
+    local tracksToRemove='';
+    for file in *mkv; do
+        # make sure the paired srt file exists, if not then skip this file
+        if [[ ! -f "${file%.*}.srt" ]]; then
+            continue;
+        fi
+
+        mv "$file" "${file%.*}.tmp";
+        if [[ "true" == "${replaceExisting}" ]]; then
+            # remove existing subtitle tracks
+            tracksToRemove=$(mkvmerge -i "${file%.*}.tmp"|grep -P '^Track ID.*subtitle'|sed -E 's/^Track ID ([1-9][0-9]*): .*subtitle.*$/1/g'|tr 'n' ','|sed 's/,$//g');
+            mkvmerge -o "$file" --subtitle-tracks !${tracksToRemove} "${file%.*}.tmp";
+            mv "$file" "${file%.*}.tmp";
+        fi
+        #add the srt file
+        mkvmerge -o "$file" "${file%.*}.tmp" --language 0:eng --track-name 0:English "${file%.*}.srt";
+        if [[ -e "${file}" ]]; then
+            rm "${file}.tmp";
+        fi
+    done
+    cd "${originalLocation}";
+}
+function batchSetMkvDefaultTrackId() {
+    local folderPath="$1";
+    local defTrackId="$2";
+
+    if [[ "" == "${defTrackId}" && "" != "${folderPath}" && $folderPath =~ ^[0-9][0-9]*$ ]]; then
+        defTrackId="${folderPath}";
+        folderPath=$(pwd);
+    fi
+
+    if [[ "" == "${defTrackId}" || ! $defTrackId =~ ^[1-9][0-9]*$ ]]; then
+        echo "batchSetMkvDefaultTrackId(): ERROR empty or invalid track ids";
+        echo "expected usage: ";
+        echo "#get list of subtitle track ids";
+        echo 'getMkvSubtitleTrackInfo';
+        echo '';
+        echo "# call this method to set exactly one track per track type (e.g. audio/subtitle/etc)";
+        echo "# as the default track. the same method can be used to set either audio or subtitle tracks.";
+        echo 'batchSetMkvDefaultTrackId /path/to/folder audioTrackId';
+        echo 'batchSetMkvDefaultTrackId /path/to/folder subtitleTrackId';
+        return;
+    fi
+
+    if [[ ! -e "${folderPath}" ]]; then
+        echo "batchSetMkvDefaultTrackId(): ERROR mkv parent folder does not exist.";
+        return;
+    fi
+    local originalLocation=$(pwd);
+    cd "${folderPath}";
+    for file in *mkv; do
+        mv "$file" "${file}.bak";
+        mkvmerge -o "${file}" --default-track ${defTrackId} "${file}.bak";
+        if [[ -e "${file}" ]]; then
+            rm "${file}.bak";
+        fi
+    done
+    cd "${originalLocation}";
+}
 function batchLogMkvSubtitleTrackInfo() {
     local outputFileName="SUBTITLES_INFO.txt";
     local folderPath="$1";
+
     if [[ "" == "${folderPath}" ]]; then
+        folderPath=$(pwd);
+
+    elif [[ "-h" == "${folderPath}" || $folderPath =~ ^--*help$ ]]; then
         echo "batchLogMkvSubtitleTrackInfo(): ERROR empty dir";
         echo "expected usage: ";
         echo "#output a list of subtitle track ids to ${outputFileName}";
