@@ -2385,6 +2385,179 @@ function printDriveAndPartitionInfo() {
         done
     done
 }
+function checkFileNamesValidForWindows() {
+    local parentDir="$1";
+    if [[ "" == "${parentDir}" || ! -d "${parentDir}" ]]; then
+        echo "ERROR: checkFileNamesValidForWindows(): Expected path to folder containing files to be checked.";
+        return 501;
+    fi
+
+    local startingDir=$(pwd);
+    echo "=======================================================================";
+    echo "Checking for invalid Windows filenames under: ";
+    echo "  '${parentDir}' ";
+    echo "=======================================================================";
+
+    cd "${parentDir}";
+
+    printf 'nChecking for Invalid Characters ... ';
+    printf 'Found %s occurrences: n' $(LC_ALL=C find . -name '*[:<>?|"*]*' -o -name '**' -o -name '*[! -~]*' | wc -l);
+    # https://unix.stackexchange.com/questions/109747/identify-files-with-non-ascii-or-non-printable-characters-in-file-name
+    # https://www.asciitable.com/
+    LC_ALL=C find . -name '*[:<>?|"*]*' -o -name '**' -o -name '*[! -~]*' | sort;
+
+    printf 'nChecking for Invalid Spacing ... ';
+    printf 'Found %s leading spaces and %s trailing spaces: n' $(LC_ALL=C find . -iregex '^.*/ .*$' -o -iregex '^.* /.*$'|wc -l) $(LC_ALL=C find . -type f -iregex '^.* .[A-Za-z0-9][A-Za-z0-9]*'|wc -l);
+    LC_ALL=C find . -iregex '^.*/ .*$' -o -iregex '^.* /.*$'|sort;
+    LC_ALL=C find . -type f -iregex '^.* .[A-Za-z0-9][A-Za-z0-9]*'|sort;
+
+    # Ignore starting path because e.g. '/media/myusb-drive' would, under Windows,
+    # be mounted as e.g. 'F:'. Length should be calculated as:
+    # A) Absolute Path (e.g. '/media/myusb-drive/foo.txt'), minus the
+    #       parent path (e.g. '/media/myusb-drive'), plus 2 (letter + colon)
+    # OR more simply:
+    # B) Relative unix path (e.g. './media/myusb-drive/foo.txt'), minus one (leading dot),
+    #   plus 2 (letter + colon)
+    # OR even more simply
+    # C) Relative unix path (e.g. './media/myusb-drive/foo.txt'),
+    #   plus 1 (letter + colon minus the leading dot from unix relative path)
+    #
+    # SO we can start with the "Max Windows Path (Under FAT)" as 255
+    # then subtract 1 (254) to find the Max Relative Path size under unix
+    # that will successfully work on a FAT partition.
+    # Then add one to (255) find paths that are too long.
+
+    printf 'nChecking for Path Length ... ';
+    printf 'Found %s paths that are too long for FAT partitions (max 255 chars*): n' $(LC_ALL=C find .|grep -Pc '^.{255,}$');
+    LC_ALL=C find .|grep -P '^.{255,}$'|sort
+
+    printf 'nn*Note: this includes the drive letter and colon added by Windows.nn';
+
+    cd "${startingDir}";
+
+}
+function removeInvalidCharactersFromFileNames() {
+    local typeList='d f';
+    local separator='=========================================================';
+
+    declare -A windowsInvalidCharactersMap;
+    windowsInvalidCharactersMap["""]="s/"//g";
+    windowsInvalidCharactersMap[":"]="s/://g";
+    windowsInvalidCharactersMap["[?]"]="s/[?]//g";
+    windowsInvalidCharactersMap["[*]"]="s/[*]//g";
+    windowsInvalidCharactersMap[">"]="s/>//g";
+    windowsInvalidCharactersMap["<"]="s/<//g";
+    windowsInvalidCharactersMap["[\\]"]="s/[\\]//g";
+    windowsInvalidCharactersMap["[|]"]="s/[|]//g";
+    windowsInvalidCharactersMap["[`]"]="s/[`]/'/g";
+
+    local typeName='';
+    printf '%sn%sn%sn' "${separator}" "Checking for invalid Windows characters:" "${separator}";
+    for type in $typeList; do
+        #echo "type: $type";
+        if [[ 'd' == "${type}" ]]; then
+            typeName='Dir';
+        else
+            typeName='File';
+        fi
+
+        for invalidCharacter in "${!windowsInvalidCharactersMap[@]}"; do
+            #echo "invalidCharacter: $invalidCharacter";
+            replacePattern="${windowsInvalidCharactersMap[$invalidCharacter]}";
+            #echo "replacePattern: $replacePattern";
+
+            printf '%s: Checking for character %s in name ... n' "${typeName}" "'${invalidCharacter}'";
+            find . -type ${type} -iname "*${invalidCharacter}*" -exec prename "${replacePattern}" "{}" ; 2>/dev/null;
+        done
+
+        # moving this one outside the loop as it can sometimes cause issues when bash interprets as a non-literal character
+        printf '%s: Checking for exclaimation point character in name ... n' "${typeName}";
+        find . -type ${type} -iname '*!*' -exec prename 's/!//g' "{}" ; 2>/dev/null;
+    done
+
+    declare -A unicodeCharactersReplacementMap;
+    unicodeCharactersReplacementMap["¡"]="s/¡//g";
+    unicodeCharactersReplacementMap["«"]="s/«/[/g";
+    unicodeCharactersReplacementMap["®"]="s/®//g";
+    unicodeCharactersReplacementMap["™"]="s/™//g";
+    unicodeCharactersReplacementMap["´"]="s/´/'/g";
+    unicodeCharactersReplacementMap["»"]="s/»/]/g";
+    unicodeCharactersReplacementMap["¿"]="s/¿//g";
+    unicodeCharactersReplacementMap["ß"]="s/ß/ss/g";
+    unicodeCharactersReplacementMap["à"]="s/à/a/g";
+    unicodeCharactersReplacementMap["á"]="s/á/a/g";
+    unicodeCharactersReplacementMap["â"]="s/â/a/g";
+    unicodeCharactersReplacementMap["ä"]="s/ä/a/g";
+    unicodeCharactersReplacementMap["å"]="s/å/a/g";
+    unicodeCharactersReplacementMap["è"]="s/è/e/g";
+    unicodeCharactersReplacementMap["é"]="s/é/e/g";
+    unicodeCharactersReplacementMap["ê"]="s/ê/e/g";
+    unicodeCharactersReplacementMap["ë"]="s/ë/e/g";
+    unicodeCharactersReplacementMap["í"]="s/í/i/g";
+    unicodeCharactersReplacementMap["ï"]="s/ï/i/g";
+    unicodeCharactersReplacementMap["ñ"]="s/ñ/n/g";
+    unicodeCharactersReplacementMap["ó"]="s/ó/o/g";
+    unicodeCharactersReplacementMap["ô"]="s/ô/o/g";
+    unicodeCharactersReplacementMap["Ö"]="s/Ö/O/g";
+    unicodeCharactersReplacementMap["ö"]="s/ö/o/g";
+    unicodeCharactersReplacementMap["Ø"]="s/Ø/0/g";
+    unicodeCharactersReplacementMap["ú"]="s/ú/u/g";
+    unicodeCharactersReplacementMap["ü"]="s/ü/u/g";
+    unicodeCharactersReplacementMap["ō"]="s/ō/o/g";
+    unicodeCharactersReplacementMap["й"]="s/й/n/g";
+    unicodeCharactersReplacementMap["к"]="s/к/k/g";
+    unicodeCharactersReplacementMap["о"]="s/о/o/g";
+    unicodeCharactersReplacementMap["п"]="s/п/n/g";
+    unicodeCharactersReplacementMap["ґ"]="s/ґ/r/g";
+    unicodeCharactersReplacementMap["–"]="s/\s*–\s*/ - /g";
+    unicodeCharactersReplacementMap["–"]="s/\s*–\s*/ - /g";
+    unicodeCharactersReplacementMap["‘"]="s/‘/'/g";
+    unicodeCharactersReplacementMap["’"]="s/’/'/g";
+    unicodeCharactersReplacementMap["…"]="s/…/ /g";
+    unicodeCharactersReplacementMap["…"]="s/…/ /g";
+    unicodeCharactersReplacementMap["“"]="s/“//g";
+    unicodeCharactersReplacementMap["”"]="s/”//g";
+
+    printf '%sn%sn%sn' "${separator}" "Checking for unicode characters:" "${separator}";
+    for type in $typeList; do
+        #echo "type: $type";
+        if [[ 'd' == "${type}" ]]; then
+            typeName='Dir';
+        else
+            typeName='File';
+        fi
+
+        for unicodeCharacter in "${!unicodeCharactersReplacementMap[@]}"; do
+            #echo "unicodeCharacter: $unicodeCharacter";
+            replacePattern="${unicodeCharactersReplacementMap[$unicodeCharacter]}";
+            #echo "replacePattern: $replacePattern";
+
+            printf '%s: Checking for unicode character %s in name ... n' "${typeName}" "'${unicodeCharacter}'";
+            find . -type ${type} -iname "*${unicodeCharacter}*" -exec prename "${replacePattern}" "{}" ; 2>/dev/null;
+        done
+
+        printf '%s: Replacing all other misc unicode characters in name ... n' "${typeName}";
+        ALL=C find . -type ${type} -name '*[! -~]*' -exec prename 's/[^ -~]//g' "{}" ; 2>/dev/null;
+    done
+
+    printf '%sn%sn%sn' "${separator}" "Checking for leading/trailing spaces:" "${separator}";
+    for type in $typeList; do
+        #echo "type: $type";
+        if [[ 'd' == "${type}" ]]; then
+            typeName='Dir';
+        else
+            typeName='File';
+        fi
+
+        printf '%s: Checking for leading spaces/dots/underscores in name ... n' "${typeName}";
+        find . -type ${type} -iregex '^.*/[. _][^/]*$' -exec prename 's/^(.*/)[s_.]+(.+)$/$1$2/g' "{}" ; 2>/dev/null;
+
+        printf '%s: Checking for trailing spaces/dots/underscores in name ... n' "${typeName}";
+        find . -type ${type} -name '*[. _]' -exec prename 's/^(.+[^s_.])[s_.]+$/$1/g' "{}" ; 2>/dev/null;
+    done
+    # and for trailing spaces/dots/underscores BEFORE the file extension
+    find . -type f -name '*[. _].*' -exec prename 's/^(.+[^s_.])[s_.]+(.w+)$/$1$2/g' "{}" ; 2>/dev/null;
+}
 #==========================================================================
 # End Section: Hard Drive functions
 #==========================================================================
