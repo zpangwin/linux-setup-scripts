@@ -134,30 +134,27 @@ for size in ${SIZES} ; do
 		echo "   success: downloaded file '${FILE_NAME}'${FILE_SIZE_KB}; replacing corresponding Mint-X / Mint-Y icons ... ";
 
 		copy_error="false";
-		if [[ -f "/usr/share/icons/HighContrast/${size}x${size}/apps/firefox.png" ]]; then
-			sudo cp "${OUTPUT_FILE}" "/usr/share/icons/HighContrast/${size}x${size}/apps/firefox.png";
-			if [[ "0" != "$?" ]]; then
-				copy_error="true";
+
+		iconDirList="/usr/share/icons/HighContrast/${size}x${size}/apps /usr/share/icons/hicolor/${size}x${size}/apps /usr/share/icons/Mint-Y/apps/${size} /usr/share/icons/Mint-Y/apps/${size}@2x /usr/share/icons/Mint-X/apps/${size}";
+		for iconDir in ${iconDirList} ; do
+			if [[ "" == "${iconDir}" || ! -d "${iconDir}" ]]; then
+				continue;
 			fi
-		fi
-		if [[ -f "/usr/share/icons/Mint-Y/apps/${size}@2x/firefox.png" ]]; then
-			sudo cp "${OUTPUT_FILE}" "/usr/share/icons/Mint-Y/apps/${size}@2x/firefox.png";
-			if [[ "0" != "$?" ]]; then
-				copy_error="true";
-			fi
-		fi
-		if [[ -f "/usr/share/icons/Mint-Y/apps/${size}/firefox.png" ]]; then
-			sudo cp "${OUTPUT_FILE}" "/usr/share/icons/Mint-Y/apps/${size}/firefox.png";
-			if [[ "0" != "$?" ]]; then
-				copy_error="true";
-			fi
-		fi
-		if [[ -f "/usr/share/icons/Mint-X/apps/${size}/firefox.png" ]]; then
-			sudo cp "${OUTPUT_FILE}" "/usr/share/icons/Mint-X/apps/${size}/firefox.png";
-			if [[ "0" != "$?" ]]; then
-				copy_error="true";
-			fi
-		fi
+
+			while IFS= read -r -d '' filePath; do
+				if [[ "" == "${filePath}" ]]; then
+					continue;
+				fi
+				echo "Overwriting '${filePath}' ...";
+				sudo cp "${OUTPUT_FILE}" "${filePath}";
+				if [[ "0" != "$?" ]]; then
+					copy_error="true";
+				fi
+
+			# Find 'firefox.png' exactly but ignore versioned images (e.g.  firefox-3.0.png) as they are symbolic links (excluded via -type f)
+			# Using an exact name match will also avoid replacing icons for aurora/developer/nightly versions if those are installed.
+			done < <(find "${iconDir}" -type f -iname 'firefox.png' -print0 2>/dev/null)
+		done
 
 		if [[ "true" == "${copy_error}" ]]; then
 			echo "   warning: failed to copy file '${FILE_NAME}' to one or more locations; skipping ... ";
