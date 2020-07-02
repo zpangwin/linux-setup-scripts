@@ -2292,6 +2292,99 @@ function mountAllFstabEntries() {
         sudo mount "${mountPoint}" 2>/dev/null;
     done
 }
+function printDriveAndPartitionInfo() {
+    # declare maps
+    declare -A partitionToUUIDMap;
+    declare -A partitionToLabelMap;
+    declare -A partitionToTypeMap;
+    declare -A UUIDtoMountPointMap;
+    declare -A partitionToMountPointMap;
+    declare -A partitionToTotalSizeMap;
+    declare -A partitionToFreeSpaceeMap;
+    declare -A partitionToUsedSpaceMap;
+    declare -A hardDiskToModelMap;
+    declare -A hardDiskToSizeMap;
+
+    # get map of device path to hard drive model
+    eval $(sudo parted --list --machine 2>/dev/null|grep -Pv 'BYT|sr0|^$|^d'|gawk -F: '{print $1" ""$7"""}'|sort -u|xargs -n 2 sh -c 'echo "hardDiskToModelMap["$1"]="$2""' argv0);
+
+    # get map of device path to hard drive size
+    eval $(eval echo $(sudo parted --list --machine 2>/dev/null|grep -Pv 'BYT|sr0|^$|^d'|gawk -F: '{print $1" "$2}'|sed -E 's/([1-9][0-9]{3})GB/$(printf "%0.2f\n" $(echo "1/1024"|bc -l))TB/g')|xargs -n 2 sh -c 'echo "hardDiskToSizeMap["$1"]="$2""' argv0);
+
+    # get map of device paths to UUIDs
+    eval $(sudo blkid|grep -P '^/dev/sd[a-z].*UUID'|sed -E 's|(/dev/sd[a-z][1-9]):.*s+UUID=("[^"]+").*$|1 2|g'|sed -E 's|(/dev/sd[a-z][1-9]):.*s+PARTUUID=("[^"]+").*$|1 2|g'|sort -u|xargs -n 2 sh -c 'echo "partitionToUUIDMap["$1"]="$2""' argv0);
+
+    # get map of device paths to partition types
+    eval $(sudo blkid|grep -P '^/dev/sd[a-z].*TYPE'|sed -E 's|(/dev/sd[a-z][1-9]):.*s+TYPE=("[^"]+").*$|1 2|g'|sort -u|xargs -n 2 sh -c 'echo "partitionToTypeMap["$1"]="$2""' argv0);
+
+    # get map of device paths to partition labels
+    eval $(sudo blkid|grep -P '^/dev/sd[a-z].*LABEL'|sed -E 's|(/dev/sd[a-z][1-9]):.*s+LABEL=("[^"]+").*$|1 2|g'|sed -E 's|(/dev/sd[a-z][1-9]):.*s+PARTLABEL=("[^"]+").*$|1 2|g'|sort -u|xargs -n 2 sh -c 'echo "partitionToLabelMap["$1"]="$2""' argv0);
+
+    # get map of device paths to mount points
+    eval $(df -h|gawk -F'\s+' '$1 ~ /^/dev/sd[a-z][1-9]$/ {print $1" "$6}'|sort -u|xargs -n 2 sh -c 'echo "partitionToMountPointMap["$1"]="$2""' argv0);
+
+    # get map of device paths to total partition size
+    eval $(eval echo $(sudo parted --list --machine 2>/dev/null|grep -Pv 'BYT|sr0'|sed -Ez 's|n(/dev/sd[a-z])([1-9]?:[^n]+)n([1-9]:[^/n]+)n([1-9]:[^/n]+)n|n12n13n14n|g'|grep -Pv 'BYT|sr0'|sed -Ez 's|n(/dev/sd[a-z])([1-9]?:[^n]+)n([1-9]:[^/n]+)n([1-9]:[^/n]+)n|n12n13n14n|g'|sed -Ez 's|n?(/dev/sd[a-z])([1-9]?:[^n]+)n([1-9]:[^/n]+)n|n12n13n|g'|sed -Ez 's|n?(/dev/sd[a-z])([1-9]?:[^n]+)n([1-9]:[^/n]+)n|n12n13n|g'|sed '/^$/d'|sed -E 's/^(/dev/sdw:[^:]+):.*:(gpt|msdos):([^:]+):.*$/1:2:3/g'|grep -P '/dev/sdw[1-9]:'|sed -E 's/^(/dev/sdw[1-9]):[^:]+:[^:]+:([^:]+):.*$/1:2/g'|sed -E 's/([1-9][0-9]{3})GB/$(printf "%0.2f\n" $(echo "1/1024"|bc -l))T/g'|sed -E 's/([1-9][0-9]{3})kB/$(printf "%0.1f\n" $(echo "1/1024"|bc -l))M/g'|sed -E 's/([GM])B$/1/g')|tr ':' ' '|xargs -n 2 sh -c 'echo "partitionToTotalSizeMap["$1"]="$2""' argv0);
+    eval $(df -h|gawk -F'\s+' '$1 ~ /^/dev/sd[a-z][1-9]$/ {print $1" "$2}'|sort -u|xargs -n 2 sh -c 'echo "partitionToTotalSizeMap["$1"]="$2""' argv0);
+
+    # get map of device paths to free space
+    eval $(df -h|gawk -F'\s+' '$1 ~ /^/dev/sd[a-z][1-9]$/ {print $1" "$4}'|sort -u|xargs -n 2 sh -c 'echo "partitionToFreeSpaceeMap["$1"]="$2""' argv0);
+
+    # get map of device paths to used space
+    eval $(df -h|gawk -F'\s+' '$1 ~ /^/dev/sd[a-z][1-9]$/ {print $1" "$3}'|sort -u|xargs -n 2 sh -c 'echo "partitionToUsedSpaceMap["$1"]="$2""' argv0);
+
+    # get maps of uuid to mount points
+    eval $(gawk -F'\s+' '$1 ~ /^UUID=/ {print $1" "$2}' /etc/fstab|sort -u|xargs -n 2 sh -c 'echo "UUIDtoMountPointMap["$1"]="$2""' argv0);
+
+    # print entries
+    local diskDevicePath='';
+    local diskModel='';
+    local diskCapacity='';
+    local partitionDevicePath='';
+    local uuid='';
+    local label='';
+    local fstype='';
+    local mountPoint='';
+    local totalSize='';
+    local freeSpace='';
+    local usedSpace='';
+
+    for diskDevicePath in "${!hardDiskToModelMap[@]}"; do
+        diskModel="${hardDiskToModelMap[$diskDevicePath]}";
+        diskCapacity="${hardDiskToSizeMap[$diskDevicePath]}";
+
+        echo "";
+        echo "===============================================================================================";
+        printf '%s Drive "%s" at %sn' "${diskCapacity}" "${diskModel}" "${diskDevicePath}";
+        echo "===============================================================================================";
+        printf '%st%st%st%st%st%-22st%sn' 'Filesystem' 'Type' 'Size' 'Used' 'Avail' 'Label' 'Mounted on'
+        for i in {1..9}; do
+            partitionDevicePath="${diskDevicePath}${i}";
+            uuid="${partitionToUUIDMap[$partitionDevicePath]}";
+            if [[ "" == "${uuid}" ]]; then
+                continue;
+            fi
+
+            label="${partitionToLabelMap[$partitionDevicePath]}";
+            fstype="${partitionToTypeMap[$partitionDevicePath]}";
+            mountPoint="${partitionToMountPointMap[$partitionDevicePath]}";
+            totalSize="${partitionToTotalSizeMap[$partitionDevicePath]}";
+            freeSpace="${partitionToFreeSpaceeMap[$partitionDevicePath]}";
+            usedSpace="${partitionToUsedSpaceMap[$partitionDevicePath]}";
+
+            if [[ "" == "${mountPoint}" ]]; then
+                mountPoint="${UUIDtoMountPointMap[$uuid]}";
+            fi
+            if [[ "" == "${mountPoint}" ]]; then
+                mountPoint="<not mounted>";
+            fi
+            if [[ "Microsoft reserved partition" == "${label}" ]]; then
+                label="Microsoft Reserved";
+            fi
+            printf '%st%st%st%st%st%-22st%sn' "${partitionDevicePath}" "${fstype}" "${totalSize}" "${usedSpace}" "${freeSpace}" "${label:0:18}" "${mountPoint}";
+        done
+    done
+}
 #==========================================================================
 # End Section: Hard Drive functions
 #==========================================================================
