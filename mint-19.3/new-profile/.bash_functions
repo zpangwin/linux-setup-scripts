@@ -29,6 +29,219 @@ function fileUriToFilePath() {
     local filePath=$(perl -MURI::Escape -e 'print uri_unescape($ARGV[0])' "${fileUri:7}");
     printf '%sn' "${filePath}";
 }
+function getAllChecksums() {
+    local checksumType="$1";
+    local showHelp="false";
+    local checksumArgs='';
+    local aryFileList=(  );
+
+    if (( ${#@} < 2 )); then
+        showHelp="true";
+    else
+        if [[ "md5" != "$1" && "sha1" != "$1" && "sha256" != "$1" && "sha512" != "$1" ]]; then
+            checksumType='';
+            showHelp="true";
+        else
+            # Precheck that are args correspond to valid paths
+            for (( i=2; i<=${#@}; i++ )); do
+                filePath="${@:$i:1}";
+                #echo "Path[${i}]: '${filePath}'";
+
+                if [[ "-h" == "${filePath}" || "--help" == "${filePath}" ]]; then
+                    showHelp="true";
+                    break;
+
+                elif [[ "-b" == "${filePath}" || "--binary" == "${filePath}" ]]; then
+                    checksumArgs='--binary';
+                    continue;
+
+                elif [[ "-t" == "${filePath}" || "--text" == "${filePath}" ]]; then
+                    checksumArgs='--text';
+                    continue;
+
+                elif [[ ! -e "${filePath}" ]]; then
+                    echo "ERROR: Path[${i}]: '${filePath}' does not exist.";
+                    return 404;
+
+                elif [[ -f "${filePath}" ]]; then
+                    # non-argument, valid single-file path
+                    aryFileList+=($(realpath "${filePath}"));
+
+                elif [[ -d "${filePath}" ]]; then
+                    # https://stackoverflow.com/questions/23356779/how-can-i-store-the-find-command-results-as-an-array-in-bash/54561526#54561526
+                    readarray -d '' aryFileList < <(find $(realpath "${filePath}") -type f -print0)
+                fi
+            done
+        fi
+    fi
+
+    if [[ "true" == "${showHelp}" ]]; then
+        echo 'Expected usage:';
+        if [[ "md5" != "$1" && "sha1" != "$1" && "sha256" != "$1" && "sha512" != "$1" ]]; then
+            echo '   getAllChecksums CHECKSUM_TYPE PATH1 [PATH2] [PATH3] [...]';
+            echo '';
+            echo '   CHECKSUM_TYPE   - Checksum algorithm to use: "md5", "sha1", "sha256", or "sha512"';
+            echo '   PATH1/PATH2/etc - Paths to get checksums for';
+        else
+            echo "   getAll${checksumType^}Checksums PATH1 [PATH2] [PATH3] [...]";
+            echo '';
+            echo '   PATH1/PATH2/etc - Paths to get checksums for';
+        fi
+        echo '';
+        echo 'This will generate a list of checksums sorted by path for all files under the passed paths. The checksums can be used for recursively comparing directories, single files, or any combination of the two are identical or have changed.';
+        if [[ "md5" != "$1" && "sha1" != "$1" && "sha256" != "$1" && "sha512" != "$1" ]]; then
+            echo "It behaves similarly to md5sum/sha256sum/etc except that it will automatically handle all recursive files under passed directories.";
+        else
+            echo "It behaves similarly to ${checksumType}sum except that it will automatically handle all recursive files under passed directories.";
+        fi
+        echo '';
+        echo '  -b, --binary         read in binary mode'
+        echo '  -t, --text           read in text mode (default)'
+        echo '';
+        return 500;
+    fi
+
+    # now collect checksums for the given paths, treating any directories recursively
+    # To make sure that this is consistent regardless of where it is run from,
+    # absolute path should always be used rather than relative paths
+    declare -A fileChecksumMap;
+    local fileChecksum='';
+    for filePath in "${aryFileList[@]}"; do
+        #echo "filePath: '${filePath}'";
+        fileChecksum=$(${checksumType}sum ${checksumArgs} "${filePath}"| cut -d" " -f1);
+        fileChecksumMap["${filePath}"]="${fileChecksum}";
+    done
+
+    local checksumLength=''
+    if [[ "md5" == "${checksumType}" ]]; then
+        checksumLength=32;
+    elif [[ "sha1" == "${checksumType}" ]]; then
+        checksumLength=40;
+    elif [[ "sha256" == "${checksumType}" ]]; then
+        checksumLength=64;
+    elif [[ "sha512" == "${checksumType}" ]]; then
+        checksumLength=128;
+    fi
+
+    # use another loop now that all values have been added to the map (and thus sorted)
+    for filePath in "${!fileChecksumMap[@]}"; do
+        fileChecksum="${fileChecksumMap[$filePath]}";
+        #echo "key: $key";
+        #echo "value: "${myMap[$key]}"";
+        printf "%-${checksumLength}s  %sn" "${fileChecksum}" "${filePath}";
+    done
+}
+function getAllMd5Checksums() {
+    getAllChecksums 'md5' "${@}";
+}
+function getAllSha1Checksums() {
+    getAllChecksums 'sha1' "${@}";
+}
+function getAllSha256Checksums() {
+    getAllChecksums 'sha256' "${@}";
+}
+function getAllSha512Checksums() {
+    getAllChecksums 'sha512' "${@}";
+}
+function getCompositeChecksum() {
+    local checksumType="$1";
+    local showHelp="false";
+    local checksumArgs='';
+    local aryFileList=(  );
+
+    if (( ${#@} < 2 )); then
+        showHelp="true";
+    else
+        if [[ "md5" != "$1" && "sha1" != "$1" && "sha256" != "$1" && "sha512" != "$1" ]]; then
+            checksumType='';
+            showHelp="true";
+        else
+            # Precheck that are args correspond to valid paths
+            for (( i=2; i<=${#@}; i++ )); do
+                filePath="${@:$i:1}";
+                #echo "Path[${i}]: '${filePath}'";
+
+                if [[ "-h" == "${filePath}" || "--help" == "${filePath}" ]]; then
+                    showHelp="true";
+                    break;
+
+                elif [[ "-b" == "${filePath}" || "--binary" == "${filePath}" ]]; then
+                    checksumArgs='--binary';
+                    continue;
+
+                elif [[ "-t" == "${filePath}" || "--text" == "${filePath}" ]]; then
+                    checksumArgs='--text';
+                    continue;
+
+                elif [[ ! -e "${filePath}" ]]; then
+                    echo "ERROR: Path[${i}]: '${filePath}' does not exist.";
+                    return 404;
+
+                elif [[ -f "${filePath}" ]]; then
+                    # non-argument, valid single-file path
+                    aryFileList+=($(realpath "${filePath}"));
+
+                elif [[ -d "${filePath}" ]]; then
+                    # https://stackoverflow.com/questions/23356779/how-can-i-store-the-find-command-results-as-an-array-in-bash/54561526#54561526
+                    readarray -d '' aryFileList < <(find $(realpath "${filePath}") -type f -print0)
+                fi
+            done
+        fi
+    fi
+
+    if [[ "true" == "${showHelp}" ]]; then
+        echo 'Expected usage:';
+        if [[ "md5" != "$1" && "sha1" != "$1" && "sha256" != "$1" && "sha512" != "$1" ]]; then
+            echo '   getCompositeChecksum CHECKSUM_TYPE PATH1 [PATH2] [PATH3] [...]';
+            echo '';
+            echo '   CHECKSUM_TYPE   - Checksum algorithm to use: "md5", "sha1", "sha256", or "sha512"';
+            echo '   PATH1/PATH2/etc - Paths to include in composite checksum';
+        else
+            echo "   getComposite${checksumType^} PATH1 [PATH2] [PATH3] [...]";
+            echo '';
+            echo '   PATH1/PATH2/etc - Paths to include in composite checksum';
+        fi
+        echo '';
+        echo 'This will generate a cumulative checksum for the combination of all paths. The checksum can be used for recursively comparing if directories, single files, or any combination of the two are identical or have changed.';
+        if [[ "md5" != "$1" && "sha1" != "$1" && "sha256" != "$1" && "sha512" != "$1" ]]; then
+            echo "It behaves similarly to md5sum/sha256sum/etc except that it treats the list of files as an atomic unit and that directories are always compared recursively.";
+        else
+            echo "It behaves similarly to ${checksumType}sum except that it treats the list of files as an atomic unit and that directories are always compared recursively.";
+        fi
+        echo '';
+        echo '  -b, --binary         read in binary mode'
+        echo '  -t, --text           read in text mode (default)'
+        echo '';
+        return 500;
+    fi
+
+    # now collect checksums for the given paths, treating any directories recursively
+    # To make sure that this is consistent regardless of where it is run from,
+    # absolute path should always be used rather than relative paths
+    declare -A fileChecksumMap;
+    local fileChecksum='';
+    for filePath in "${aryFileList[@]}"; do
+        #echo "filePath: '${filePath}'";
+        fileChecksum=$(${checksumType}sum ${checksumArgs} "${filePath}"| cut -d" " -f1);
+        fileChecksumMap["${filePath}"]="${fileChecksum}";
+    done
+
+    local compositeChecksum=$(echo "${fileChecksumMap[@]}"|${checksumType}sum|cut -d" " -f1);
+
+    printf '%sn' "${compositeChecksum}";
+}
+function getCompositeMd5() {
+    getCompositeChecksum 'md5' "${@}";
+}
+function getCompositeSha1() {
+    getCompositeChecksum 'sha1' "${@}";
+}
+function getCompositeSha256() {
+    getCompositeChecksum 'sha256' "${@}";
+}
+function getCompositeSha512() {
+    getCompositeChecksum 'sha512' "${@}";
+}
 function findDuplicateLinesInFile() {
     local file="$1";
     if [[ "" == "$file" || ! -f "$file" ]]; then
