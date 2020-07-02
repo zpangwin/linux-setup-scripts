@@ -457,39 +457,6 @@ function findUnlinkedDirsIgnoringStdErr() {
         findWrapper REL -dir -iname "${@}";
     fi
 }
-function compareBinaries() {
-    if [[ "" == "$1" || "" == "$2" ]]; then
-        echo -e "ERROR: Requires two arguments.nExpected usage:nn";
-        echo -e "compareBinaries binary1 binary2n";
-        return;
-    fi
-    if [[ '' == "$(which cmp)" ]]; then
-        echo -e "ERROR: compareBinaries requires cmp to work; please install and try again.";
-        return;
-    fi
-    cmp -l "$1" "$2" | gawk '{printf "%08X %02X %02Xn", $1, strtonum(0$2), strtonum(0$3)}';
-}
-function diffBinaries() {
-    if [[ "" == "$1" || "" == "$2" ]]; then
-        echo -e "ERROR: Requires two arguments.nExpected usage:nn";
-        echo -e "diffBinaries binary1 binary2n";
-        return;
-    fi
-    if [[ '' == "$(which xxd)" || '' == "$(which diff)" ]]; then
-        echo -e "ERROR: diffBinaries requires xxd and diff to work; please install and try again.";
-        return;
-    fi
-    local tmpDir="/tmp/diffBinaries-$(date +'%Y%m%d%H%M%S')";
-    mkdir -p "${tmpDir}";
-    if [[ -d "${tmpDir}" ]]; then
-        echo -e "diffBinaries encountered an error while creating temp dir '${tmpDir}'";
-        return;
-    fi
-    xxd "$1" > "${tmpDir}/xxd1.hex" 2>/dev/null;
-    xxd "$2" > "${tmpDir}/xxd2.hex" 2>/dev/null;
-    echo '';
-    diff "${tmpDir}/xxd1.hex" "${tmpDir}/xxd2.hex";
-}
 function create7zArchive() {
     echo "Note: The 7z format does not perserve Linux file permissions.";
     echo "If this is desired, it is recommended to use the tar.xz format instead as";
@@ -660,6 +627,71 @@ function makeThenChangeDir() {
 # End Section: General Utility functions
 #==========================================================================
 
+#==========================================================================
+# Start Section: Binary/Hex/Octal functions
+#==========================================================================
+function compareBinaries() {
+    if [[ "" == "$1" || "" == "$2" ]]; then
+        echo -e "ERROR: Requires two arguments.nExpected usage:nn";
+        echo -e "compareBinaries binary1 binary2n";
+        return;
+    fi
+    if [[ '' == "$(which cmp)" ]]; then
+        echo -e "ERROR: compareBinaries requires cmp to work; please install and try again.";
+        return;
+    fi
+    cmp -l "$1" "$2" | gawk '{printf "%08X %02X %02Xn", $1, strtonum(0$2), strtonum(0$3)}';
+}
+function diffBinaries() {
+    if [[ "" == "$1" || "" == "$2" ]]; then
+        echo -e "ERROR: Requires two arguments.nExpected usage:nn";
+        echo -e "diffBinaries binary1 binary2n";
+        return;
+    fi
+    if [[ '' == "$(which xxd)" || '' == "$(which diff)" ]]; then
+        echo -e "ERROR: diffBinaries requires xxd and diff to work; please install and try again.";
+        return;
+    fi
+    local tmpDir="/tmp/diffBinaries-$(date +'%Y%m%d%H%M%S')";
+    mkdir -p "${tmpDir}";
+    if [[ -d "${tmpDir}" ]]; then
+        echo -e "diffBinaries encountered an error while creating temp dir '${tmpDir}'";
+        return;
+    fi
+    xxd "$1" > "${tmpDir}/xxd1.hex" 2>/dev/null;
+    xxd "$2" > "${tmpDir}/xxd2.hex" 2>/dev/null;
+    echo '';
+    diff "${tmpDir}/xxd1.hex" "${tmpDir}/xxd2.hex";
+}
+function getStringBlobFromBinary() {
+    local file="$1";
+    if [[ "" == "$file" || ! -f "$file" ]]; then
+        echo "ERROR: No file passed or file does not exist.";
+        return;
+    fi
+    local fileSizeInBytes=$(du --bytes "${file}"|cut -f1);
+    hexdump -e "${fileSizeInBytes} "%_p" "\n"" "${file}";
+}
+function getHexBlobWithNoSpacing() {
+    local file="$1";
+    if [[ "" == "$file" || ! -f "$file" ]]; then
+        echo "ERROR: No file passed or file does not exist.";
+        return;
+    fi
+    local fileSizeInBytes=$(du --bytes "${file}"|cut -f1);
+    hexdump -e "${fileSizeInBytes}/1 "%02x" "\n"" "${file}"
+}
+function getHexBlobWithSingleByteSpacing() {
+    local file="$1";
+    if [[ "" == "$file" || ! -f "$file" ]]; then
+        echo "ERROR: No file passed or file does not exist.";
+        return;
+    fi
+    local fileSizeInBytes=$(du --bytes "${file}"|cut -f1);
+    hexdump -e "${fileSizeInBytes}/1 "%02x " "\n"" "${file}"
+}
+#==========================================================================
+# End Section: Binary/Hex/Octal functions
 #==========================================================================
 
 #==========================================================================
