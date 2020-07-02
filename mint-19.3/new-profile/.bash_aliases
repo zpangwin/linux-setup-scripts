@@ -132,6 +132,8 @@ alias mkbackuphh='makeBackupWithFullTimestamp'
 alias hist='history'
 alias histoff="setGnomeTerminalTitle 'Incognito Window' && set +o history"
 alias histon="setGnomeTerminalTitle \"$USER@$HOSTNAME:\${PWD//\${HOME//\\//\\\\\\/}/\\~}\" && set -o history"
+alias nohist="setGnomeTerminalTitle 'Incognito Window' && set +o history"
+alias vihist='vi ~/.bash_history'
 
 # remount any unmounted fstab entries such as drives with noauto
 alias mfstab='mountAllFstabEntries'
@@ -139,6 +141,23 @@ alias mstab='mountAllFstabEntries'
 alias restoremounts='mountAllFstabEntries'
 alias restoremnts='mountAllFstabEntries'
 
+alias blkid='sudo blkid'
+alias parted='sudo parted --list'
+alias fdisk='sudo fdisk --list'
+
+alias diskinfo='printDriveAndPartitionInfo';
+alias disks='printDriveAndPartitionInfo';
+alias driveinfo='printDriveAndPartitionInfo';
+alias drives='printDriveAndPartitionInfo';
+alias partitions='printDriveAndPartitionInfo';
+
+alias lsdisk='printDriveAndPartitionInfo';
+alias lsdisks='printDriveAndPartitionInfo';
+alias lsdrive='printDriveAndPartitionInfo';
+alias lsdrives='printDriveAndPartitionInfo';
+
+alias chkwinnames='checkFileNamesValidForWindows';
+alias fixwinnames='removeInvalidCharactersFromFileNames';
 #====================================================
 # Search related commands
 #====================================================
@@ -146,10 +165,20 @@ alias restoremnts='mountAllFstabEntries'
 alias grepa='alias|grep -Pi'
 alias agrep='alias|grep -Pi'
 
-alias grepfn="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort|grep -Pi"
-alias fngrep="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort|grep -Pi"
-alias listfunctions="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
-alias listfunc="grep -P '^\s*function\s' $HOME/.bash_functions|sed -E 's/^\s*function\s+(\w+)\W.*$/\1/g'|sort"
+CUSTOM_BASH_USER_FUNCTIONS="$HOME/.bash_functions $HOME/.bash_private $HOME/GAME_VARS";
+
+alias grepfn="for f in $CUSTOM_BASH_USER_FUNCTIONS; do grep -P '^\\s*function\\s' "\$f" 2>/dev/null|sed -E 's/^\\s*function\\s+(\\w+)\\W.*\$/\1/g'; done|sort|grep -Pi"
+alias fngrep="for f in $CUSTOM_BASH_USER_FUNCTIONS; do grep -P '^\\s*function\\s' "\$f" 2>/dev/null|sed -E 's/^\\s*function\\s+(\\w+)\\W.*\$/\1/g'; done|sort|grep -Pi"
+alias listfunctions="for f in $CUSTOM_BASH_USER_FUNCTIONS; do grep -P '^\\s*function\\s' "\$f" 2>/dev/null|sed -E 's/^\\s*function\\s+(\\w+)\\W.*\$/\1/g'; done|sort|grep -Pi"
+alias listfunc="for f in $CUSTOM_BASH_USER_FUNCTIONS; do grep -P '^\\s*function\\s' "\$f" 2>/dev/null|sed -E 's/^\\s*function\\s+(\\w+)\\W.*\$/\1/g'; done|sort|grep -Pi"
+
+alias displayfunction='declare -f'
+alias displayfn='declare -f'
+alias functionsource='declare -f'
+alias fnsource='declare -f'
+alias fnsrc='declare -f'
+alias showfunction='declare -f'
+alias showfn='declare -f'
 
 #grep dirs
 alias grepd='LC_ALL=c ls -qAhclp1 --group-directories-first | grep -P -i -e '
@@ -162,6 +191,17 @@ alias ff='findLinkedFilesIgnoringStdErr'
 alias fd='findLinkedDirsIgnoringStdErr'
 alias ff.='findUnlinkedFilesIgnoringStdErr'
 alias fd.='findUnlinkedDirsIgnoringStdErr'
+
+# empty stuff
+alias fe='find . -type d -empty'
+
+# find by file type
+alias fmp4="find . -type f -iname '*.mp4' ";
+alias fmkv="find . -type f -iname '*.mkv' ";
+alias ftxt="find . -type f -iname '*.txt' ";
+alias fexe="find . -type f -iname '*.exe' ";
+alias fvid="find . -type f \( -iname '*.avi' -o  -iname '*.flv' -o  -iname '*.m[4kpo][4gv]' -o -iname '*.mpeg' -o -iname '*.ogm' -o -iname '*.wmv' \) ";
+alias faud="find . -type f \( -iname '*.flac' -o  -iname '*.m[4p][3ab]' -o -iname '*.ogg' -o -iname '*.wav' -o -iname '*.wma' \) ";
 
 #The -L follows symlinks
 alias findf='findLinkedFilesIgnoringStdErr'
@@ -177,6 +217,13 @@ alias findfilenolink='findUnlinkedFilesIgnoringStdErr'
 alias finddirnolink='findUnlinkedDirsIgnoringStdErr'
 
 alias dupesinfile='findDuplicateLinesInFile'
+
+# find and remove
+alias rmemp="find . -type d -empty -delete";
+alias rmempty="find . -type d -empty -delete";
+alias rmtxt="find . -type f -iname '*.txt' -delete";
+alias rmexe="find . -type f -iname '*.exe' -delete";
+
 
 #====================================================
 # Config related commands
@@ -269,6 +316,17 @@ alias g+wr="sudo chmod -R g+wr"
 alias g+wx="sudo chmod -R g+wx"
 alias g+xr="sudo chmod -R g+xr"
 alias g+xw="sudo chmod -R g+xw"
+
+#====================================================
+# Hex/Binary/Octal commands
+#====================================================
+alias blobstring="getStringBlobFromBinary"
+alias stringblob="getStringBlobFromBinary"
+alias hexstr="getHexBlobWithSingleByteSpacing"
+alias hexstring="getHexBlobWithSingleByteSpacing"
+alias rawhex="getHexBlobWithNoSpacing"
+alias hexblob="getHexBlobWithNoSpacing"
+alias lshex='echo "cli: hexdump od xxd; gui: bless"'
 
 #====================================================
 # Package related commands
@@ -382,6 +440,12 @@ alias restartservice='restartSystemdServices'
 alias restore='enableAndRestartSystemdServices'
 alias restoresvc='enableAndRestartSystemdServices'
 alias restoreservice='enableAndRestartSystemdServices'
+
+# note: this overrides default atq and uses the function instead (use full path of /usr/bin/atq for non-function call)
+alias atq='printAtQueue'
+alias lsat='printAtQueue'
+alias atmv='rescheduleAtJob'
+alias atadd='addMinutesToAtJob'
 
 #====================================================
 # X-Window related commands
@@ -552,7 +616,6 @@ alias netscan="sudo ls >/dev/null;echo -e '\nip addr\t\tmac addr\t\thostname\n==
 
 alias netview='displayNetworkHostnames'
 
-
 alias stopsmb='sudo systemctl stop smbd; sudo systemctl stop nmbd;'
 alias startsmb='sudo systemctl start smbd; sudo systemctl start nmbd;'
 alias restartsmb='sudo systemctl restart smbd; sudo systemctl restart nmbd;'
@@ -570,18 +633,24 @@ alias connection="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d
 alias onvpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
 alias vpn="internetType='ETHERNET';isVpnUp=\$(ifconfig -a|grep -P '^tun\d+: .*<.*\bUP\b'|wc -l); [[ '1' == \"\$isVpnUp\" ]] && internetType='VPN';echo \"Connected to internet via: \$internetType\""
 
-
 #====================================================
 # Text editor related commands
 #====================================================
 alias edit="openFileInTextEditor";
 alias nemo="openNemo";
 
+alias via="vi ${HOME}/.bash_aliases"
+alias avi="vi ${HOME}/.bash_aliases"
 alias vialias="vi ${HOME}/.bash_aliases"
 alias editalias="openFileInTextEditor ${HOME}/.bash_aliases"
 
+alias vif="vi ${HOME}/.bash_functions"
+alias fvi="vi ${HOME}/.bash_functions"
 alias vifunc="vi ${HOME}/.bash_functions"
 alias editfunc="openFileInTextEditor ${HOME}/.bash_functions"
+
+alias viref='referenceVim'
+alias vihelp='referenceVim'
 
 #====================================================
 # Multimedia related commands
@@ -589,9 +658,34 @@ alias editfunc="openFileInTextEditor ${HOME}/.bash_functions"
 alias getmkvsubs="getMkvSubtitleTrackInfo";
 alias mkvsubs="getMkvSubtitleTrackInfo";
 alias rmmkvsubs="removeMkvSubtitleTracksById";
-alias rmdirmkvsubs="batchRemoveMkvSubtitleTracksById";
+
 alias logmkvsubs="batchLogMkvSubtitleTrackInfo";
+alias logallmkvsubs="batchLogMkvSubtitleTrackInfo";
 alias lsmkvsubs="batchLogMkvSubtitleTrackInfo";
+alias rmdirmkvsubs="batchRemoveMkvSubtitleTracksById";
+alias rmallmkvsubs="batchRemoveMkvSubtitleTracksById";
+
+alias setdirmkvdefaultsubs="batchSetMkvDefaultTrackId";
+alias setmkvdefaultsubs="setMkvDefaultTrackId";
+
+alias extractmkvsubs="extractMkvSubtitleTextById";
+alias extractdirmkvsubs="batchExtractMkvSubtitleTextById";
+alias extractallmkvsubs="batchExtractMkvSubtitleTextById";
+
+alias popmkvsubs="extractMkvSubtitleTextById";
+alias popdirmkvsubs="batchExtractMkvSubtitleTextById";
+alias popallmkvsubs="batchExtractMkvSubtitleTextById";
+
+alias addmkvsubs="addMkvSubtitleText";
+alias adddirmkvsubs="batchAddMkvSubtitleText";
+alias addallmkvsubs="batchAddMkvSubtitleText";
+
+alias pushmkvsubs="addMkvSubtitleText";
+alias pushdirmkvsubs="batchAddMkvSubtitleText";
+alias pushallmkvsubs="batchAddMkvSubtitleText";
+
+alias getmkvaudio="getMkvAudioTrackInfo";
+alias mkvaudio="getMkvAudioTrackInfo";
 
 alias 2mp3='extractMp3AudioFromVideoFile'
 alias tomp3='extractMp3AudioFromVideoFile'
@@ -679,7 +773,9 @@ alias scrot60='scrot --delay 60 --silent --count ~/Pictures/Screenshots/$(date +
 #====================================================
 # Misc commands
 #====================================================
-alias cls='reset'
+# note: 'cl' blocks something from the package 'cl-launch'. From apt search: "uniform frontend to running Common Lisp code from the shell"
+alias cl='reset'
+alias cls="reset;echo 'Note: You can use Ctrl+L to clear the terminal screen quickly.';";
 alias nocaps="SYM_GROUP_NAME='none';setxkbmap -layout us -option;setxkbmap -layout us -option caps:\${SYM_GROUP_NAME};gsettings set org.gnome.desktop.input-sources xkb-options \"['caps:\${SYM_GROUP_NAME}']\";"
 
 alias scriptcheck='echo "Note: Actual command is shellcheck"; shellcheck'
@@ -733,6 +829,12 @@ alias add='git add'
 alias branch='git branch'
 alias checkout='git checkout';
 alias clone='git clone'
+alias clonef='gitCloneWithFormattedDir'
+alias cloneflist='gitCloneWithFormattedDir'
+alias clonefd='gitCloneWithFormattedDir "%o_%n"'
+alias clonefdlist='gitCloneListWithFormattedDir "%o_%n"'
+alias clonefdef='gitCloneWithFormattedDir "%o_%n"'
+alias clonefork='gitCloneWithFormattedDir "%o_%n_FORK"'
 alias commit='git commit -m'
 alias commita='git add -A; git commit -a -m'
 alias commitall='git add -A; git commit -a -m'
@@ -741,10 +843,44 @@ alias commitall='git add -A; git commit -a -m'
 alias log='GIT_PAGER=cat git log --format="%H  %cn  %cd  %s" --date=format:"%Y-%m-%d %H:%M:%S"';
 alias prune='git remote prune origin'
 alias pull='git pull --all'
+alias origin='git config --get remote.origin.url'
 alias reflog='git reflog'
-#this would block /usr/bin/stat which is used for determining filesizes
+alias remote='git config --get remote.origin.url'
+alias remotes='git remote -v'
+#Note using alias 'stat' will block /usr/bin/stat which is used for determining filesizes
 #alias stat='git status'
 alias unstage='git reset HEAD'
+#Note using alias 'reset' will block /usr/bin/reset which is used for resetting terminal output
+
+# e.g. revert filename OR git checkout -- filename
+alias revert='git checkout HEAD -- '
+alias revertSingleFile='git checkout HEAD -- '
+alias resetSingleFile='git checkout HEAD -- '
+
+# list files in last x commits
+alias lslast='git diff --name-status HEAD~1..HEAD'
+alias lslast2='git diff --name-status HEAD~2..HEAD~1'
+alias lslast3='git diff --name-status HEAD~3..HEAD~2'
+alias lslast4='git diff --name-status HEAD~4..HEAD~3'
+alias lslast5='git diff --name-status HEAD~5..HEAD~4'
+alias lslast6='git diff --name-status HEAD~6..HEAD~5'
+alias lslast7='git diff --name-status HEAD~7..HEAD~6'
+alias lslast8='git diff --name-status HEAD~8..HEAD~7'
+alias lslast9='git diff --name-status HEAD~9..HEAD~8'
+
+# list remotes for all repos under dir
+alias lsremotes='gitListRemotesForAllReposUnderDir'
+
+# diff files in last x commits
+alias difflast='git diff HEAD~1..HEAD'
+alias difflast2='git diff HEAD~2..HEAD~1'
+alias difflast3='git diff HEAD~3..HEAD~2'
+alias difflast4='git diff HEAD~4..HEAD~3'
+alias difflast5='git diff HEAD~5..HEAD~4'
+alias difflast6='git diff HEAD~6..HEAD~5'
+alias difflast7='git diff HEAD~7..HEAD~6'
+alias difflast8='git diff HEAD~8..HEAD~7'
+alias difflast9='git diff HEAD~9..HEAD~8'
 
 #git CLI abbreviated commands
 alias ga='git add'
@@ -829,12 +965,24 @@ alias up9='cd ../../../../../../../../..'
 
 alias cdnew="makeThenChangeDir";
 
+alias tmp='cd /tmp'
+alias home='cd /home'
+alias etc='cd /etc'
+alias sources='cd /etc/apt/sources.list.d/'
+alias ppas='cd /etc/apt/sources.list.d/'
+alias smbconfig='cd /etc/samba'
+alias nemodir='cd /usr/share/nemo'
+alias nemoactions='cd /usr/share/nemo/actions'
+alias apps='cd /usr/share/applications'
+
+
 #====================================================
 # Handle my common typos / bad spelling
 #====================================================
 alias dc='cd'
 alias ls-acl='LC_ALL=c ls -qAhclp1 --group-directories-first'
 
+alias ecgo='echo'
 alias echp='echo'
 alias eco='echo'
 
@@ -853,3 +1001,4 @@ alias greo='grep'
 alias greio='grep'
 alias rgep='grep'
 alias gre\[='grep'
+alias up\[='cd ..'
