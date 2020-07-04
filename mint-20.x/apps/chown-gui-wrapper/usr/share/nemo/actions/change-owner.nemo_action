@@ -1,0 +1,9 @@
+[Nemo Action]
+Name=Change Owner/Group
+Comment=GUI wrapper for chown
+Selection=s
+Exec=/usr/bin/pkexec-chown-gui-wrapper %F
+Icon-Name=gnome-settings
+Extensions=any;
+Quote=double
+
