@@ -27,9 +27,12 @@ cd linux-setup-scripts/mint-20.x/apps/chown-gui-wrapper
 
 ## Status
 
-Last tested : Feb 2020
+Last tested : 2020, July 03
 
-Last status : working (Mint 19.3 Cinnamon x64)
+Last status :
+
+* Mint 19.3 Cinnamon x64: working
+* Mint 20.0 Cinnamon x64 in Virtualbox: working but \~30s launch delay (presumably due to running in VM)
 
 ## Screenshots
 

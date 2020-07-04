@@ -53,6 +53,23 @@ while IFS= read -r -d '' shellScript; do
 
 	# TODO - replace this case statment with an array...
 	case "${scriptName}" in
+
+
+	 install-wine-devel-from-winehq-repo.sh)
+		# Skipit
+		continue;
+		;;
+
+	 install-wine-dev-from-winehq-repo.sh)
+		# Skipit
+		continue;
+		;;
+
+	 install-wine-stable-from-winehq-repo.sh)
+		# Skipit
+		continue;
+		;;
+
 	 backup-official-waterfox.sh)
 		# Skipit
 		continue;
@@ -63,11 +80,20 @@ while IFS= read -r -d '' shellScript; do
 		continue;
 		;;
 
+	 launch-dual-boot-ff-as-read-only.sh)
+		# Skipit
+		continue;
+		;;
+
+	 setup-dual-boot-ff-as-read-only.sh)
+		# Skipit
+		continue;
+		;;
+
 	 download-and-install-official-waterfox.sh)
 		# The PPA script should be preferred instead
 		continue;
 		;;
-
 	 install-mono.sh)
 		# The Mono + GitExt script should be preferred instead
 		continue;

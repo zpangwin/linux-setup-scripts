@@ -20,7 +20,7 @@ cd linux-setup-scripts/mint-20.x/apps/fslint
 
 ## Status
 
-Last tested : 2020, July 03 with fslint_2.46-1_all.deb
+Last tested : 2020, July 04 with fslint_2.46-1_all.deb
 Last status : working (Mint 20.0 Cinnamon x64 in Virtualbox)
 
 

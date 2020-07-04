@@ -53,5 +53,5 @@ cd linux-setup-scripts/mint-20.x/apps/samba-config
 
 ## Status
 
-Last tested : 2020, July 03 with Samba Server Config Tool 1.2.63
+Last tested : 2020, July 04 with Samba Server Config Tool 1.2.63
 Last status : working (Mint 20.0 Cinnamon x64 in Virtualbox)

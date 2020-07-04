@@ -95,7 +95,7 @@ wget http://archive.ubuntu.com/ubuntu/pool/universe/s/system-config-samba/system
 
 # 2. install system-config-samba GUI
 echo "Installing system-config-samba ...";
-sudo apt-get install ./*.deb
+sudo apt-get install -y ./*.deb
 
 cd "${startDir}";
 

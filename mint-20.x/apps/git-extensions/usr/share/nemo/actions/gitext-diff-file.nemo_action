@@ -1,0 +1,10 @@
+[Nemo Action]
+Name=GitExt Diff File
+Comment=GitExt Diff File
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-diff-file.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-diff-file.sh;
+Icon-Name=git-ext-diff
+Selection=s
+Extensions=nodirs;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F

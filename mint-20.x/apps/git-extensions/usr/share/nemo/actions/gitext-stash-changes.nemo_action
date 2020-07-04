@@ -1,0 +1,10 @@
+[Nemo Action]
+Name=GitExt Stash
+Comment=GitExt Stash
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-stash.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-stash.sh;
+Icon-Name=git-ext-stash
+Selection=Any
+Extensions=any;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F

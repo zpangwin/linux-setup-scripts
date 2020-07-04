@@ -11,6 +11,9 @@ if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
 fi
 . "${SCRIPT_DIR_PARENT}/functions.sh";
 
+#get sudo prompt out of the way
+sudo ls -acl >/dev/null
+
 # with Ubuntu 20, fslint is no longer available in the central repos
 # workaround: manually install deb files from old packages
 #	https://askubuntu.com/questions/1233710/where-is-fslint-duplicate-file-finder-for-ubuntu-20-04
@@ -24,6 +27,6 @@ wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-gtk2_2.24.0-6
 wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-glade2_2.24.0-6_amd64.deb
 wget http://archive.ubuntu.com/ubuntu/pool/universe/f/fslint/fslint_2.46-1_all.deb
 
-sudo apt-get install ./*.deb
+sudo apt-get install -y ./*.deb
 
 cd "${startDir}";

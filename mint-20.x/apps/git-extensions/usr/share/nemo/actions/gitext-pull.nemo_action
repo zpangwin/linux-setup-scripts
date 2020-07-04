@@ -1,0 +1,10 @@
+[Nemo Action]
+Name=GitExt Pull
+Comment=GitExt Pull
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-pull.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-pull.sh;
+Icon-Name=git-ext-pull
+Selection=Any
+Extensions=any;
+Quote=double
+Conditions=exec /usr/bin/is-git-dir %F
