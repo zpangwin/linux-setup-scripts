@@ -1,7 +1,8 @@
 [Nemo Action]
 Name=Edit with Sublime
 Comment=Edit with Sublime Text
-Exec=/bin/bash /usr/share/nemo/actions/scripts/multi-file-handler.sh "/opt/sublime_text/sublime_text" "%U"
+Exec=/opt/sublime_text/sublime_text %F
 Icon-Name=sublime-text
 Selection=notnone
 Extensions=nodirs;
+Quote=double
