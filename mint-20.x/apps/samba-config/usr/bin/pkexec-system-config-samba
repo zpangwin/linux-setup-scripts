@@ -1,2 +1,0 @@
-#!/bin/bash
-pkexec --user root /usr/sbin/system-config-samba

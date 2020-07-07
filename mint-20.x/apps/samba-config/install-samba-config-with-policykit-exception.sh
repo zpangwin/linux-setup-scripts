@@ -8,12 +8,6 @@ if [[ ! -f "${SCRIPT_DIR}/usr/share/polkit-1/actions/org.freedesktop.policykit.p
     exit;
 fi
 
-if [[ ! -f "${SCRIPT_DIR}/usr/bin/pkexec-system-config-samba" ]]; then
-    echo "Error: missing required file '${SCRIPT_DIR}/usr/bin/pkexec-system-config-samba'";
-    echo "See 'How to install' section from README";
-    exit;
-fi
-
 if [[ ! -f "${SCRIPT_DIR}/usr/share/applications/system-config-samba.desktop" ]]; then
     echo "Error: missing required file '${SCRIPT_DIR}/usr/share/applications/system-config-samba.desktop'";
     echo "See 'How to install' section from README";
@@ -108,7 +102,6 @@ sudo mv /usr/share/applications/system-config-samba.desktop /usr/share/applicati
 
 # copy script files
 echo "Configuring Polkit authentication ...";
-sudo cp -a "${SCRIPT_DIR}/usr/bin/pkexec-system-config-samba" /usr/bin/pkexec-system-config-samba;
 sudo cp -a "${SCRIPT_DIR}/usr/share/applications/system-config-samba.desktop" /usr/share/applications/system-config-samba.desktop;
 
 # Install policykit exception...
@@ -130,10 +123,6 @@ else
 fi
 
 echo "Setting permissions ...";
-
-sudo chown root:root /usr/bin/pkexec-system-config-samba;
 sudo chown root:root /usr/share/applications/system-config-samba.desktop;
-
-sudo chmod 755 /usr/bin/pkexec-system-config-samba;
 sudo chmod 644 /usr/share/applications/system-config-samba.desktop;
 
