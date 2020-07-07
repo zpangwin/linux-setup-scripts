@@ -34,9 +34,9 @@ if [[ "true" != "${nemoActionOnly}" ]]; then
 
 	# Create symlinks for sublime
 	if [[ -f /opt/sublime_text/sublime_text ]]; then
-	    ln -s /opt/sublime_text/sublime_text /usr/bin/sublime;
-	    ln -s /opt/sublime_text/sublime_text /usr/bin/sublime-text;
-	    ln -s /opt/sublime_text/sublime_text /usr/bin/sublime_text;
+	    sudo ln -s /opt/sublime_text/sublime_text /usr/bin/sublime;
+	    sudo ln -s /opt/sublime_text/sublime_text /usr/bin/sublime-text;
+	    sudo ln -s /opt/sublime_text/sublime_text /usr/bin/sublime_text;
 	fi
 fi
 
@@ -44,21 +44,29 @@ if [[ "" != "${SCRIPT_DIR}" ]]; then
 	hasMissingFiles="false";
 	if [[ ! -f "${SCRIPT_DIR}/usr/share/nemo/actions/edit-with-sublime.nemo_action" ]]; then
 		hasMissingFiles="true";
-	elif [[ ! -f "${SCRIPT_DIR}/usr/share/nemo/actions/scripts/multi-file-handler.sh" ]]; then
-		hasMissingFiles="true";
 	fi
 
 	if [[ "false" == "${hasMissingFiles}" ]]; then
 		sudo cp -a -t "/usr/share/nemo/actions" "${SCRIPT_DIR}/usr/share/nemo/actions"/*;
-
 		sudo chown root:root "/usr/share/nemo/actions/edit-with-sublime.nemo_action";
 		sudo chmod 644 "/usr/share/nemo/actions/edit-with-sublime.nemo_action";
+	fi
 
-		sudo chown root:root "/usr/share/nemo/actions/scripts";
-		sudo chmod 655 "/usr/share/nemo/actions/scripts";
+	mkdir -p "${HOME}/.config/sublime-text-3/Packages/User" 2>/dev/null;
 
-		sudo chown root:root "/usr/share/nemo/actions/scripts/multi-file-handler.sh";
-		sudo chmod 755 "/usr/share/nemo/actions/scripts/multi-file-handler.sh";
+	hasExistingUserKeymap="false";
+	if [[ -f "${HOME}/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap" ]]; then
+		hasExistingUserKeymap="true";
+	fi
+	if [[ "false" == "${hasExistingUserKeymap}" && -f "${SCRIPT_DIR}/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap" ]]; then
+		cp -a -t "${HOME}/.config/sublime-text-3/Packages/User" "${SCRIPT_DIR}/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap";
+	fi
+
+	hasExistingUserConfig="false";
+	if [[ -f "${HOME}/.config/sublime-text-3/Packages/User/Preferences.sublime-settings" ]]; then
+		hasExistingUserConfig="true";
+	fi
+	if [[ "false" == "${hasExistingUserConfig}" && -f "${SCRIPT_DIR}/.config/sublime-text-3/Packages/User/Preferences.sublime-settings" ]]; then
+		cp -a -t "${HOME}/.config/sublime-text-3/Packages/User" "${SCRIPT_DIR}/.config/sublime-text-3/Packages/User/Preferences.sublime-settings";
 	fi
 fi
-
