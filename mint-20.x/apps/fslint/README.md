@@ -15,7 +15,7 @@ To install run the following from a terminal:
 git clone https://github.com/zpangwin/linux-setup-scripts.git;
 find linux-setup-scripts -type f -iname '*.sh' -exec chmod a+rx "{}" \;;
 cd linux-setup-scripts/mint-20.x/apps/fslint
-./install-from-fslint-from-old-repos
+./install-from-fslint-from-old-repos.sh
 ```
 
 ## Status
