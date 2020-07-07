@@ -43,7 +43,6 @@ function addPPAIfNotInSources () {
 	#PPA doesn't exist in sources, so add it...
 	sudo add-apt-repository -y $* > /dev/null;
 }
-
 function addCustomSource() {
 	# get sudo prompt out of way up-front so that it
 	# doesn't appear in the middle of other output
@@ -67,6 +66,11 @@ function addCustomSource() {
 	local repoName="$1";
 	local repoDetails="$2";
 	if [[ "true" != "$showUsageInfo" ]]; then
+		if [[ "0" != "${#@}" && "1" != "${#@}" ]]; then
+			echo "addCustomSource(): validating '$1' '${@:2}'";
+			echo "";
+		fi
+
 		#if not just displaying help info, then check passed args
 		if [[ "" == "${repoName}" ]]; then
 			hasMissingOrInvalidInfo="true";
@@ -80,7 +84,7 @@ function addCustomSource() {
 			hasMissingOrInvalidInfo="true";
 			errorMessage="invalid REPO_NAME '${repoName}'; this name is reserved for system usage";
 
-		elif [[ ! $repoName =~ ^[A-Za-z0-9][-A-Za-z0-9.]*[A-Za-z0-9]$ ]]; then
+		elif [[ ! $repoName =~ ^[A-Za-z0-9][-A-Za-z0-9._]*[A-Za-z0-9]$ ]]; then
 			hasMissingOrInvalidInfo="true";
 			errorMessage="invalid REPO_NAME '${repoName}' - only alphanum/hyphen/period allowed, must start/end with alphanum";
 		fi
