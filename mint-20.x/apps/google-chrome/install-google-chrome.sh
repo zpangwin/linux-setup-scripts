@@ -11,6 +11,9 @@ if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
 fi
 . "${SCRIPT_DIR_PARENT}/functions.sh";
 
+# get the sudo prompt out of the way up front
+sudo ls -acl 2>&1 >/dev/null;
+
 # add key
 echo "Adding key ...";
 wget -qO - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -;
