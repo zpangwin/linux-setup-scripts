@@ -11,7 +11,7 @@ if [[ ! -f "${SCRIPT_DIR_PARENT}/functions.sh" ]]; then
 fi
 . "${SCRIPT_DIR_PARENT}/functions.sh";
 
-sudo apt-get install -y apt-transport-https curl;
+sudo apt-get install -y apt-transport-https curl ffmpeg;
 
 # add key
 echo "Adding signing key ...";
@@ -27,4 +27,6 @@ sudo apt-get update 2>&1 >/dev/null;
 echo "Installing Vivaldi ...";
 sudo apt-get install -y vivaldi-stable;
 
-
+if [[ -f /opt/vivaldi/update-ffmpeg && -x /opt/vivaldi/update-ffmpeg ]]; then
+	bash /opt/vivaldi/update-ffmpeg;
+fi
