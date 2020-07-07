@@ -53,7 +53,10 @@ while IFS= read -r -d '' shellScript; do
 
 	# TODO - replace this case statment with an array...
 	case "${scriptName}" in
-
+	 install-pince-w-menu-items-and-polkit-exceptions.sh)
+		# Skipit
+		continue;
+		;;
 
 	 install-wine-devel-from-winehq-repo.sh)
 		# Skipit
