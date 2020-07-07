@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=PINCE
+GenericName=Linux Cheat Engine
+Comment=Linux Cheat Engine
+Keywords=Games;Gaming;
+Exec=/usr/bin/pkexec-pince
+Icon=pince
+Terminal=false
+Type=Application
+Categories=Games;Gaming;
+StartupNotify=true
+X-GNOME-UsesNotifications=true
+

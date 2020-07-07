@@ -1,0 +1,14 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=Eclipse
+Comment=Eclipse Integrated Development Environment
+Keywords=Programming;Development;IDE;
+Exec=eclipse -data ~/.eclipse-workspace
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=eclipse-jee
+Categories=Programming;Development;IDE;
+StartupNotify=true
