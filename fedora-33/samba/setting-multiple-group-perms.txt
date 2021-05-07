@@ -1,0 +1,4 @@
+
+
+https://fedoramagazine.org/fedora-32-simple-local-file-sharing-with-samba/
+

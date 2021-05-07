@@ -1,0 +1,18 @@
+[
+	// Unbinding keys:
+	//	https://stackoverflow.com/questions/19245837
+	//		1. remove the command attribute
+	//		2. set "command":"unbound"
+	{ "keys": ["ctrl+b"], "command": "unbound" },
+	{ "keys": ["ctrl+q"], "command": "unbound" },
+
+	// Rebinds
+	{ "keys": ["ctrl+shift+d"], "command": "find_under_expand" },
+	{ "keys": ["ctrl+d"], "command": "duplicate_line" },
+
+	{ "keys": ["f9"], "command": "sort_lines", "args": {"case_sensitive": false} },
+	{ "keys": ["ctrl+f9"], "command": "sort_lines", "args": {"case_sensitive": true} },
+
+	{ "keys": ["ctrl+u"], "command": "upper_case" },
+	{ "keys": ["ctrl+l"], "command": "lower_case" }
+]

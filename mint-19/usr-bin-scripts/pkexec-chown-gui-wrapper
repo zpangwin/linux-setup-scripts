@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# v1.2.0
+# Last Updated: 2019 Oct 15
+
+yad_installed=$(which yad 2>/dev/null);
+if [[ "" == "${yad_installed}" ]]; then
+	ERROR_MSG="ERROR: Missing dependency 'yad'; Please run: sudo apt-get install -y yad;";
+	notify-send --icon=error "${ERROR_MSG}";
+	echo "${ERROR_MSG}";
+	exit;
+fi
+
+pkexec --user root env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/chown-gui-wrapper "${@}"

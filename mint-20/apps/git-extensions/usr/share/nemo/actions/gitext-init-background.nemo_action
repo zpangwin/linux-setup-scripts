@@ -1,0 +1,10 @@
+[Nemo Action]
+Name=GitExt Init
+Comment=GitExt Init
+Exec="/usr/share/nemo/actions/scripts/launch-gitext-init.sh" %F
+Dependencies=git;mono;/opt/GitExtensions/gitext.sh;/usr/share/nemo/actions/scripts/launch-gitext-init.sh;
+Icon-Name=git-ext-clone
+Selection=none
+Extensions=none;
+Quote=double
+Conditions=exec /usr/bin/is-non-git-dir %F

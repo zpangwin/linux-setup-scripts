@@ -1,0 +1,18 @@
+{
+	"always_prompt_for_file_reload": true,
+	"atomic_save": true,
+	"auto_close_tags": true,
+	"auto_complete": false,
+	"auto_match_enabled": false,
+	"copy_with_empty_selection": false,
+	"drag_text": false,
+	"ensure_newline_at_eof_on_save": true,
+	"font_size": 11,
+	"highlight_modified_tabs": true,
+	"show_encoding": true,
+	"show_line_endings": true,
+	"tab_completion": false,
+	"translate_tabs_to_spaces": false,
+	"trim_automatic_white_space": true,
+	"trim_trailing_white_space_on_save": true
+}

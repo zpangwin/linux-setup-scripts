@@ -1,0 +1,10 @@
+#!/bin/bash
+passedPath="$1";
+if [[ -s "${passedPath}" ]]; then
+	if [[ -f "${passedPath}" ]]; then
+		passedPath=$(dirname "${passedPath}");
+	fi
+	if [[ -d "${passedPath}" ]]; then
+		git -C "${passedPath}" rev-parse --show-toplevel 2>/dev/null;
+	fi
+fi

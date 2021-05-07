@@ -1,0 +1,108 @@
+Got a notification about SE-Linux regarding polkit changes.
+
+-> interestingly, the pop-up did appear .... approx 2-3 minutes AFTER it was launched.
+-> this might be about permissions, syntax, etc as I do see the entries present in the file
+
+==========================================================================================================
+cat /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <action id="org.freedesktop.policykit.pkexec.run-chown-gui-wrapper">
+    <description>GUI wrapper for chown</description>
+    <message>Authentication is required to run chown-gui-wrapper</message>
+    <icon_name>gnome-settings</icon_name>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/bin/bash</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">/usr/bin/chown-gui-wrapper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">TRUE</annotate>
+  </action>
+</policyconfig>
+
+==========================================================================================================
+
+
+==========================================================================================================
+Details from the notification:
+==========================================================================================================
+
+
+SELinux is preventing gmain from getattr access on the file /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy.
+
+*****  Plugin restorecon (68.9 confidence) suggests   ************************
+
+If you want to fix the label.
+/usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy default label should be usr_t.
+Then you can run restorecon. The access attempt may have been stopped due to insufficient permissions to access a parent directory in which case try to change the following command accordingly.
+Do
+# /sbin/restorecon -v /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy
+
+*****  Plugin file (21.0 confidence) suggests   ******************************
+
+If you think this is caused by a badly mislabeled machine.
+Then you need to fully relabel.
+Do
+touch /.autorelabel; reboot
+
+*****  Plugin file (21.0 confidence) suggests   ******************************
+
+If you think this is caused by a badly mislabeled machine.
+Then you need to fully relabel.
+Do
+touch /.autorelabel; reboot
+
+*****  Plugin catchall_labels (3.92 confidence) suggests   *******************
+
+If you want to allow gmain to have getattr access on the org.freedesktop.policykit.pkexec.policy file
+Then you need to change the label on /usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy
+Do
+# semanage fcontext -a -t FILE_TYPE '/usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy'
+where FILE_TYPE is one of the following: NetworkManager_log_t, NetworkManager_tmp_t, abrt_helper_exec_t, abrt_tmp_t, abrt_upload_watch_tmp_t, abrt_var_cache_t, abrt_var_log_t, abrt_var_run_t, acct_data_t, admin_crontab_tmp_t, admin_home_t, afs_logfile_t, aide_log_t, alsa_tmp_t, amanda_log_t, amanda_tmp_t, anon_inodefs_t, antivirus_log_t, antivirus_tmp_t, apcupsd_log_t, apcupsd_tmp_t, apmd_log_t, apmd_tmp_t, arpwatch_tmp_t, asterisk_log_t, asterisk_tmp_t, auditadm_sudo_tmp_t, auditd_tmp_t, auth_cache_t, automount_tmp_t, awstats_tmp_t, bacula_log_t, bacula_tmp_t, bin_t, bitlbee_log_t, bitlbee_tmp_t, blueman_tmp_t, bluetooth_helper_tmp_t, bluetooth_helper_tmpfs_t, bluetooth_tmp_t, boinc_log_t, boinc_project_tmp_t, boinc_tmp_t, boot_t, bootloader_tmp_t, brltty_log_t, bugzilla_tmp_t, cache_home_t, calamaris_log_t, callweaver_log_t, canna_log_t, cardmgr_dev_t, ccs_tmp_t, ccs_var_lib_t, ccs_var_log_t, cdcc_tmp_t, cert_t, certmaster_var_log_t, certmonger_tmp_t, cfengine_log_t, cgred_log_t, checkpc_log_t, chrome_sandbox_tmp_t, chronyd_tmp_t, chronyd_var_log_t, cinder_api_tmp_t, cinder_backup_tmp_t, cinder_log_t, cinder_scheduler_tmp_t, cinder_volume_tmp_t, cloud_init_tmp_t, cloud_log_t, cluster_conf_t, cluster_tmp_t, cluster_var_lib_t, cluster_var_log_t, cluster_var_run_t, cobbler_tmp_t, cobbler_var_log_t, cockpit_tmp_t, cockpit_tmpfs_t, collectd_log_t, collectd_script_tmp_t, colord_tmp_t, comsat_tmp_t, condor_log_t, condor_master_tmp_t, condor_schedd_tmp_t, condor_startd_tmp_t, config_home_t, config_usr_t, conman_log_t, conman_tmp_t, conntrackd_log_t, consolekit_log_t, consolekit_var_run_t, couchdb_log_t, couchdb_tmp_t, cpu_online_t, crack_tmp_t, cron_log_t, crond_tmp_t, crontab_tmp_t, ctdbd_log_t, ctdbd_tmp_t, cups_pdf_tmp_t, cupsd_log_t, cupsd_lpd_tmp_t, cupsd_tmp_t, cvs_tmp_t, cyphesis_log_t, cyphesis_tmp_t, cyrus_tmp_t, data_home_t, dbadm_sudo_tmp_t, dbskkd_tmp_t, dbus_home_t, dbusd_etc_t, dcc_client_tmp_t, dcc_dbclean_tmp_t, dccd_tmp_t, dccifd_tmp_t, dccm_tmp_t, ddclient_log_t, ddclient_tmp_t, deltacloudd_log_t, deltacloudd_tmp_t, denyhosts_var_log_t, devicekit_tmp_t, devicekit_var_log_t, dhcpc_tmp_t, dhcpd_tmp_t, dirsrv_snmp_var_log_t, dirsrv_tmp_t, dirsrv_var_log_t, dirsrvadmin_tmp_t, disk_munin_plugin_tmp_t, dkim_milter_tmp_t, dlm_controld_var_log_t, dnsmasq_tmp_t, dnsmasq_var_log_t, dnssec_trigger_tmp_t, dovecot_auth_tmp_t, dovecot_deliver_tmp_t, dovecot_tmp_t, dovecot_var_log_t, drbd_tmp_t, dspam_log_t, etc_runtime_t, etc_t, evtchnd_var_log_t, exim_log_t, exim_tmp_t, fail2ban_log_t, fail2ban_tmp_t, fail2ban_var_lib_t, faillog_t, fenced_tmp_t, fenced_var_log_t, fetchmail_log_t, file_context_t, fingerd_log_t, firewalld_tmp_t, firewalld_var_log_t, firewallgui_tmp_t, foghorn_var_log_t, fonts_cache_t, fonts_t, fprintd_tmp_t, fsadm_log_t, fsadm_tmp_t, fsdaemon_tmp_t, ftpd_tmp_t, ftpdctl_tmp_t, games_tmp_t, games_tmpfs_t, gconf_home_t, gconf_tmp_t, geoclue_tmp_t, getty_log_t, getty_tmp_t, gfs_controld_var_log_t, git_script_tmp_t, gkeyringd_gnome_home_t, gkeyringd_tmp_t, glance_log_t, glance_registry_tmp_t, glance_tmp_t, glusterd_log_t, glusterd_tmp_t, gnome_home_t, gpg_agent_tmp_t, gpg_agent_tmpfs_t, gpg_pinentry_tmp_t, gpg_pinentry_tmpfs_t, gpm_tmp_t, groupd_var_log_t, gssd_tmp_t, gstreamer_home_t, haproxy_var_log_t, hostname_etc_t, hsqldb_tmp_t, httpd_log_t, httpd_php_tmp_t, httpd_suexec_tmp_t, httpd_tmp_t, ibacm_log_t, icc_data_home_t, icecast_log_t, inetd_child_tmp_t, inetd_log_t, inetd_tmp_t, init_tmp_t, initrc_tmp_t, initrc_var_log_t, innd_log_t, ipa_custodia_log_t, ipa_custodia_tmp_t, ipa_log_t, ipa_tmp_t, ipsec_log_t, ipsec_tmp_t, iptables_tmp_t, iscsi_log_t, iscsi_tmp_t, iwhd_log_t, jetty_log_t, jetty_tmp_t, jockey_var_log_t, kadmind_log_t, kadmind_tmp_t, kdumpctl_tmp_t, kdumpgui_tmp_t, keepalived_tmp_t, keystone_log_t, keystone_tmp_t, kismet_log_t, kismet_tmp_t, kismet_tmpfs_t, klogd_tmp_t, kmod_tmp_t, krb5_conf_t, krb5_host_rcache_t, krb5kdc_log_t, krb5kdc_tmp_t, ksmtuned_log_t, ktalkd_log_t, ktalkd_tmp_t, l2tpd_tmp_t, lastlog_t, ld_so_cache_t, ld_so_t, ldconfig_tmp_t, lib_t, livecd_tmp_t, locale_t, logrotate_mail_tmp_t, logrotate_tmp_t, logwatch_mail_tmp_t, logwatch_tmp_t, lpd_tmp_t, lpr_tmp_t, lsassd_tmp_t, lsmd_plugin_tmp_t, lvm_tmp_t, machineid_t, mail_munin_plugin_tmp_t, mailman_cgi_tmp_t, mailman_log_t, mailman_mail_tmp_t, mailman_queue_tmp_t, man_cache_t, man_t, mandb_cache_t, mcelog_log_t, mdadm_log_t, mdadm_tmp_t, mediawiki_tmp_t, minidlna_log_t, mirrormanager_log_t, mock_tmp_t, mojomojo_tmp_t, mongod_log_t, mongod_tmp_t, motion_log_t, mount_tmp_t, mozilla_plugin_tmp_t, mozilla_plugin_tmpfs_t, mozilla_tmp_t, mozilla_tmpfs_t, mpd_log_t, mpd_tmp_t, mplayer_tmpfs_t, mrtg_log_t, mscan_tmp_t, munin_log_t, munin_script_tmp_t, munin_tmp_t, mysqld_log_t, mysqld_tmp_t, mythtv_var_log_t, naemon_log_t, nagios_eventhandler_plugin_tmp_t, nagios_log_t, nagios_openshift_plugin_tmp_t, nagios_system_plugin_tmp_t, nagios_tmp_t, named_log_t, named_tmp_t, net_conf_t, netutils_tmp_t, neutron_log_t, neutron_tmp_t, nfsd_tmp_t, nova_log_t, nova_tmp_t, nscd_log_t, nsd_log_t, nsd_tmp_t, ntop_tmp_t, ntpd_log_t, ntpd_tmp_t, numad_var_log_t, nut_upsd_tmp_t, nut_upsdrvctl_tmp_t, nut_upsmon_tmp_t, nx_server_tmp_t, opendnssec_tmp_t, openhpid_log_t, openshift_app_tmp_t, openshift_cgroup_read_tmp_t, openshift_cron_tmp_t, openshift_initrc_tmp_t, openshift_log_t, openshift_tmp_t, opensm_log_t, openvpn_status_t, openvpn_tmp_t, openvpn_var_log_t, openvswitch_log_t, openvswitch_tmp_t, openwsman_log_t, openwsman_tmp_t, oracleasm_tmp_t, osad_log_t, pam_timestamp_tmp_t, passenger_log_t, passenger_tmp_t, passwd_file_t, pcp_log_t, pcp_tmp_t, pegasus_openlmi_storage_tmp_t, pegasus_tmp_t, pesign_tmp_t, piranha_log_t, piranha_web_tmp_t, pkcs11_modules_conf_t, pkcs_slotd_log_t, pkcs_slotd_tmp_t, pki_log_t, pki_ra_log_t, pki_tomcat_log_t, pki_tomcat_tmp_t, pki_tps_log_t, plymouthd_var_log_t, podsleuth_tmp_t, podsleuth_tmpfs_t, policykit_auth_exec_t, policykit_exec_t, policykit_reload_t, policykit_resolve_exec_t, policykit_tmp_t, policykit_var_lib_t, policykit_var_run_t, polipo_log_t, portmap_tmp_t, postfix_bounce_tmp_t, postfix_cleanup_tmp_t, postfix_local_tmp_t, postfix_map_tmp_t, postfix_pickup_tmp_t, postfix_pipe_tmp_t, postfix_postdrop_t, postfix_qmgr_tmp_t, postfix_smtp_tmp_t, postfix_smtpd_tmp_t, postfix_virtual_tmp_t, postgresql_log_t, postgresql_tmp_t, pppd_log_t, pppd_tmp_t, pptp_log_t, prelink_exec_t, prelink_log_t, prelink_tmp_t, prelude_lml_tmp_t, prelude_log_t, privoxy_log_t, proc_t, procmail_log_t, procmail_tmp_t, prosody_log_t, prosody_tmp_t, psad_tmp_t, psad_var_log_t, pulseaudio_tmpfs_t, puppet_log_t, puppet_tmp_t, puppetmaster_tmp_t, pyicqt_log_t, qdiskd_var_log_t, qpidd_tmp_t, rabbitmq_tmp_t, rabbitmq_var_log_t, racoon_tmp_t, radiusd_log_t, realmd_tmp_t, redis_log_t, redis_tmp_t, rhev_agentd_log_t, rhev_agentd_tmp_t, rhsmcertd_log_t, rhsmcertd_tmp_t, ricci_modcluster_var_log_t, ricci_tmp_t, ricci_var_log_t, rkhunter_var_lib_t, rlogind_tmp_t, rolekit_tmp_t, rpcbind_tmp_t, rpm_log_t, rpm_script_tmp_t, rpm_tmp_t, rrdcached_tmp_t, rsync_log_t, rsync_tmp_t, rtas_errd_log_t, rtas_errd_tmp_t, samba_etc_t, samba_log_t, samba_net_tmp_t, samba_var_t, sanlock_log_t, sbd_tmpfs_t, sblim_tmp_t, secadm_sudo_tmp_t, sectool_tmp_t, sectool_var_log_t, security_t, selinux_munin_plugin_tmp_t, semanage_tmp_t, sendmail_log_t, sendmail_tmp_t, sensord_log_t, services_munin_plugin_tmp_t, session_dbusd_tmp_t, setroubleshoot_fixit_tmp_t, setroubleshoot_tmp_t, setroubleshoot_var_log_t, sge_tmp_t, shell_exec_t, shorewall_log_t, shorewall_tmp_t, slapd_log_t, slapd_tmp_t, slpd_log_t, smbd_tmp_t, smoltclient_tmp_t, smsd_log_t, smsd_tmp_t, snapperd_log_t, snmpd_log_t, snort_log_t, snort_tmp_t, sosreport_tmp_t, soundd_tmp_t, spamc_tmp_t, spamd_log_t, spamd_tmp_t, speech_dispatcher_log_t, speech_dispatcher_tmp_t, squid_log_t, squid_tmp_t, squirrelmail_spool_t, src_t, ssh_agent_tmp_t, ssh_keygen_tmp_t, ssh_tmpfs_t, sssd_public_t, sssd_var_lib_t, sssd_var_log_t, staff_sudo_tmp_t, stapserver_log_t, stapserver_tmp_t, stapserver_tmpfs_t, stunnel_log_t, stunnel_tmp_t, sudo_log_t, svirt_tmp_t, svnserve_log_t, svnserve_tmp_t, swat_tmp_t, swift_tmp_t, sysadm_passwd_tmp_t, sysadm_sudo_tmp_t, sysfs_t, syslogd_tmp_t, sysstat_log_t, system_conf_t, system_cronjob_tmp_t, system_db_t, system_dbusd_tmp_t, system_dbusd_var_lib_t, system_mail_tmp_t, system_munin_plugin_tmp_t, systemd_importd_tmp_t, systemd_logind_sessions_t, systemd_logind_var_run_t, systemd_machined_var_run_t, targetd_tmp_t, tcpd_tmp_t, telepathy_gabble_tmp_t, telepathy_idle_tmp_t, telepathy_logger_tmp_t, telepathy_mission_control_tmp_t, telepathy_msn_tmp_t, telepathy_salut_tmp_t, telepathy_sofiasip_tmp_t, telepathy_stream_engine_tmp_t, telepathy_sunshine_tmp_t, telnetd_tmp_t, tetex_data_t, textrel_shlib_t, tgtd_tmp_t, thin_aeolus_configserver_log_t, thin_log_t, thumb_tmp_t, tmp_t, tomcat_log_t, tomcat_tmp_t, tor_var_log_t, tuned_log_t, tuned_tmp_t, tvtime_tmp_t, tvtime_tmpfs_t, udev_tmp_t, ulogd_var_log_t, uml_tmp_t, uml_tmpfs_t, unconfined_munin_plugin_tmp_t, user_cron_spool_t, user_fonts_t, user_home_t, user_mail_tmp_t, user_tmp_t, usr_t, uucpd_log_t, uucpd_tmp_t, var_log_t, var_spool_t, varnishd_tmp_t, varnishlog_log_t, vdagent_log_t, virt_log_t, virt_qemu_ga_log_t, virt_qemu_ga_tmp_t, virt_tmp_t, virt_var_lib_t, vmtools_tmp_t, vmware_host_tmp_t, vmware_log_t, vmware_tmp_t, vmware_tmpfs_t, vpnc_tmp_t, w3c_validator_tmp_t, watchdog_log_t, webadm_tmp_t, webalizer_tmp_t, winbind_log_t, wireshark_tmp_t, wireshark_tmpfs_t, wtmp_t, xauth_tmp_t, xdm_log_t, xend_tmp_t, xend_var_log_t, xenstored_tmp_t, xenstored_var_log_t, xferlog_t, xserver_log_t, xserver_tmpfs_t, ypbind_tmp_t, ypserv_tmp_t, zabbix_log_t, zabbix_tmp_t, zarafa_deliver_log_t, zarafa_deliver_tmp_t, zarafa_gateway_log_t, zarafa_ical_log_t, zarafa_indexer_log_t, zarafa_indexer_tmp_t, zarafa_monitor_log_t, zarafa_server_log_t, zarafa_server_tmp_t, zarafa_spooler_log_t, zarafa_var_lib_t, zebra_log_t, zebra_tmp_t, zoneminder_log_t.
+Then execute:
+restorecon -v '/usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy'
+
+
+*****  Plugin catchall (1.18 confidence) suggests   **************************
+
+If you believe that gmain should be allowed getattr access on the org.freedesktop.policykit.pkexec.policy file by default.
+Then you should report this as a bug.
+You can generate a local policy module to allow this access.
+Do
+allow this access for now by executing:
+# ausearch -c 'gmain' --raw | audit2allow -M my-gmain
+# semodule -X 300 -i my-gmain.pp
+
+Additional Information:
+Source Context                system_u:system_r:policykit_t:s0
+Target Context                unconfined_u:object_r:unlabeled_t:s0
+Target Objects                /usr/share/polkit-1/actions/org.freedesktop.policy
+                              kit.pkexec.policy [ file ]
+Source                        gmain
+Source Path                   gmain
+Port                          <Unknown>
+Host                          fedoratest.local
+Source RPM Packages
+Target RPM Packages
+SELinux Policy RPM            selinux-policy-targeted-3.14.6-29.fc33.noarch
+Local Policy RPM              selinux-policy-targeted-3.14.6-29.fc33.noarch
+Selinux Enabled               True
+Policy Type                   targeted
+Enforcing Mode                Enforcing
+Host Name                     fedoratest.local
+Platform                      Linux fedoratest.local 5.8.18-300.fc33.x86_64 #1
+                              SMP Mon Nov 2 19:09:05 UTC 2020 x86_64 x86_64
+Alert Count                   1
+First Seen                    2020-11-12 18:21:37 EST
+Last Seen                     2020-11-12 18:21:37 EST
+Local ID                      8c7bcc01-5d0d-4c65-99e4-e02bacb6da2c
+
+Raw Audit Messages
+type=AVC msg=audit(1605223297.550:334): avc:  denied  { getattr } for  pid=826 comm="gmain" path="/usr/share/polkit-1/actions/org.freedesktop.policykit.pkexec.policy" dev="sda6" ino=3696628 scontext=system_u:system_r:policykit_t:s0 tcontext=unconfined_u:object_r:unlabeled_t:s0 tclass=file permissive=0
+
+
+Hash: gmain,policykit_t,unlabeled_t,file,getattr
+
+

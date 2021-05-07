@@ -1,0 +1,191 @@
+DISTRO_NAME='unknown';
+DISTRO_VERSION='unknown';
+
+PARENT_DISTRO='unknown';
+BASE_DISTRO='unknown';
+
+if [[ -f /etc/fedora-release ]]; then
+	DISTRO_NAME='fedora';
+	PARENT_DISTRO='fedora';
+	BASE_DISTRO='fedora';
+
+	if [[ -f /etc/os-release && '1' == "$(grep -ic ^ID=fedora /etc/os-release 2>/dev/null)" ]]; then
+		# only keep major version
+		VERSION_TEMP=$(grep -i ^VERSION_ID /etc/os-release 2>/dev/null|cut -d= -f2);
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*\.[0-9][.0-9]*$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\.[0-9][.0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		fi
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*$ ]]; then
+			DISTRO_VERSION="${VERSION_TEMP}";
+		fi
+		unset VERSION_TEMP;
+	fi
+
+elif [[ -f /etc/debian_version ]]; then
+	BASE_DISTRO='debian';
+
+	if [[ -f /etc/lsb-release ]]; then
+		# only keep major version
+		VERSION_TEMP=$(grep -i ^DISTRIB_RELEASE /etc/lsb-release 2>/dev/null|cut -d= -f2);
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*\.[0-9][.0-9]*$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\.[0-9][.0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		fi
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*$ ]]; then
+			DISTRO_VERSION="${VERSION_TEMP}";
+		fi
+		unset VERSION_TEMP;
+	fi
+
+	if [[ -f /etc/linuxmint/info ]]; then
+		if [[ -f /etc/upstream-release/lsb-release && "$(grep -ci ubuntu /etc/upstream-release/lsb-release 2>/dev/null)" -ge 1 ]]; then
+			DISTRO_NAME='mint';
+			PARENT_DISTRO='ubuntu';
+		else
+			DISTRO_NAME='lmde';
+			PARENT_DISTRO='debian';
+		fi
+
+	elif [[ -f /etc/lsb-release && "$(grep -ci ubuntu /etc/lsb-release 2>/dev/null)" -ge 1 ]]; then
+		DISTRO_NAME='ubuntu';
+		PARENT_DISTRO='debian';
+
+	elif [[ -f /etc/os-release ]]; then
+		# https://gist.github.com/natefoo/814c5bf936922dad97ff
+		#	MX Linux has ID=debian
+		#	Kali Linux, Raspbian have ID_LIKE=debian
+		if [[ '1' == "$(grep -ic '^ID=debian$' /etc/os-release 2>/dev/null)" ]]; then
+			PARENT_DISTRO='debian';
+
+		elif [[ '1' == "$(grep -Pic '^ID_LIKE=debian$' /etc/os-release 2>/dev/null)" && '0' == "$(grep -Pic '^ID=debian$' /etc/os-release 2>/dev/null)" ]]; then
+			DISTRO_NAME="$(grep -i ^ID= /etc/os-release|cut -d= -f2|tr '[:upper:]' '[:lower:]')";
+			PARENT_DISTRO='debian';
+		fi
+
+		# only keep major version
+		VERSION_TEMP=$(grep -i ^VERSION_ID /etc/os-release 2>/dev/null|cut -d= -f2);
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*\.[0-9][.0-9]*$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\.[0-9][.0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		fi
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*$ ]]; then
+			DISTRO_VERSION="${VERSION_TEMP}";
+		fi
+		unset VERSION_TEMP;
+	fi
+
+elif [[ -f /etc/os-release ]]; then
+	# https://www.reddit.com/r/linuxquestions/comments/92y1ug/not_sure_if_this_is_a_question_but_can_i_have_the/
+	# https://gist.github.com/natefoo/814c5bf936922dad97ff
+	DISTRO_NAME="$(grep -i ^ID= /etc/os-release|cut -d= -f2|tr '[:upper:]' '[:lower:]')";
+	if [[ '1' == "$(grep -ic ^VERSION_ID= /etc/os-release 2>/dev/null)" ]]; then
+		# only keep major version
+		VERSION_TEMP=$(grep -i ^VERSION_ID /etc/os-release 2>/dev/null|cut -d= -f2);
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*\.[0-9][.0-9]*$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+		elif [[ $VERSION_TEMP =~ ^\"[1-9][0-9]*\.[0-9][.0-9]*\"$ ]]; then
+			VERSION_TEMP="${VERSION_TEMP//\"/}";
+			VERSION_TEMP="${VERSION_TEMP%%.*}";
+		fi
+		if [[ $VERSION_TEMP =~ ^[1-9][0-9]*$ ]]; then
+			DISTRO_VERSION="${VERSION_TEMP}";
+		fi
+		unset VERSION_TEMP;
+	fi
+	if [[ '1' == "$(grep -ic ^ID_LIKE= /etc/os-release 2>/dev/null)" ]]; then
+		ID_LIKE="$(grep -i ^ID_LIKE= /etc/os-release|cut -d= -f2|tr '[:upper:]' '[:lower:]')";
+		if [[ 'debian' == "$ID_LIKE" || 'fedora' == "$ID_LIKE" || 'arch' == "$ID_LIKE" ]]; then
+			BASE_DISTRO="$ID_LIKE";
+		fi
+		unset ID_LIKE;
+	fi
+fi
+export DISTRO_NAME="${DISTRO_NAME}";
+export DISTRO_VERSION="${DISTRO_VERSION}";
+export PARENT_DISTRO="${PARENT_DISTRO}";
+export BASE_DISTRO="${BASE_DISTRO}";
+
+if [[ 'debian' == "$BASE_DISTRO" && -f /etc/debian_version ]]; then
+	DEBIAN_VERSION="$(cat /etc/debian_version 2>/dev/null)";
+	if [[ ! -z "$DEBIAN_VERSION" && $DEBIAN_VERSION =~ ^[A-Za-z].*$ ]]; then
+		DEBIAN_CODENAME="$(echo "${DEBIAN_VERSION}"|sed -E 's/^(\w+)\W.*$/\1/g'|tr '[:upper:]' '[:lower:]')";
+		case "${DEBIAN_CODENAME}" in
+			buster)   DEBIAN_VERSION='10' ;;
+			bullseye) DEBIAN_VERSION='11' ;;
+			bookworm) DEBIAN_VERSION='12' ;;
+			trixie)   DEBIAN_VERSION='13' ;;
+			*) DEBIAN_VERSION= ;;
+		esac
+	elif [[ ! -z "$DEBIAN_VERSION" && $DEBIAN_VERSION =~ ^[1-9][0-9].*$ ]]; then
+		# ${DEBIAN_VERSION%%.*} - outputs only the number to the left of the decimal (e.g. the major version)
+		DEBIAN_VERSION="${DEBIAN_VERSION%%.*}";
+		case "${DEBIAN_VERSION}" in
+			10) DEBIAN_CODENAME='buster' ;;
+			11) DEBIAN_CODENAME='bullseye' ;;
+			12) DEBIAN_CODENAME='bookworm' ;;
+			13) DEBIAN_CODENAME='trixie' ;;
+			*) DEBIAN_CODENAME= ;;
+		esac
+	fi
+	export DEBIAN_CODENAME="${DEBIAN_CODENAME}";
+	export DEBIAN_VERSION="${DEBIAN_VERSION}";
+
+	if [[ 'mint' == "$DISTRO_NAME" && -f /etc/lsb-release ]]; then
+		MINT_CODENAME=$(gawk -F'=' '$1 ~ /^DISTRIB_CODENAME$/ {print $2}' /etc/lsb-release);
+		MINT_VERSION=$(gawk -F'=' '$1 ~ /^DISTRIB_RELEASE$/ {print $2}' /etc/lsb-release);
+		export MINT_CODENAME="${MINT_CODENAME}";
+		export MINT_VERSION="${MINT_VERSION}";
+	fi
+
+	# set ubuntu variables too; these can be important for determining compatible PPAs and such
+	if [[ 'ubuntu' == "$PARENT_DISTRO" && -f /etc/upstream-release/lsb-release ]]; then
+		UBUNTU_CODENAME=$(gawk -F'=' '$1 ~ /^DISTRIB_CODENAME$/ {print $2}' /etc/upstream-release/lsb-release);
+		UBUNTU_VERSION=$(gawk -F'=' '$1 ~ /^DISTRIB_RELEASE$/ {print $2}' /etc/upstream-release/lsb-release);
+
+	elif [[ 'ubuntu' == "$DISTRO_NAME" && -f /etc/lsb-release ]]; then
+		UBUNTU_CODENAME=$(gawk -F'=' '$1 ~ /^DISTRIB_CODENAME$/ {print $2}' /etc/lsb-release);
+		UBUNTU_VERSION=$(gawk -F'=' '$1 ~ /^DISTRIB_RELEASE$/ {print $2}' /etc/lsb-release);
+	fi
+	export UBUNTU_CODENAME="${UBUNTU_CODENAME}";
+	export UBUNTU_VERSION="${UBUNTU_VERSION}";
+fi
+
+if [[ $bashrcDebugLevel -ge 3 ]]; then
+	echo "      DISTRO_NAME:    '$DISTRO_NAME'";
+	echo "      DISTRO_VERSION: '$DISTRO_VERSION'";
+	echo "      PARENT_DISTRO:  '$PARENT_DISTRO'";
+	echo "      BASE_DISTRO:    '$BASE_DISTRO'";
+
+	if [[ 'debian' == "$BASE_DISTRO" ]]; then
+		echo "";
+		echo "      DEBIAN_CODENAME: '$DEBIAN_CODENAME'";
+		echo "      DEBIAN_VERSION:  '$DEBIAN_VERSION'";
+	fi
+
+	if [[ 'ubuntu' == "$DISTRO_NAME" || 'ubuntu' == "$PARENT_DISTRO" ]]; then
+		echo "";
+		echo "      UBUNTU_CODENAME: '$UBUNTU_CODENAME'";
+		echo "      UBUNTU_VERSION:  '$UBUNTU_VERSION'";
+	fi
+
+	if [[ 'mint' == "$DISTRO_NAME" ]]; then
+		echo "";
+		echo "      MINT_CODENAME: '$MINT_CODENAME'";
+		echo "      MINT_VERSION:  '$MINT_VERSION'";
+	fi
+fi
