@@ -1,9 +1,0 @@
-
-[Nemo Action]
-Name=Display Settings
-Comment=Display Settings
-Exec=/usr/bin/python3 /usr/share/cinnamon/cinnamon-settings/cinnamon-settings.py display
-Icon-Name=display
-Selection=none
-Extensions=none
-Conditions=desktop

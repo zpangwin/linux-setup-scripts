@@ -1,7 +1,0 @@
-[Nemo Action]
-Name=Extract Audio to ogg
-Comment=Extract Audio as ogg
-Exec=/bin/bash /usr/share/nemo/actions/scripts/convert-video-to-ogg.sh "%F"
-Icon-Name=
-Selection=S
-Extensions=3gp;arf;asf;avi;f4v;flv;h264;m1v;m2v;m4v;mkv;mov;mp4;mp4v;mpg;mpeg;ogm;ogv;ogx;qt;rm;rv;wmv;
