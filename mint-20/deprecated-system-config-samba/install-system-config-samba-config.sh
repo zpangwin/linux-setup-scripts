@@ -82,8 +82,31 @@ tmpDir=$(mktemp -d /tmp/XXX);
 cd "${tmpDir}";
 
 echo "Download DEB files for system-config-samba and legacy depends ...";
-wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-gtk2_2.24.0-6_amd64.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-glade2_2.24.0-6_amd64.deb
+# update 2021-May-08: the following links for python-gtk2_2.24.0-6_amd64.deb
+#	and python-glade2_2.24.0-6_amd64.deb now result in 404's. Were they removed by the
+#	package mantainer?
+#		wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-gtk2_2.24.0-6_amd64.deb
+#		wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-glade2_2.24.0-6_amd64.deb
+#	it does work if we replace with :
+#		wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-gtk2_2.24.0-5.1ubuntu2_amd64.deb
+#		wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-glade2_2.24.0-5.1ubuntu2_amd64.deb
+#
+#	but I have opted to use al alternate mirror as shown in this post:
+#		https://askubuntu.com/questions/1233710/where-is-fslint-duplicate-file-finder-for-ubuntu-20-04/1233818#1233818
+#
+# 	According to the above fslint post, it sounds like python2 cairo is no longer available starting in
+#	Ubuntu 20.10. In this case, additional libraries are needed to install system-config-samba
+#
+if [[ 0 == $(apt search cairo 2>/dev/null|grep -Pc '^\w+\s*python2[\.\d]*-cairo') ]]; then
+	wget http://archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb
+	wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pygobject-2/python-gobject-2_2.28.6-14ubuntu1_amd64.deb
+	wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pycairo/python-cairo_1.16.2-2ubuntu2_amd64.deb
+fi
+
+wget http://old-releases.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-gtk2_2.24.0-6_amd64.deb
+wget http://old-releases.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-glade2_2.24.0-6_amd64.deb
+
+# these links were still working fine as of 2021-May-08
 wget http://archive.ubuntu.com/ubuntu/pool/universe/libu/libuser/python-libuser_0.62~dfsg-0.1ubuntu2_amd64.deb
 wget http://archive.ubuntu.com/ubuntu/pool/universe/s/system-config-samba/system-config-samba_1.2.63-0ubuntu6_all.deb
 
